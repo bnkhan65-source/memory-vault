@@ -10,6 +10,7 @@ import BottomNav from "../../components/BottomNav";
 export default function CameraPage() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [photo, setPhoto] = useState<string | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState("Moments");
   const router = useRouter();
 
   const [facingMode, setFacingMode] = useState<"user" | "environment">("environment");
@@ -108,6 +109,7 @@ export default function CameraPage() {
       await addDoc(collection(db, "users", uid, "memories"), {
         imageUrl: downloadURL,
         caption,
+        category: selectedCategory || "Moments",
         createdAt: serverTimestamp(),
       });
 
@@ -153,6 +155,21 @@ export default function CameraPage() {
         <img src={photo} className="w-full h-full object-cover" />
       )}
 
+      <div className="absolute bottom-40 left-0 right-0 flex justify-center gap-2 z-50 flex-wrap px-4">
+  {["Moments", "People", "Music", "Ideas"].map(cat => (
+    <button
+      key={cat}
+      onClick={() => setSelectedCategory(cat)}
+      className={`px-3 py-1 rounded-full text-sm ${
+        selectedCategory === cat
+          ? "bg-white text-black"
+          : "bg-white/30 text-white"
+      }`}
+    >
+      {cat}
+    </button>
+  ))}
+      </div>
       {/* Controls */}
       <div className="absolute bottom-24 left-0 right-0 flex justify-center gap-4 z-50">
         {!photo ? (
