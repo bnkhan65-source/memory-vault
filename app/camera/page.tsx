@@ -12,24 +12,65 @@ export default function CameraPage() {
   const [photo, setPhoto] = useState<string | null>(null);
   const router = useRouter();
 
+  const [facingMode, setFacingMode] = useState<"user" | "environment">("environment");
+  const [stream, setStream] = useState<MediaStream | null>(null);
+
+  // Start camera on load + when flipping
   useEffect(() => {
     startCamera();
-  }, []);
+    return () => {
+      stream?.getTracks().forEach(track => track.stop());
+    };
+  }, [facingMode]);
 
- const startCamera = async () => {
-  try {
-    const stream = await navigator.mediaDevices.getUserMedia({
-      video: true,
-    });
+  const startCamera = async () => {
+    try {
+      // Stop previous stream
+      stream?.getTracks().forEach(track => track.stop());
 
-    if (videoRef.current) {
-      videoRef.current.srcObject = stream;
+      // STEP 1 — Force permission so labels become available
+      const tempStream = await navigator.mediaDevices.getUserMedia({ video: true });
+      tempStream.getTracks().forEach(track => track.stop());
+
+      // STEP 2 — Get devices with labels
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      const videoDevices = devices.filter(d => d.kind === "videoinput");
+
+      let selectedDevice;
+
+      if (facingMode === "environment") {
+        // Try to find rear camera
+        selectedDevice = videoDevices.find(d =>
+          d.label.toLowerCase().includes("back") ||
+          d.label.toLowerCase().includes("rear") ||
+          d.label.toLowerCase().includes("environment")
+        );
+
+        // Fallback if label detection fails
+        if (!selectedDevice && videoDevices.length > 1) {
+          selectedDevice = videoDevices[1];
+        }
+      } else {
+        // Front camera
+        selectedDevice = videoDevices[0];
+      }
+
+      const newStream = await navigator.mediaDevices.getUserMedia({
+        video: selectedDevice?.deviceId
+          ? { deviceId: { exact: selectedDevice.deviceId } }
+          : { facingMode },
+      });
+
+      setStream(newStream);
+
+      if (videoRef.current) {
+        videoRef.current.srcObject = newStream;
+      }
+    } catch (error) {
+      console.error("Camera error:", error);
+      alert("Camera access failed — check permissions");
     }
-  } catch (error) {
-    console.error("Camera error:", error);
-    alert("Camera access failed — check permissions");
-  }
-};
+  };
 
   const takePhoto = () => {
     const canvas = document.createElement("canvas");
@@ -45,65 +86,37 @@ export default function CameraPage() {
 
     const image = canvas.toDataURL("image/png");
     setPhoto(image);
+
+    // Stop camera after capture
+    stream?.getTracks().forEach(track => track.stop());
   };
 
   const savePhoto = async () => {
-  console.log("SAVE CLICKED");
+    if (!photo || !auth.currentUser) return;
 
-  if (!photo) {
-    console.log("NO PHOTO");
-    return;
-  }
+    const uid = auth.currentUser.uid;
 
-  if (!auth.currentUser) {
-    console.log("NO USER");
-    return;
-  }
+    try {
+      // Temporary caption (avoid API issues)
+      const caption = "New memory 📸";
 
-  const uid = auth.currentUser.uid;
+      const storageRef = ref(storage, `memories/${uid}/${Date.now()}.png`);
+      await uploadString(storageRef, photo, "data_url");
 
-  try {
-    console.log("CALLING AI...");
+      const downloadURL = await getDownloadURL(storageRef);
 
-    const res = await fetch("/api/caption", {
-      method: "POST",
-       headers: {
-    "Content-Type": "application/json",
-  },
-      body: JSON.stringify({ image: photo }),
-    });
+      await addDoc(collection(db, "users", uid, "memories"), {
+        imageUrl: downloadURL,
+        caption,
+        createdAt: serverTimestamp(),
+      });
 
-    console.log("AI RESPONSE:", res);
-
-    const { caption } = await res.json();
-    console.log("CAPTION:", caption);
-
-    console.log("UPLOADING IMAGE...");
-
-    const storageRef = ref(storage, `memories/${uid}/${Date.now()}.png`);
-    await uploadString(storageRef, photo, "data_url");
-
-    const downloadURL = await getDownloadURL(storageRef);
-    console.log("IMAGE URL:", downloadURL);
-
-    console.log("SAVING TO FIRESTORE...");
-
-    await addDoc(collection(db, "users", uid, "memories"), {
-      imageUrl: downloadURL,
-      caption,
-      createdAt: serverTimestamp(),
-    });
-
-    console.log("DONE → REDIRECT");
-
-    router.push("/");
-  } catch (error) {
-    console.error("ERROR:", error);
-    alert("Something failed — check console");
-  }
-};
-
-  
+      router.push("/");
+    } catch (error) {
+      console.error("ERROR:", error);
+      alert("Something failed — check console");
+    }
+  };
 
   return (
     <div className="relative min-h-screen bg-black">
@@ -118,8 +131,20 @@ export default function CameraPage() {
             className="w-full h-full object-cover"
           />
 
-          {/* Dreamy overlay */}
+          {/* Overlay */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/20 to-transparent" />
+
+          {/* Flip Button */}
+          <button
+            onClick={() =>
+              setFacingMode(prev =>
+                prev === "user" ? "environment" : "user"
+              )
+            }
+            className="absolute top-6 right-6 z-50 bg-black/50 text-white px-4 py-2 rounded-lg"
+          >
+            Flip
+          </button>
         </div>
       )}
 
@@ -128,24 +153,32 @@ export default function CameraPage() {
         <img src={photo} className="w-full h-full object-cover" />
       )}
 
-      {/* Capture / Save Button */}
-      <div className="absolute bottom-24 left-0 right-0 flex justify-center z-50">
+      {/* Controls */}
+      <div className="absolute bottom-24 left-0 right-0 flex justify-center gap-4 z-50">
         {!photo ? (
           <button
             onClick={takePhoto}
             className="w-20 h-20 bg-white/80 backdrop-blur-md rounded-full shadow-xl border border-white/40"
           />
         ) : (
-          <button
-  onClick={async () => {
-    console.log("BUTTON CLICKED");
-    alert("clicked");
-    await savePhoto();
-  }}
-  className="bg-gradient-to-r from-purple-400 to-pink-400 text-white px-6 py-3 rounded-lg shadow-md"
->
-  Save Photo
-</button>
+          <>
+            <button
+              onClick={() => {
+                setPhoto(null);
+                startCamera();
+              }}
+              className="bg-gray-200 px-6 py-3 rounded-lg"
+            >
+              Retake
+            </button>
+
+            <button
+              onClick={savePhoto}
+              className="bg-gradient-to-r from-purple-400 to-pink-400 text-white px-6 py-3 rounded-lg shadow-md"
+            >
+              Save Photo
+            </button>
+          </>
         )}
       </div>
 
