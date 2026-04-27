@@ -105,16 +105,12 @@ export default function CameraPage() {
 
       const downloadURL = await getDownloadURL(storageRef);
 
-      await addDoc(collection(db, "users", uid, "memories"), {
-        imageUrl: downloadURL,
-        caption,
-        createdAt: serverTimestamp(),
-      });
+    
 
       router.push("/");
-    } catch (error) {
-      console.error("ERROR:", error);
-      alert("Something failed — check console");
+    } catch (error: any) {
+  console.error("FULL ERROR:", error);
+  alert(error.message || "Save failed");
     }
   };
 
