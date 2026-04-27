@@ -105,7 +105,11 @@ export default function CameraPage() {
 
       const downloadURL = await getDownloadURL(storageRef);
 
-    
+      await addDoc(collection(db, "users", uid, "memories"), {
+        imageUrl: downloadURL,
+        caption,
+        createdAt: serverTimestamp(),
+      });
 
       router.push("/");
     } catch (error: any) {
