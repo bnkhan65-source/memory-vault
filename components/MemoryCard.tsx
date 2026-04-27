@@ -8,6 +8,7 @@ type Memory = {
   id: string;
   text: string;
   imageUrl?: string;
+  category?: string;
   tags?: string[];
   spotifyUrl?: string | null;
   type?: "vibe" | "snapshot" | "note" | "collection" | "moment" | "list";
@@ -79,30 +80,43 @@ useEffect(() => {
   };
 }, [isEditing, handleSaveEdit]);
   return (
+    
+    
     //MAIN WRAPPER//
 
- <div
- ref={cardRef}
+<div
+  ref={cardRef}
   onMouseDown={() => setIsPressed(true)}
   onMouseUp={() => setIsPressed(false)}
   onMouseLeave={() => setIsPressed(false)}
   onTouchStart={() => setIsPressed(true)}
   onTouchEnd={() => setIsPressed(false)}
   onClick={(e) => {
-  if (memory.type === "list") return;
+    if (memory.type === "list") return;
 
-  if (isEditing) {
-    handleSaveEdit();
-    return;
-  }
+    if (isEditing) {
+      handleSaveEdit();
+      return;
+    }
 
-  setIsEditing(true);
-}}
-className={`bg-white p-4 rounded-xl shadow-sm flex gap-3 items-center transition-all duration-150 ease-out cursor-pointer hover:shadow-lg hover:-translate-y-1 hover:bg-gray-50
-  ${isPulsing ? "scale-[1.03] shadow-lg" : ""}
-  ${isPressed ? "scale-[0.97]" : ""}
-}`}
+    setIsEditing(true);
+  }}
+  className={`relative bg-white p-4 rounded-xl shadow-sm flex gap-3 items-center transition-all duration-150 ease-out cursor-pointer hover:shadow-lg hover:-translate-y-1 hover:bg-gray-50
+    ${isPulsing ? "scale-[1.03] shadow-lg" : ""}
+    ${isPressed ? "scale-[0.97]" : ""}
+  `}
 >
+
+  {/* ✅ Category badge */}
+  {memory.category && (
+    <div className="absolute top-2 right-2">
+      <span className="text-[10px] px-2 py-1 bg-gray-200 rounded-full text-gray-700">
+        {memory.category}
+      </span>
+    </div>
+  )}
+
+ 
     {/* Album Image */}
     {memory.imageUrl && (
       <img

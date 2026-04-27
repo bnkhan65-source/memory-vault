@@ -20,6 +20,7 @@ type Memory = {
   id: string;
   text: string;
   imageUrl?: string;
+  category?: string;
   tags?: string[];
   spotifyUrl?: string | null;
   type?: "vibe" | "snapshot" | "note" | "collection" | "moment" | "list";
