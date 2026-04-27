@@ -109,10 +109,19 @@ useEffect(() => {
 
   {/* ✅ Category badge */}
   {memory.category && (
-    <div className="absolute top-2 right-2">
-      <span className="text-[10px] px-2 py-1 bg-gray-200 rounded-full text-gray-700">
-        {memory.category}
-      </span>
+    <div className="flex items-center gap-2 mb-2">
+       {/* 🔥 Category (PRIMARY) */}
+  {memory.category && (
+    <span className="text-xs px-2 py-1 bg-gray-800 text-white rounded-full">
+      {memory.category}
+    </span>
+  )}
+
+  {/* 🧠 Type (SECONDARY) */}
+  <span className="text-xs px-2 py-1 bg-gray-100 text-gray-500 rounded-full">
+    {memory.type && MEMORY_TYPE_META[memory.type]?.label}
+  </span>
+
     </div>
   )}
 
