@@ -155,7 +155,14 @@ export default function CameraPage() {
         <img src={photo} className="w-full h-full object-cover" />
       )}
 
-      <div className="absolute bottom-64 left-0 right-0 flex justify-center z-40 px-4">
+     <div className="absolute bottom-64 left-0 right-0 flex flex-col items-center z-40 px-4">
+
+  {/* Selected Category Label */}
+  <div className="text-white text-sm mb-2 bg-black/40 px-3 py-1 rounded-full backdrop-blur-md">
+    Selected: {selectedCategory}
+  </div>
+
+  {/* Category Buttons */}
   <div className="flex gap-2 flex-wrap justify-center bg-black/40 backdrop-blur-md px-3 py-2 rounded-full">
     {["Moments", "People", "Music", "Ideas"].map(cat => (
       <button
@@ -171,6 +178,7 @@ export default function CameraPage() {
       </button>
     ))}
   </div>
+
 </div>
       {/* Controls */}
       <div className="absolute bottom-24 left-0 right-0 flex justify-center gap-4 z-50">
