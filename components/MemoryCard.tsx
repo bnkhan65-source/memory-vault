@@ -137,12 +137,12 @@ return (
 
         {/* Main content */}
        {memory.type === "list" ? (
-  <div className="space-y-2">
-    {editText
-      .split(/\n|,/)
-      .map((item) => item.trim())
-      .filter(Boolean)
-      .map((item, index) => (
+        <div className="space-y-2">
+        {(memory.text || "")
+        .split(/\n|,/)
+        .map((item) => item.trim())
+        .filter(Boolean)
+        .map((item, index) => (
         <div
           key={index}
           className="flex items-center gap-2 text-sm"
