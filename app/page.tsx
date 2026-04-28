@@ -212,6 +212,7 @@ const searchVideos = async () => {
   const data = await res.json();
   setVideoResults(data.videos || []);
 };
+const [isListening, setIsListening] = useState(false);
 const startRecording = () => {
   const SpeechRecognition =
     (window as any).SpeechRecognition ||
