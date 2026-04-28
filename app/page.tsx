@@ -136,9 +136,16 @@ export default function Home() {
   let type: Memory["type"] = "note";
 
 // ✅ Detect comma-separated lists
+const lowerText = textToSave.toLowerCase();
+
 if (
   textToSave.includes("\n") ||
-  textToSave.split(",").length > 1
+  textToSave.split(",").length > 1 ||
+  lowerText.includes("shopping list") ||
+  lowerText.includes("grocery list") ||
+  lowerText.includes("checklist") ||
+  lowerText.includes("todo") ||
+  lowerText.includes("to do")
 ) {
   type = "list";
 }
@@ -304,16 +311,29 @@ const deleteMemory = async (id: string) => {
     saveMemory(value); // ✅ pass directly
     }
   }}
-  placeholder="Add a memory..."
+  placeholder='Add memory or say “shopping list…”'
   className="flex-1 min-w-0 bg-white/60 backdrop-blur-md border border-white/40 p-3 rounded-lg text-base text-gray-900 placeholder-gray-400 focus:outline-none"
-/>
+  />
+  <p className="text-xs text-gray-500 mt-1">
+  Tip: Say “shopping list” for checklist mode
+  </p>
 
     <button
-      onClick={startRecording}
-      className="p-3 bg-white/60 rounded-lg"
-    >
-      🎤
-    </button>
+  onClick={startRecording}
+  className="p-3 bg-white/60 rounded-lg"
+>
+  🎤
+</button>
+
+<button
+  type="button"
+  onClick={() =>
+    alert('Say "shopping list" to create checklist memories')
+  }
+  className="p-3 bg-white/60 rounded-lg text-gray-500"
+>
+  ⓘ
+</button>
   </div>
 {selectedTrack?.type === "video" && (
   <div className="bg-white p-3 rounded-xl shadow-sm mb-3 border">
