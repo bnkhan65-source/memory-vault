@@ -225,38 +225,27 @@ const startRecording = () => {
   const recognition = new SpeechRecognition();
 
   recognition.lang = "en-US";
-  recognition.continuous = false;
+  recognition.continuous = true;
   recognition.interimResults = false;
   recognition.maxAlternatives = 1;
 
-  recognition.onresult = async (event: any) => {
-    let transcript = "";
+  let transcript = "";
+
+  recognition.onresult = (event: any) => {
+    transcript = "";
 
     for (let i = 0; i < event.results.length; i++) {
       transcript += event.results[i][0].transcript + " ";
     }
 
     transcript = transcript.trim();
-
     console.log("VOICE:", transcript);
+  };
 
-    // Detect checklist voice mode
+  recognition.onend = async () => {
+    if (!transcript || !auth.currentUser) return;
+
     const lowerText = transcript.toLowerCase();
-    let cleanedTranscript = transcript
-  .replace(/shopping list/i, "")
-  .replace(/grocery list/i, "")
-  .replace(/checklist/i, "")
-  .replace(/todo/i, "")
-  .replace(/to do/i, "")
-  .replace(/done/i, "")
-  .replace(/finished/i, "")
-  .replace(/stop/i, "")
-  .trim();
-
-// Convert spoken list into comma-separated list
-cleanedTranscript = cleanedTranscript
-  .split(" ")
-  .join(", ");
 
     let type: Memory["type"] = "note";
 
@@ -270,19 +259,32 @@ cleanedTranscript = cleanedTranscript
       type = "list";
     }
 
-    if (auth.currentUser) {
-      await addDoc(
-        collection(db, "users", auth.currentUser.uid, "memories"),
-        {
-         text: cleanedTranscript,
-          type,
-          checked: [],
-          createdAt: serverTimestamp(),
-        }
-      );
+    let cleanedTranscript = transcript
+      .replace(/shopping list/i, "")
+      .replace(/grocery list/i, "")
+      .replace(/checklist/i, "")
+      .replace(/todo/i, "")
+      .replace(/to do/i, "")
+      .replace(/done/i, "")
+      .replace(/finished/i, "")
+      .replace(/stop/i, "")
+      .trim();
 
-      fetchMemories(auth.currentUser.uid);
-    }
+    cleanedTranscript = cleanedTranscript
+      .split(" ")
+      .join(", ");
+
+    await addDoc(
+      collection(db, "users", auth.currentUser.uid, "memories"),
+      {
+        text: cleanedTranscript,
+        type,
+        checked: [],
+        createdAt: serverTimestamp(),
+      }
+    );
+
+    fetchMemories(auth.currentUser.uid);
   };
 
   recognition.start();
