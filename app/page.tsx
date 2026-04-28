@@ -241,6 +241,13 @@ const startRecording = () => {
 
     // Detect checklist voice mode
     const lowerText = transcript.toLowerCase();
+    let cleanedTranscript = transcript
+  .replace(/shopping list/i, "")
+  .replace(/grocery list/i, "")
+  .replace(/checklist/i, "")
+  .replace(/todo/i, "")
+  .replace(/to do/i, "")
+  .trim();
 
     let type: Memory["type"] = "note";
 
@@ -258,7 +265,7 @@ const startRecording = () => {
       await addDoc(
         collection(db, "users", auth.currentUser.uid, "memories"),
         {
-          text: transcript,
+         text: cleanedTranscript,
           type,
           checked: [],
           createdAt: serverTimestamp(),
