@@ -152,7 +152,7 @@ return (
               e.stopPropagation();
               toggleCheck(index);
             }}
-            className="text-gray-500"
+            className="w-8 h-8 flex items-center justify-center text-lg text-gray-500 rounded-md active:bg-gray-100"
           >
             {checkedItems.includes(index) ? "☑" : "☐"}
           </button>
