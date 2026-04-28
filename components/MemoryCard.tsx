@@ -92,24 +92,20 @@ export default function MemoryCard({
         {/* TOP ROW → Primary + Secondary */}
         <div className="flex items-center gap-2 mb-3 flex-wrap">
           {/* PRIMARY → Category */}
-          <div>
-            {memory.category && (
-              <span className="text-xs px-3 py-1 bg-gray-800 text-white rounded-full font-medium">
-                {memory.category}
-              </span>
-            )}
-          </div>
+          {memory.category && (
+            <span className="text-xs px-3 py-1 bg-gray-800 text-white rounded-full font-medium">
+              {memory.category}
+            </span>
+          )}
 
           {/* SECONDARY → Type */}
-          <div>
-            {memory.type && (
-              <span
-                className={`text-xs px-3 py-1 rounded-full ${meta.color}`}
-              >
-                {meta.icon} {meta.label}
-              </span>
-            )}
-          </div>
+          {memory.type && (
+            <span
+              className={`text-xs px-3 py-1 rounded-full font-medium ${meta.color}`}
+            >
+              {meta.icon} {meta.label}
+            </span>
+          )}
         </div>
 
         {/* Main content */}
