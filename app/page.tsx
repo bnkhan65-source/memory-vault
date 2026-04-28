@@ -282,6 +282,14 @@ const startRecording = () => {
       .split(" ")
       .join(", ");
 
+      const tempMemory: Memory = {
+  id: Date.now().toString(),
+  text: cleanedTranscript,
+  type,
+  checked: [],
+};
+
+setMemories((prev) => [tempMemory, ...prev]);
     await addDoc(
       collection(db, "users", auth.currentUser.uid, "memories"),
       {
