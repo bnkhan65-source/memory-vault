@@ -389,7 +389,7 @@ const toggleCheck = async (
     saveMemory(value); // ✅ pass directly
     }
   }}
-  placeholder='Add memory…”'
+  placeholder='Add memory…'
   className="flex-1 min-w-0 bg-white/60 backdrop-blur-md border border-white/40 p-3 rounded-lg text-base text-gray-900 placeholder-gray-400 focus:outline-none"
   />
   
