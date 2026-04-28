@@ -1,299 +1,158 @@
 "use client";
 
-import { updateDoc, doc } from "firebase/firestore";
-import { db, auth } from "@/lib/firebase";
-import { MEMORY_TYPE_META } from "../lib/memoryTypes";
-import { useState, useRef, useEffect } from "react";
+import { useRef, useState } from "react";
+import { MEMORY_TYPE_META } from "@/lib/memoryTypes";
+
 type Memory = {
   id: string;
-  text: string;
+  text?: string;
   imageUrl?: string;
+  spotifyUrl?: string;
   category?: string;
-  tags?: string[];
-  spotifyUrl?: string | null;
-  type?: "vibe" | "snapshot" | "note" | "collection" | "moment" | "list";
-  checked?: number[];
+  type?: keyof typeof MEMORY_TYPE_META;
 };
-//COMPONENT
-export default function MemoryCard({
-  memory, onDelete,}: {
+
+type Props = {
   memory: Memory;
   onDelete: (id: string) => void;
-}) {
-  
-  const meta = MEMORY_TYPE_META[memory.type || "note"];
-  const [checkedItems, setCheckedItems] = useState<number[]>(
-  memory.checked || []
-  
-);
-const [isEditing, setIsEditing] = useState(false);
-const [editText, setEditText] = useState(memory.text);
-const cardRef = useRef<HTMLDivElement | null>(null);
-const [justSaved, setJustSaved] = useState(false);
-const [showSaved, setShowSaved] = useState(false);
-const [isPulsing, setIsPulsing] = useState(false);
-const [isPressed, setIsPressed] = useState(false);
-const handleSaveEdit = async () => {
-  if (!auth.currentUser) return;
-  if (!editText.trim()) return; // ✅ prevent empty
-  if (editText === memory.text) {
-    setIsEditing(false);
-    return;
-  }
-
-
-  await updateDoc(
-    doc(db, "users", auth.currentUser.uid, "memories", memory.id),
-    {
-      text: editText,
-    }
-  );
-  
-  setIsEditing(false);
-  setJustSaved(true);
-  setTimeout(() => {
-  setJustSaved(false);
-  }, 1200);
-  
-  // ✅ pulse trigger
-setIsPulsing(true);
-setTimeout(() => {
-  setIsPulsing(false);
-}, 200);
+  onUpdate?: (id: string, newText: string) => void;
 };
-useEffect(() => {
-  const handleClickOutside = (event: MouseEvent) => {
-    if (
-      cardRef.current &&
-      !cardRef.current.contains(event.target as Node)
-    ) {
-      if (isEditing) {
-        handleSaveEdit();
-      }
+
+export default function MemoryCard({
+  memory,
+  onDelete,
+  onUpdate,
+}: Props) {
+  const cardRef = useRef<HTMLDivElement>(null);
+
+  const [isEditing, setIsEditing] = useState(false);
+  const [editText, setEditText] = useState(memory.text || "");
+  const [justSaved, setJustSaved] = useState(false);
+  const [isPressed, setIsPressed] = useState(false);
+  const [isPulsing, setIsPulsing] = useState(false);
+
+  const meta =
+    MEMORY_TYPE_META[memory.type || "note"] ||
+    MEMORY_TYPE_META.note;
+
+  const handleSaveEdit = () => {
+    if (onUpdate) {
+      onUpdate(memory.id, editText);
     }
+
+    setIsEditing(false);
+    setJustSaved(true);
+
+    setTimeout(() => {
+      setJustSaved(false);
+    }, 1500);
   };
 
-  document.addEventListener("mousedown", handleClickOutside);
-
-  return () => {
-    document.removeEventListener("mousedown", handleClickOutside);
-  };
-}, [isEditing, handleSaveEdit]);
   return (
-    
-    
-    //MAIN WRAPPER//
+    <div
+      ref={cardRef}
+      onMouseDown={() => setIsPressed(true)}
+      onMouseUp={() => setIsPressed(false)}
+      onMouseLeave={() => setIsPressed(false)}
+      onTouchStart={() => setIsPressed(true)}
+      onTouchEnd={() => setIsPressed(false)}
+      onClick={() => {
+        if (memory.type === "list") return;
 
-<div
-  ref={cardRef}
-  onMouseDown={() => setIsPressed(true)}
-  onMouseUp={() => setIsPressed(false)}
-  onMouseLeave={() => setIsPressed(false)}
-  onTouchStart={() => setIsPressed(true)}
-  onTouchEnd={() => setIsPressed(false)}
-  onClick={(e) => {
-    if (memory.type === "list") return;
+        if (isEditing) {
+          handleSaveEdit();
+          return;
+        }
 
-    if (isEditing) {
-      handleSaveEdit();
-      return;
-    }
-
-    setIsEditing(true);
-  }}
-  className={`relative bg-white p-4 rounded-xl shadow-sm flex gap-3 items-center transition-all duration-150 ease-out cursor-pointer hover:shadow-lg hover:-translate-y-1 hover:bg-gray-50
-    ${isPulsing ? "scale-[1.03] shadow-lg" : ""}
-    ${isPressed ? "scale-[0.97]" : ""}
-  `}
->
-
-  {/* ✅ Category badge */}
-  
-<div className="flex justify-between items-start mb-2 w-full">
-
-  {/* PRIMARY: Category (LEFT) */}
-  <div>
-    {memory.category && (
-      <span className="text-xs px-3 py-1 bg-gray-800 text-white rounded-full font-medium">
-        {memory.category}
-      </span>
-    )}
-  </div>
-
-  {/* SECONDARY: Type (RIGHT) */}
-  <div>
-    {memory.type && (
-      <span className="text-xs px-3 py-1 bg-gray-100 text-gray-500 rounded-full">
-        {MEMORY_TYPE_META[memory.type]?.label}
-      </span>
-    )}
-  </div>
-
-</div>
- 
-    {/* Album Image */}
-    {memory.imageUrl && (
-      <img
-        src={memory.imageUrl}
-        onClick={(e) => {
-          e.stopPropagation();
-          if (memory.spotifyUrl) {
-            window.open(memory.spotifyUrl, "_blank");
-          }
-        }}
-        className="w-16 h-16 rounded object-cover"
-      />
-    )}
-
-    {/* Content */}
-    <div className="flex-1">
-     <div className="flex justify-between items-start mb-2 w-full">
-
-  {/* PRIMARY: Category (LEFT) */}
-  <div>
-    {memory.category && (
-      <span className="text-xs px-3 py-1 bg-gray-800 text-white rounded-full font-medium">
-        {memory.category}
-      </span>
-    )}
-  </div>
-
-  {/* SECONDARY: Type (RIGHT) */}
-  <div>
-    {memory.type && (
-      <span className={`text-xs px-3 py-1 rounded-full ${meta.color}`}>
-        {meta.icon} {meta.label}
-      </span>
-    )}
-  </div>
-
-</div>
-
-  {/* ✅ LIST vs NORMAL TEXT */}
-{memory.type === "list" ? (
-  <div className="space-y-1">
-
-    {memory.text.
-    split("\n")
-    .map(item => item.trim())
-    .filter(item => item.length > 0)
-    .map((item, i) => {
-      const isChecked = checkedItems.includes(i);
-
-      return (
-        <div
-          key={i}
-          onClick={async (e) => {
+        setIsEditing(true);
+      }}
+      className={`bg-white p-4 rounded-xl shadow-sm flex gap-3 items-start transition-all duration-150 ease-out cursor-pointer hover:shadow-lg hover:-translate-y-1 hover:bg-gray-50
+        ${isPulsing ? "scale-[1.03] shadow-lg" : ""}
+        ${isPressed ? "scale-[0.97]" : ""}
+      `}
+    >
+      {/* Left-side image */}
+      {memory.imageUrl && (
+        <img
+          src={memory.imageUrl}
+          alt="Memory"
+          onClick={(e) => {
             e.stopPropagation();
 
-            const newChecked = isChecked
-              ? checkedItems.filter((idx) => idx !== i)
-              : [...checkedItems, i];
-
-            setCheckedItems(newChecked);
-
-            if (auth.currentUser) {
-              await updateDoc(
-                doc(db, "users", auth.currentUser.uid, "memories", memory.id),
-                { checked: newChecked }
-              );
+            if (memory.spotifyUrl) {
+              window.open(memory.spotifyUrl, "_blank");
             }
           }}
-          className="flex items-center gap-2 text-sm cursor-pointer"
+          className="w-20 h-20 rounded-lg object-cover shrink-0"
+        />
+      )}
+
+      {/* Right-side content */}
+      <div className="flex-1 min-w-0">
+        {/* TOP ROW → Primary + Secondary */}
+        <div className="flex justify-between items-center mb-3">
+          {/* PRIMARY → Category */}
+          <div>
+            {memory.category && (
+              <span className="text-xs px-3 py-1 bg-gray-800 text-white rounded-full font-medium">
+                {memory.category}
+              </span>
+            )}
+          </div>
+
+          {/* SECONDARY → Type */}
+          <div>
+            {memory.type && (
+              <span
+                className={`text-xs px-3 py-1 rounded-full ${meta.color}`}
+              >
+                {meta.icon} {meta.label}
+              </span>
+            )}
+          </div>
+        </div>
+
+        {/* Main content */}
+        {isEditing ? (
+          <textarea
+            value={editText}
+            onChange={(e) => setEditText(e.target.value)}
+            onClick={(e) => e.stopPropagation()}
+            className="w-full border rounded-lg p-2 text-sm"
+            rows={3}
+            autoFocus
+          />
+        ) : (
+          <p className="text-sm font-medium text-gray-900 break-words">
+            {editText}
+          </p>
+        )}
+
+        {/* Saved indicator */}
+        {justSaved && (
+          <p className="text-[10px] text-green-500 mt-1">
+            Saved ✓
+          </p>
+        )}
+
+        {/* Spotify helper text */}
+        {memory.spotifyUrl && (
+          <p className="text-[10px] text-gray-400 mt-2">
+            Tap artwork to open
+          </p>
+        )}
+
+        {/* Delete */}
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onDelete(memory.id);
+          }}
+          className="text-red-500 text-xs mt-3"
         >
-          <input type="checkbox" checked={isChecked} readOnly />
-
-          <span
-            className={
-              isChecked
-                ? "line-through text-gray-400"
-                : "text-gray-900"
-            }
-          >
-           
-          </span>
-        </div>
-      );
-    })}
-  </div>
-) : isEditing ? (
-  <>
-    {(memory.type as any) === "list" ? (
-      <textarea
-        value={editText}
-        onChange={(e) => setEditText(e.target.value)}
-        onClick={(e) => e.stopPropagation()}
-        onBlur={() => handleSaveEdit()}
-        autoFocus
-        rows={4}
-        placeholder="Type item and press Enter..."
-        className="w-full text-sm border rounded p-2"
-      />
-    ) : (
-      <input
-        value={editText}
-        onChange={(e) => setEditText(e.target.value)}
-        onClick={(e) => e.stopPropagation()}
-        onBlur={() => handleSaveEdit()}
-        onKeyDown={(e) => {
-          if (e.key === "Enter") {
-            handleSaveEdit();
-          }
-        }}
-        autoFocus
-        className="w-full text-sm border rounded p-1"
-      />
-    )}
-  </>
-) : (
-  <>
-  <p className="text-sm font-medium text-gray-900">
-    {editText}
-  </p>
-
-  {justSaved && (
-  <p className="text-[10px] text-green-500 mt-1 opacity-100 transition-opacity duration-500">
-    Saved ✓
-  </p>
-  
-  )}
-  
-  </>
-)}
-
-      {/* Spotify hint */}
-      {memory.spotifyUrl && (
-        <p className="text-[10px] text-gray-400 mt-1">
-          Tap artwork to open
-        </p>
-      )}
-
-      {/* Tags */}
-      {memory.tags && memory.tags.length > 0 && (
-        <div className="flex gap-2 mt-1 flex-wrap">
-          {memory.tags.map((tag, i) => (
-            <span
-              key={i}
-              className="text-xs bg-purple-100 text-purple-600 px-2 py-1 rounded-full"
-            >
-              #{tag}
-            </span>
-          ))}
-        </div>
-      )}
-
-      {/* Delete */}
-      <button
-        onClick={(e) => {
-          e.stopPropagation();
-          onDelete(memory.id);
-        }}
-        className="text-red-500 text-xs mt-2"
-      >
-        Delete
-      </button>
+          Delete
+        </button>
+      </div>
     </div>
-    
-  </div>
-);
+  );
 }
