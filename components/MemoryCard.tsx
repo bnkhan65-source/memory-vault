@@ -137,12 +137,12 @@ return (
 
         {/* Main content */}
        {memory.type === "list" ? (
-        <div className="space-y-2">
-        {(memory.text || "")
-        .split(/\n|,/)
-        .map((item) => item.trim())
-        .filter(Boolean)
-        .map((item, index) => (
+  <div className="space-y-2">
+    {(memory.text || "")
+      .split(",")
+      .map((item) => item.trim())
+      .filter(Boolean)
+      .map((item, index) => (
         <div
           key={index}
           className="flex items-center gap-2 text-sm"
@@ -154,10 +154,18 @@ return (
             }}
             className="text-gray-500"
           >
-           {checkedItems.includes(index) ? "☑" : "☐"}
+            {checkedItems.includes(index) ? "☑" : "☐"}
           </button>
 
-          <span>{item}</span>
+          <span
+            className={
+              checkedItems.includes(index)
+                ? "line-through text-gray-400"
+                : ""
+            }
+          >
+            {item}
+          </span>
         </div>
       ))}
   </div>
