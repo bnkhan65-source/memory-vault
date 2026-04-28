@@ -249,7 +249,9 @@ const startRecording = () => {
     transcript = transcript.trim();
     console.log("VOICE:", transcript);
   };
-
+  recognition.onspeechend = () => {
+  recognition.stop();
+};
   recognition.onend = async () => {
     if (!transcript || !auth.currentUser) return;
 
