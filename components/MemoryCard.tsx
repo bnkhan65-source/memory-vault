@@ -108,25 +108,28 @@ useEffect(() => {
 >
 
   {/* ✅ Category badge */}
-  {memory.category && (
-    <div className="flex items-center gap-2 mb-2">
+  
+<div className="flex justify-between items-start mb-2 w-full">
 
-  {/* PRIMARY: Category */}
-  {memory.category && (
-    <span className="text-xs px-3 py-1 bg-gray-800 text-white rounded-full font-medium">
-      {memory.category}
-    </span>
-  )}
+  {/* PRIMARY: Category (LEFT) */}
+  <div>
+    {memory.category && (
+      <span className="text-xs px-3 py-1 bg-gray-800 text-white rounded-full font-medium">
+        {memory.category}
+      </span>
+    )}
+  </div>
 
-  {/* SECONDARY: Type */}
-  {memory.type && (
-    <span className="text-xs px-3 py-1 bg-gray-100 text-gray-500 rounded-full">
-      {MEMORY_TYPE_META[memory.type]?.label}
-    </span>
-  )}
+  {/* SECONDARY: Type (RIGHT) */}
+  <div>
+    {memory.type && (
+      <span className="text-xs px-3 py-1 bg-gray-100 text-gray-500 rounded-full">
+        {MEMORY_TYPE_META[memory.type]?.label}
+      </span>
+    )}
+  </div>
 
-</div>  )}
-
+</div>
  
     {/* Album Image */}
     {memory.imageUrl && (
@@ -144,9 +147,27 @@ useEffect(() => {
 
     {/* Content */}
     <div className="flex-1">
-      <div className={`text-xs px-2 py-1 rounded-full inline-block mb-2 ${meta.color}`}>
+     <div className="flex justify-between items-start mb-2 w-full">
+
+  {/* PRIMARY: Category (LEFT) */}
+  <div>
+    {memory.category && (
+      <span className="text-xs px-3 py-1 bg-gray-800 text-white rounded-full font-medium">
+        {memory.category}
+      </span>
+    )}
+  </div>
+
+  {/* SECONDARY: Type (RIGHT) */}
+  <div>
+    {memory.type && (
+      <span className={`text-xs px-3 py-1 rounded-full ${meta.color}`}>
         {meta.icon} {meta.label}
-      </div>
+      </span>
+    )}
+  </div>
+
+</div>
 
   {/* ✅ LIST vs NORMAL TEXT */}
 {memory.type === "list" ? (
