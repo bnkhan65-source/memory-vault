@@ -247,6 +247,9 @@ const startRecording = () => {
   .replace(/checklist/i, "")
   .replace(/todo/i, "")
   .replace(/to do/i, "")
+  .replace(/done/i, "")
+  .replace(/finished/i, "")
+  .replace(/stop/i, "")
   .trim();
 
 // Convert spoken list into comma-separated list
