@@ -392,9 +392,7 @@ const toggleCheck = async (
   placeholder='Add memory or say “shopping list…”'
   className="flex-1 min-w-0 bg-white/60 backdrop-blur-md border border-white/40 p-3 rounded-lg text-base text-gray-900 placeholder-gray-400 focus:outline-none"
   />
-  <p className="text-xs text-gray-500 mt-1">
-  Tip: Say “shopping list” for checklist mode
-  </p>
+  
 
     <button
   onClick={startRecording}
