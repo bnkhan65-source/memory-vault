@@ -229,7 +229,12 @@ const startRecording = () => {
   recognition.interimResults = false;
   recognition.maxAlternatives = 1;
   recognition.onerror = (event: any) => {
+    if (event.error === "service-not-allowed") {
+    alert("Voice notes work best in Safari on iPhone.");
+    return;
+  }
   alert(`Mic error: ${event.error}`);
+
 };
 
   let transcript = "";
