@@ -110,20 +110,22 @@ useEffect(() => {
   {/* ✅ Category badge */}
   {memory.category && (
     <div className="flex items-center gap-2 mb-2">
-       {/* 🔥 Category (PRIMARY) */}
+
+  {/* PRIMARY: Category */}
   {memory.category && (
-    <span className="text-xs px-2 py-1 bg-gray-800 text-white rounded-full">
+    <span className="text-xs px-3 py-1 bg-gray-800 text-white rounded-full font-medium">
       {memory.category}
     </span>
   )}
 
-  {/* 🧠 Type (SECONDARY) */}
-  <span className="text-xs px-2 py-1 bg-gray-100 text-gray-500 rounded-full">
-    {memory.type && MEMORY_TYPE_META[memory.type]?.label}
-  </span>
-
-    </div>
+  {/* SECONDARY: Type */}
+  {memory.type && (
+    <span className="text-xs px-3 py-1 bg-gray-100 text-gray-500 rounded-full">
+      {MEMORY_TYPE_META[memory.type]?.label}
+    </span>
   )}
+
+</div>  )}
 
  
     {/* Album Image */}
