@@ -90,7 +90,7 @@ export default function MemoryCard({
       {/* Right-side content */}
       <div className="flex-1 min-w-0">
         {/* TOP ROW → Primary + Secondary */}
-        <div className="flex justify-between items-center mb-3">
+        <div className="flex items-center gap-2 mb-3 flex-wrap">
           {/* PRIMARY → Category */}
           <div>
             {memory.category && (
