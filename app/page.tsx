@@ -222,22 +222,48 @@ const startRecording = () => {
   }
 
   const recognition = new SpeechRecognition();
+
   recognition.lang = "en-US";
+  recognition.continuous = true;
+  recognition.interimResults = false;
+  recognition.maxAlternatives = 1;
 
   recognition.onresult = async (event: any) => {
-    const transcript = event.results[0][0].transcript;
+    let transcript = "";
+
+    for (let i = 0; i < event.results.length; i++) {
+      transcript += event.results[i][0].transcript + " ";
+    }
+
+    transcript = transcript.trim();
 
     console.log("VOICE:", transcript);
 
-    // OPTIONAL: show it in input
-    //setMemory(transcript);
+    // Detect checklist voice mode
+    const lowerText = transcript.toLowerCase();
 
-    // AUTO SAVE (THIS IS THE KEY PART)
+    let type: Memory["type"] = "note";
+
+    if (
+      lowerText.includes("shopping list") ||
+      lowerText.includes("grocery list") ||
+      lowerText.includes("checklist") ||
+      lowerText.includes("todo") ||
+      lowerText.includes("to do")
+    ) {
+      type = "list";
+    }
+
     if (auth.currentUser) {
-      await addDoc(collection(db, "users", auth.currentUser.uid, "memories"), {
-        text: transcript,
-        createdAt: serverTimestamp(),
-      });
+      await addDoc(
+        collection(db, "users", auth.currentUser.uid, "memories"),
+        {
+          text: transcript,
+          type,
+          checked: [],
+          createdAt: serverTimestamp(),
+        }
+      );
 
       fetchMemories(auth.currentUser.uid);
     }
