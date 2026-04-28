@@ -109,20 +109,36 @@ export default function MemoryCard({
         </div>
 
         {/* Main content */}
-        {isEditing ? (
-          <textarea
-            value={editText}
-            onChange={(e) => setEditText(e.target.value)}
-            onClick={(e) => e.stopPropagation()}
-            className="w-full border rounded-lg p-2 text-sm"
-            rows={3}
-            autoFocus
-          />
-        ) : (
-          <p className="text-sm font-medium text-gray-900 break-words">
-            {editText}
-          </p>
-        )}
+        {memory.type === "list" ? (
+  <div className="space-y-2">
+    {editText
+      .split(/\n|,/)
+      .map((item) => item.trim())
+      .filter(Boolean)
+      .map((item, index) => (
+        <div
+          key={index}
+          className="flex items-center gap-2 text-sm"
+        >
+          <span className="text-gray-400">☐</span>
+          <span>{item}</span>
+        </div>
+      ))}
+  </div>
+) : isEditing ? (
+  <textarea
+    value={editText}
+    onChange={(e) => setEditText(e.target.value)}
+    onClick={(e) => e.stopPropagation()}
+    className="w-full border rounded-lg p-2 text-sm"
+    rows={3}
+    autoFocus
+  />
+) : (
+  <p className="text-sm font-medium text-gray-900 break-words">
+    {editText}
+  </p>
+)}
 
         {/* Saved indicator */}
         {justSaved && (
