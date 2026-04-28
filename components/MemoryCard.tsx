@@ -7,7 +7,7 @@ type Memory = {
   id: string;
   text?: string;
   imageUrl?: string;
-  spotifyUrl?: string;
+  spotifyUrl?: string | null;
   category?: string;
   type?: keyof typeof MEMORY_TYPE_META;
 };
