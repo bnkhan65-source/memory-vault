@@ -49,8 +49,16 @@ export default function MemoryCard({
   }, 1500);
 };
 
+const [checkedItems, setCheckedItems] = useState<number[]>(
+  memory.checked || []
+);
+
 const toggleCheck = (index: number) => {
-  console.log("Toggle item:", index);
+  setCheckedItems((prev) =>
+    prev.includes(index)
+      ? prev.filter((i) => i !== index)
+      : [...prev, index]
+  );
 };
 
 return (
@@ -132,7 +140,7 @@ return (
             }}
             className="text-gray-500"
           >
-            {memory.checked?.includes(index) ? "☑" : "☐"}
+           {checkedItems.includes(index) ? "☑" : "☐"}
           </button>
 
           <span>{item}</span>
