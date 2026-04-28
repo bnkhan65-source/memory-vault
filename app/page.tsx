@@ -249,6 +249,11 @@ const startRecording = () => {
   .replace(/to do/i, "")
   .trim();
 
+// Convert spoken list into comma-separated list
+cleanedTranscript = cleanedTranscript
+  .split(" ")
+  .join(", ");
+
     let type: Memory["type"] = "note";
 
     if (
