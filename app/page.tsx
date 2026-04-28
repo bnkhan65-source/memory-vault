@@ -12,6 +12,7 @@ import {
   serverTimestamp,
   deleteDoc,
   doc,
+  updateDoc,
 } from "firebase/firestore";
 import { useRouter } from "next/navigation";
 import BottomNav from "../components/BottomNav";
@@ -296,6 +297,32 @@ const deleteMemory = async (id: string) => {
 
   fetchMemories(auth.currentUser.uid);
 };
+const toggleCheck = async (
+  memoryId: string,
+  index: number,
+  currentChecked: number[] = []
+) => {
+  if (!auth.currentUser) return;
+
+  const updatedChecked = currentChecked.includes(index)
+    ? currentChecked.filter((i) => i !== index)
+    : [...currentChecked, index];
+
+  await updateDoc(
+    doc(
+      db,
+      "users",
+      auth.currentUser.uid,
+      "memories",
+      memoryId
+    ),
+    {
+      checked: updatedChecked,
+    }
+  );
+
+  fetchMemories(auth.currentUser.uid);
+};
           //CONTENT CARD 
  const filteredMemories = memories.filter((m) => {
  const textMatch = [
@@ -557,6 +584,7 @@ filteredMemories.map((m) => (
     key={m.id}
     memory={m}
     onDelete={deleteMemory}
+    onToggleCheck={toggleCheck}
   />
 ))
 )}

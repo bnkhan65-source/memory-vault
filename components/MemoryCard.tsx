@@ -17,12 +17,18 @@ type Props = {
   memory: Memory;
   onDelete: (id: string) => void;
   onUpdate?: (id: string, newText: string) => void;
+  onToggleCheck?: (
+    memoryId: string,
+    index: number,
+    currentChecked: number[]
+  ) => void;
 };
 
 export default function MemoryCard({
   memory,
   onDelete,
   onUpdate,
+  onToggleCheck,
 }: Props) {
   const cardRef = useRef<HTMLDivElement>(null);
 
@@ -54,11 +60,19 @@ const [checkedItems, setCheckedItems] = useState<number[]>(
 );
 
 const toggleCheck = (index: number) => {
-  setCheckedItems((prev) =>
-    prev.includes(index)
-      ? prev.filter((i) => i !== index)
-      : [...prev, index]
-  );
+  const updatedChecked = checkedItems.includes(index)
+    ? checkedItems.filter((i) => i !== index)
+    : [...checkedItems, index];
+
+  setCheckedItems(updatedChecked);
+
+  if (onToggleCheck) {
+    onToggleCheck(
+      memory.id,
+      index,
+      checkedItems
+    );
+  }
 };
 
 return (
