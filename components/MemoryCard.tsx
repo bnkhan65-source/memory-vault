@@ -10,6 +10,7 @@ type Memory = {
   spotifyUrl?: string | null;
   category?: string;
   type?: keyof typeof MEMORY_TYPE_META;
+  checked?: number[];
 };
 
 type Props = {
@@ -36,19 +37,23 @@ export default function MemoryCard({
     MEMORY_TYPE_META.note;
 
   const handleSaveEdit = () => {
-    if (onUpdate) {
-      onUpdate(memory.id, editText);
-    }
+  if (onUpdate) {
+    onUpdate(memory.id, editText);
+  }
 
-    setIsEditing(false);
-    setJustSaved(true);
+  setIsEditing(false);
+  setJustSaved(true);
 
-    setTimeout(() => {
-      setJustSaved(false);
-    }, 1500);
-  };
+  setTimeout(() => {
+    setJustSaved(false);
+  }, 1500);
+};
 
-  return (
+const toggleCheck = (index: number) => {
+  console.log("Toggle item:", index);
+};
+
+return (
     <div
       ref={cardRef}
       onMouseDown={() => setIsPressed(true)}
@@ -109,7 +114,7 @@ export default function MemoryCard({
         </div>
 
         {/* Main content */}
-        {memory.type === "list" ? (
+       {memory.type === "list" ? (
   <div className="space-y-2">
     {editText
       .split(/\n|,/)
@@ -120,7 +125,16 @@ export default function MemoryCard({
           key={index}
           className="flex items-center gap-2 text-sm"
         >
-          <span className="text-gray-400">☐</span>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              toggleCheck(index);
+            }}
+            className="text-gray-500"
+          >
+            {memory.checked?.includes(index) ? "☑" : "☐"}
+          </button>
+
           <span>{item}</span>
         </div>
       ))}
