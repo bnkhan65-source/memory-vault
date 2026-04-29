@@ -226,7 +226,7 @@ const startRecording = () => {
   const recognition = new SpeechRecognition();
 
   recognition.lang = "en-US";
-  recognition.continuous = false;
+  recognition.continuous = true;
   recognition.interimResults = false;
   recognition.maxAlternatives = 1;
   recognition.onerror = (event: any) => {
@@ -240,22 +240,15 @@ const startRecording = () => {
 
   let transcript = "";
 
-  recognition.onresult = (event: any) => {
-    transcript = "";
+ 
 
-    for (let i = 0; i < event.results.length; i++) {
-      transcript += event.results[i][0].transcript + " ";
-    }
+recognition.onresult = (event: any) => {
+  for (let i = event.resultIndex; i < event.results.length; i++) {
+    transcript += event.results[i][0].transcript + " ";
+  }
 
-    transcript = transcript.trim();
-    console.log("VOICE:", transcript);
-  };
-  recognition.onspeechend = () => {
-  recognition.stop();
-};
-recognition.onspeechend = () => {
-      recognition.stop();
-  
+  transcript = transcript.trim();
+  console.log("VOICE:", transcript);
 };
   recognition.onend = async () => {
     if (!transcript || !auth.currentUser) return;
