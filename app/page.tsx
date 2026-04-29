@@ -253,6 +253,11 @@ const startRecording = () => {
   recognition.onspeechend = () => {
   recognition.stop();
 };
+recognition.onspeechend = () => {
+  setTimeout(() => {
+    recognition.stop();
+  }, 1000);
+};
   recognition.onend = async () => {
     if (!transcript || !auth.currentUser) return;
 
