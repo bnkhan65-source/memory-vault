@@ -226,7 +226,7 @@ const startRecording = () => {
   const recognition = new SpeechRecognition();
 
   recognition.lang = "en-US";
-  recognition.continuous = true;
+  recognition.continuous = false;
   recognition.interimResults = false;
   recognition.maxAlternatives = 1;
   recognition.onerror = (event: any) => {
@@ -254,9 +254,8 @@ const startRecording = () => {
   recognition.stop();
 };
 recognition.onspeechend = () => {
-  setTimeout(() => {
-    recognition.stop();
-  }, 1000);
+      recognition.stop();
+  
 };
   recognition.onend = async () => {
     if (!transcript || !auth.currentUser) return;
