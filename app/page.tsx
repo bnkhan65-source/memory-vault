@@ -250,59 +250,62 @@ recognition.onresult = (event: any) => {
   transcript = transcript.trim();
   console.log("VOICE:", transcript);
 };
-  recognition.onend = async () => {
-    if (!transcript || !auth.currentUser) return;
+ recognition.onend = async () => {
+  if (!transcript || !auth.currentUser) return;
 
-    const lowerText = transcript.toLowerCase();
+  const lowerText = transcript.toLowerCase();
 
-    let type: Memory["type"] = "note";
+  let type: Memory["type"] = "note";
 
-    if (
-      lowerText.includes("shopping list") ||
-      lowerText.includes("grocery list") ||
-      lowerText.includes("checklist") ||
-      lowerText.includes("todo") ||
-      lowerText.includes("to do")
-    ) {
-      type = "list";
-    }
+  if (
+    lowerText.includes("shopping list") ||
+    lowerText.includes("grocery list") ||
+    lowerText.includes("checklist") ||
+    lowerText.includes("todo") ||
+    lowerText.includes("to do")
+  ) {
+    type = "list";
+  }
 
-    let cleanedTranscript = transcript
-      .replace(/shopping list/i, "")
-      .replace(/grocery list/i, "")
-      .replace(/checklist/i, "")
-      .replace(/todo/i, "")
-      .replace(/to do/i, "")
-      .replace(/done/i, "")
-      .replace(/finished/i, "")
-      .replace(/stop/i, "")
-      .trim();
+  let cleanedTranscript = transcript
+    .replace(/shopping list/i, "")
+    .replace(/grocery list/i, "")
+    .replace(/checklist/i, "")
+    .replace(/todo/i, "")
+    .replace(/to do/i, "")
+    .replace(/done/i, "")
+    .replace(/finished/i, "")
+    .replace(/stop/i, "")
+    .trim();
 
-    cleanedTranscript = cleanedTranscript
-      .split(" ")
-      .join(", ");
+  cleanedTranscript = cleanedTranscript
+    .split(" ")
+    .join(", ");
 
-      const tempMemory: Memory = {
-  id: Date.now().toString(),
-  text: cleanedTranscript,
-  type,
-  checked: [],
-};
-
-setMemories((prev) => [tempMemory, ...prev]);
-    await addDoc(
-      collection(db, "users", auth.currentUser.uid, "memories"),
-      {
-        text: cleanedTranscript,
-        type,
-        checked: [],
-        createdAt: serverTimestamp(),
-      }
-    );
-
-    fetchMemories(auth.currentUser.uid);
+  const tempMemory: Memory = {
+    id: Date.now().toString(),
+    text: cleanedTranscript,
+    type,
+    checked: [],
   };
 
+  // Instant UI update
+  setMemories((prev) => [tempMemory, ...prev]);
+
+  // Save to Firebase in background
+  await addDoc(
+    collection(db, "users", auth.currentUser.uid, "memories"),
+    {
+      text: cleanedTranscript,
+      type,
+      checked: [],
+      createdAt: serverTimestamp(),
+    }
+  );
+};
+
+    
+  
   recognition.start();
 };
 
