@@ -1,42 +1,58 @@
+// app/api/generate-tags/route.ts
+// Receives memory text and returns 2-4 short AI-generated tags.
+
+import OpenAI from "openai";
 import { NextResponse } from "next/server";
 
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
+
 export async function POST(req: Request) {
-  const { text } = await req.json();
+  try {
+    const { text } = await req.json();
 
-  if (!text) {
-    return NextResponse.json({ tags: [] });
-  }
+    if (!text || typeof text !== "string" || !text.trim()) {
+      return NextResponse.json({ tags: [] });
+    }
 
-  const response = await fetch("https://api.openai.com/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
-    },
-    body: JSON.stringify({
-      model: "gpt-4.1-mini",
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      max_tokens: 60,
       messages: [
         {
           role: "system",
           content:
-            "Generate 3-5 short, single-word tags for this memory. Return ONLY a comma-separated list.",
+            "You generate short tags for personal memory notes. " +
+            "Return ONLY a JSON array of 2 to 4 lowercase single-word or hyphenated tags. " +
+            "No explanation, no markdown, no extra text. Example: [\"food\",\"family\",\"weekend\"]",
         },
         {
           role: "user",
-          content: text,
+          content: text.slice(0, 500), // cap input to keep cost low
         },
       ],
-    }),
-  });
+    });
 
-  const data = await response.json();
+    const raw = response.choices[0]?.message?.content?.trim() ?? "[]";
 
-  const raw = data.choices?.[0]?.message?.content || "";
+    let tags: string[] = [];
+    try {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) {
+        tags = parsed
+          .filter((t) => typeof t === "string")
+          .map((t) => t.toLowerCase().trim())
+          .slice(0, 4);
+      }
+    } catch {
+      console.error("TAG PARSE ERROR — raw response:", raw);
+    }
 
-  const tags = raw
-    .split(",")
-    .map((t: string) => t.trim().toLowerCase())
-    .filter(Boolean);
-
-  return NextResponse.json({ tags });
+    return NextResponse.json({ tags });
+  } catch (error) {
+    console.error("GENERATE TAGS ERROR:", error);
+    // Return empty tags rather than erroring — tags are non-critical
+    return NextResponse.json({ tags: [] });
+  }
 }

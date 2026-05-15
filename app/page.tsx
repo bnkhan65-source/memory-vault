@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { auth, db } from "@/lib/firebase";
 import { onAuthStateChanged, User } from "firebase/auth";
 import {
@@ -13,20 +13,58 @@ import {
   deleteDoc,
   doc,
   updateDoc,
+  getDoc,
+  setDoc,
 } from "firebase/firestore";
 import { useRouter } from "next/navigation";
 import BottomNav from "../components/BottomNav";
 import MemoryCard from "@/components/MemoryCard";
+
+// ── Types ─────────────────────────────────────────────────────────────────────
+
+type SelectedItem = {
+  kind: "movie" | "music" | "video";
+  title: string;
+  image?: string | null;
+  year?: string;
+  artist?: string;
+  url?: string;
+  videoId?: string;
+  movieId?: number;
+};
+
 type Memory = {
   id: string;
-  text: string;
-  imageUrl?: string;
-  category?: string;
-  tags?: string[];
+  text?: string | null;
+  imageUrl?: string | null;
+  videoUrl?: string | null;
+  category?: string | null;
+  tags?: string[] | null;
   spotifyUrl?: string | null;
-  type?: "vibe" | "snapshot" | "note" | "collection" | "moment" | "list";
+  type?: "vibe" | "snapshot" | "note" | "collection" | "moment" | "list" | "playlist";
+  playlistType?: "music" | "movie" | "video" | "mixed";
   checked?: number[];
+  items?: SelectedItem[];
 };
+
+type Track = {
+  title?: string;
+  artist?: string;
+  image?: string;
+  url?: string;
+  type?: "video";
+  videoId?: string;
+  thumbnail?: string;
+};
+
+type Movie = {
+  id: number;
+  title: string;
+  year: string;
+  poster: string | null;
+};
+
+// ── Component ─────────────────────────────────────────────────────────────────
 
 export default function Home() {
   const [user, setUser] = useState<User | null>(null);
@@ -35,587 +73,1040 @@ export default function Home() {
   const [memory, setMemory] = useState("");
   const [memories, setMemories] = useState<Memory[]>([]);
   const [search, setSearch] = useState("");
-  const [tags, setTags] = useState("");
   const [activeTag, setActiveTag] = useState<string | null>(null);
-  const [spotifyResults, setSpotifyResults] = useState<any[]>([]);
-  const [selectedTrack, setSelectedTrack] = useState<any | null>(null);
+  const [spotifyResults, setSpotifyResults] = useState<Track[]>([]);
+  const [selectedTrack, setSelectedTrack] = useState<Track | null>(null);
   const [isSaving, setIsSaving] = useState(false);
-  const [videoResults, setVideoResults] = useState<any[]>([]);
-  
+  const [videoResults, setVideoResults] = useState<Track[]>([]);
+  const [movieResults, setMovieResults] = useState<Movie[]>([]);
+  const [selectedItems, setSelectedItems] = useState<SelectedItem[]>([]);
+  const [showPlaylistModal, setShowPlaylistModal] = useState(false);
+  const [isListening, setIsListening] = useState(false);
+  const [isDetecting, setIsDetecting] = useState(false);
+  const [voiceQuery, setVoiceQuery] = useState("");
+  const [mediaRecorderInstance, setMediaRecorderInstance] =
+    useState<MediaRecorder | null>(null);
+  const [userPlan, setUserPlan] = useState<"free" | "premium">("free");
+  const [trialDaysLeft, setTrialDaysLeft] = useState<number | null>(null);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+  const [feedbackText, setFeedbackText] = useState("");
+  const [feedbackSent, setFeedbackSent] = useState(false);
+  const memoryInputRef = useRef<HTMLInputElement>(null);
+
   const router = useRouter();
 
- useEffect(() => {
-  let timeout = setTimeout(() => {
-    console.warn("Auth timeout fallback");
-    setLoading(false);
-  }, 4000); // safety fallback
+  // ── Auth ────────────────────────────────────────────────────────────────────
 
-  const unsubscribe = onAuthStateChanged(auth, async (u) => {
-    try {
-      if (!u) {
-        router.push("/login");
-      } else {
-        setUser(u);
-        await fetchMemories(u.uid);
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      console.warn("Auth timeout fallback");
+      setLoading(false);
+    }, 4000);
+
+    const unsubscribe = onAuthStateChanged(auth, async (u) => {
+      try {
+        if (!u) {
+          router.push("/login");
+        } else {
+          setUser(u);
+          await Promise.all([fetchMemories(u.uid), loadUserProfile(u.uid)]);
+        }
+      } catch (err) {
+        console.error("AUTH ERROR:", err);
+        setError("Something went wrong loading your account.");
+      } finally {
+        clearTimeout(timeout);
+        setLoading(false);
       }
-    } catch (err) {
-      console.error("AUTH ERROR:", err);
-      setError("Something went wrong");
-    } finally {
+    });
+
+    return () => {
       clearTimeout(timeout);
-      setLoading(false); // ✅ GUARANTEED
+      unsubscribe();
+    };
+  }, [router]);
+
+  // ── User profile (plan + trial) ─────────────────────────────────────────────
+
+  const loadUserProfile = async (uid: string) => {
+    const profileRef = doc(db, "users", uid);
+    const snap = await getDoc(profileRef);
+
+    const now = new Date();
+
+    if (!snap.exists()) {
+      // First sign-in — create profile and start trial
+      await setDoc(profileRef, {
+        plan: "free",
+        trialStartDate: now.toISOString(),
+      });
+      setUserPlan("free");
+      setTrialDaysLeft(7);
+    } else {
+      const data = snap.data();
+      const plan = data.plan || "free";
+      setUserPlan(plan);
+
+      if (plan === "premium") {
+        setTrialDaysLeft(null);
+      } else {
+        const trialStart = data.trialStartDate ? new Date(data.trialStartDate) : now;
+        const daysPassed = Math.floor((now.getTime() - trialStart.getTime()) / (1000 * 60 * 60 * 24));
+        const daysLeft = Math.max(0, 7 - daysPassed);
+        setTrialDaysLeft(daysLeft);
+      }
     }
-  });
-
-  return () => {
-    clearTimeout(timeout);
-    unsubscribe();
   };
-}, [router]);
 
+  // ── Fetch memories ──────────────────────────────────────────────────────────
 
-  //GET MEMORY//
   const fetchMemories = async (uid: string) => {
-  try {
-    const q = query(
-      collection(db, "users", uid, "memories"),
-      orderBy("createdAt", "desc")
+    try {
+      const q = query(
+        collection(db, "users", uid, "memories"),
+        orderBy("createdAt", "desc")
+      );
+      const snapshot = await getDocs(q);
+      const data: Memory[] = snapshot.docs.map((d) => ({
+        id: d.id,
+        ...(d.data() as Omit<Memory, "id">),
+      }));
+      setMemories(data);
+    } catch (err) {
+      console.error("FETCH MEMORIES ERROR:", err);
+      setError("Failed to load memories.");
+    }
+  };
+
+  // ── Detect memory type ──────────────────────────────────────────────────────
+
+  const detectType = (text: string, track: Track | null): Memory["type"] => {
+    const lower = text.toLowerCase();
+    let type: Memory["type"] = "note";
+
+    if (
+      text.includes("\n") ||
+      text.split(",").length > 1 ||
+      lower.includes("shopping list") ||
+      lower.includes("grocery list") ||
+      lower.includes("checklist") ||
+      lower.includes("todo") ||
+      lower.includes("to do")
+    ) {
+      type = "list";
+    }
+
+    if (track?.image && !track?.url) {
+      type = "snapshot";
+    }
+
+    if (track?.url) {
+      type = "vibe";
+    }
+
+    return type;
+  };
+
+  // ── Save memory ─────────────────────────────────────────────────────────────
+
+  const saveMemory = async (inputValue?: string) => {
+    const textToSave = inputValue ?? memory;
+    if (isSaving) return;
+    if (!textToSave.trim() || !user) return;
+
+    setIsSaving(true);
+    setMemory("");
+
+    let aiTags: string[] = [];
+
+    try {
+      const res = await fetch("/api/generate-tags", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: textToSave }),
+      });
+      const data = await res.json();
+      aiTags = data.tags || [];
+    } catch (err) {
+      console.error("Tag generation error:", err);
+    }
+
+    const combinedTags = [...new Set([...aiTags])];
+    const type = detectType(textToSave, selectedTrack);
+
+    try {
+      const newDoc = await addDoc(
+        collection(db, "users", user.uid, "memories"),
+        {
+          text: textToSave,
+          tags: combinedTags,
+          spotifyUrl: selectedTrack?.url || null,
+          imageUrl: selectedTrack?.image || null,
+          videoUrl:
+            selectedTrack?.type === "video"
+              ? `https://www.youtube.com/watch?v=${selectedTrack.videoId}`
+              : null,
+          type,
+          checked: [],
+          createdAt: serverTimestamp(),
+        }
+      );
+
+      const newMemory: Memory = {
+        id: newDoc.id,
+        text: textToSave,
+        tags: combinedTags,
+        spotifyUrl: selectedTrack?.url || null,
+        imageUrl: selectedTrack?.image || null,
+        videoUrl:
+          selectedTrack?.type === "video"
+            ? `https://www.youtube.com/watch?v=${selectedTrack.videoId}`
+            : null,
+        type,
+        checked: [],
+      };
+
+      setMemories((prev) => [newMemory, ...prev]);
+      setSelectedTrack(null);
+    } catch (err) {
+      console.error("SAVE ERROR:", err);
+      setError("Failed to save memory. Please try again.");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // ── Search music ────────────────────────────────────────────────────────────
+
+  const searchSpotify = async (q?: string) => {
+    const term = String(q || voiceQuery || memory || "");
+    if (!term.trim()) return;
+    try {
+      const res = await fetch("/api/music-search", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query: term }),
+      });
+      const data = await res.json();
+      setSpotifyResults(data.tracks || []);
+    } catch (err) {
+      console.error("Music search error:", err);
+    }
+  };
+
+  // ── Search videos ───────────────────────────────────────────────────────────
+
+  const searchVideos = async (q?: string) => {
+    const term = String(q || voiceQuery || memory || "");
+    if (!term.trim()) return;
+    try {
+      const res = await fetch("/api/video-search", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query: term }),
+      });
+      const data = await res.json();
+      setVideoResults(data.videos || []);
+    } catch (err) {
+      console.error("Video search error:", err);
+    }
+  };
+
+  // ── Search movies ───────────────────────────────────────────────────────────
+
+  const searchMovies = async (q?: string) => {
+    const term = String(q ?? voiceQuery ?? memory ?? "");
+    if (!term.trim()) return;
+    try {
+      const res = await fetch("/api/movie-search", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query: term }),
+      });
+      const data = await res.json();
+      setMovieResults(data.movies || []);
+    } catch (err) {
+      console.error("[searchMovies] fetch error:", err);
+    }
+  };
+
+  // ── Multi-select helpers ────────────────────────────────────────────────────
+
+  const addToSelection = (item: SelectedItem) => {
+    setSelectedItems((prev) => {
+      if (prev.length >= 10) return prev;
+      if (prev.some((s) => s.title === item.title && s.kind === item.kind && s.artist === item.artist && s.year === item.year)) return prev;
+      return [...prev, item];
+    });
+  };
+
+  const removeFromSelection = (index: number) => {
+    setSelectedItems((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const clearSearchState = () => {
+    setMemory("");
+    setVoiceQuery("");
+    setSpotifyResults([]);
+    setVideoResults([]);
+    setMovieResults([]);
+    setSelectedItems([]);
+  };
+
+  const getPlaylistType = (): "music" | "movie" | "video" | "mixed" => {
+    const kinds = [...new Set(selectedItems.map((i) => i.kind))];
+    if (kinds.length === 1) return kinds[0] as "music" | "movie" | "video";
+    return "mixed";
+  };
+
+  const saveAsPlaylist = async () => {
+    if (!user || selectedItems.length === 0) return;
+    const playlistType = getPlaylistType();
+    const label = playlistType === "music" ? "🎵" : playlistType === "movie" ? "🎬" : playlistType === "video" ? "🎥" : "🎶";
+    try {
+      const newDoc = await addDoc(collection(db, "users", user.uid, "memories"), {
+        text: `${label} Playlist (${selectedItems.length} items)`,
+        type: "playlist",
+        playlistType,
+        items: selectedItems,
+        checked: [],
+        createdAt: serverTimestamp(),
+      });
+      setMemories((prev) => [
+        { id: newDoc.id, text: `${label} Playlist (${selectedItems.length} items)`, type: "playlist", playlistType, items: selectedItems, checked: [] },
+        ...prev,
+      ]);
+      clearSearchState();
+    } catch (err) {
+      console.error("SAVE PLAYLIST ERROR:", err);
+      setError("Failed to save playlist.");
+    }
+  };
+
+  const addToExistingPlaylist = async (playlistId: string) => {
+    if (!user || selectedItems.length === 0) return;
+    const playlist = memories.find((m) => m.id === playlistId);
+    if (!playlist) return;
+    const newItems = [...(playlist.items || []), ...selectedItems];
+    const newText = playlist.text?.replace(/\(\d+ items?\)/, `(${newItems.length} items)`) ?? `Playlist (${newItems.length} items)`;
+    try {
+      await updateDoc(doc(db, "users", user.uid, "memories", playlistId), {
+        items: newItems,
+        text: newText,
+      });
+      setMemories((prev) =>
+        prev.map((m) => m.id === playlistId ? { ...m, items: newItems, text: newText } : m)
+      );
+      clearSearchState();
+    } catch (err) {
+      console.error("ADD TO PLAYLIST ERROR:", err);
+      setError("Failed to update playlist.");
+    }
+  };
+
+  const saveSeparately = async () => {
+    if (!user || selectedItems.length === 0) return;
+    const newMemories: Memory[] = [];
+    for (const item of selectedItems) {
+      try {
+        const text = item.kind === "music"
+          ? `${item.title}${item.artist ? ` — ${item.artist}` : ""}`
+          : `${item.title}${item.year ? ` (${item.year})` : ""}`;
+        const type = item.kind === "video" ? "vibe" : item.url ? "vibe" : "snapshot";
+        const videoUrl = item.kind === "video" && item.videoId ? `https://www.youtube.com/watch?v=${item.videoId}` : null;
+        const newDoc = await addDoc(collection(db, "users", user.uid, "memories"), {
+          text, type, imageUrl: item.image || null, spotifyUrl: item.url || null, videoUrl, checked: [], createdAt: serverTimestamp(),
+        });
+        newMemories.push({ id: newDoc.id, text, type, imageUrl: item.image || null, spotifyUrl: item.url || null, videoUrl, checked: [] });
+      } catch (err) {
+        console.error("SAVE SEPARATE ERROR:", err);
+      }
+    }
+    setMemories((prev) => [...newMemories, ...prev]);
+    clearSearchState();
+  };
+
+  // ── Voice recording (Whisper) ───────────────────────────────────────────────
+
+  const micAllowed = userPlan === "premium" || (trialDaysLeft !== null && trialDaysLeft > 0);
+
+  const startRecording = async () => {
+    if (!micAllowed) {
+      setShowUpgradeModal(true);
+      return;
+    }
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream);
+      const audioChunks: Blob[] = [];
+
+      setIsListening(true);
+
+      mediaRecorder.ondataavailable = (event) => {
+        audioChunks.push(event.data);
+      };
+
+      mediaRecorder.onstop = async () => {
+        setIsListening(false);
+
+        const audioBlob = new Blob(audioChunks, { type: "audio/webm" });
+        const formData = new FormData();
+        formData.append("file", audioBlob, "recording.webm");
+
+        try {
+          // Step 1: Transcribe audio (send Firebase token to verify identity)
+          const idToken = await user?.getIdToken();
+          const res = await fetch("/api/transcribe", {
+            method: "POST",
+            headers: idToken ? { Authorization: `Bearer ${idToken}` } : {},
+            body: formData,
+          });
+          const data = await res.json();
+          if (!data.text) return;
+
+          const spokenText = data.text.trim();
+
+          // Step 2: Detect intent + get clean query
+          setIsDetecting(true);
+          let query = spokenText;
+          let intent: "music" | "movie" | "video" | "all" = "all";
+
+          try {
+            const intentRes = await fetch("/api/detect-intent", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ text: spokenText }),
+            });
+            const intentData = await intentRes.json();
+            query = intentData.query || spokenText;
+            intent = intentData.intent || "all";
+          } catch {
+            console.warn("Intent detection failed, defaulting to 'all'");
+          }
+
+          // Step 3: Show detected query as a label (not in the input — avoids iOS keyboard)
+          setVoiceQuery(query);
+          setIsDetecting(false);
+
+          // Step 4: Auto-search the right category
+          if (intent === "music") {
+            await searchSpotify(query);
+          } else if (intent === "movie") {
+            await searchMovies(query);
+          } else if (intent === "video") {
+            await searchVideos(query);
+          } else {
+            // "all" — search everything in parallel
+            await Promise.all([
+              searchSpotify(query),
+              searchMovies(query),
+              searchVideos(query),
+            ]);
+          }
+        } catch (err) {
+          console.error("VOICE SEARCH ERROR:", err);
+          setIsDetecting(false);
+          setError("Voice search failed. Please try again.");
+        }
+      };
+
+      mediaRecorder.start();
+
+      // Auto-stop after 4 seconds so recording doesn't hang
+      setTimeout(() => {
+        if (mediaRecorder.state === "recording") {
+          mediaRecorder.stop();
+        }
+      }, 4000);
+
+      setMediaRecorderInstance(mediaRecorder);
+    } catch (err) {
+      console.error("MIC ERROR:", err);
+      alert("Microphone access failed. Please check your browser permissions.");
+    }
+  };
+
+  // ── Delete memory ───────────────────────────────────────────────────────────
+
+  const deleteMemory = async (id: string) => {
+    if (!auth.currentUser) return;
+    try {
+      await deleteDoc(
+        doc(db, "users", auth.currentUser.uid, "memories", id)
+      );
+      setMemories((prev) => prev.filter((m) => m.id !== id));
+    } catch (err) {
+      console.error("DELETE ERROR:", err);
+      setError("Failed to delete memory.");
+    }
+  };
+
+  // ── Toggle checklist item ───────────────────────────────────────────────────
+
+  const toggleCheck = async (
+    memoryId: string,
+    index: number,
+    currentChecked: number[] = []
+  ) => {
+    if (!auth.currentUser) return;
+
+    const updatedChecked = currentChecked.includes(index)
+      ? currentChecked.filter((i) => i !== index)
+      : [...currentChecked, index];
+
+    await updateDoc(
+      doc(db, "users", auth.currentUser.uid, "memories", memoryId),
+      { checked: updatedChecked }
     );
 
-    const snapshot = await getDocs(q);
-
-    const data: Memory[] = snapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...(doc.data() as Omit<Memory, "id">),
-    }));
-
-    setMemories(data);
-  } catch (err) {
-    console.error("FETCH MEMORIES ERROR:", err);
-    setError("Failed to load memories");
-  }
-};
-
-
-   // SAVE MEMORY//
-  const saveMemory = async (inputValue?: string) => {
-  const textToSave = inputValue ?? memory; 
-  if (isSaving) return;
-  if (!textToSave.trim() || !user) return;
-
-  setIsSaving(true);
-
-  
-  setMemory(""); // clear input immediately
-  
-  // DO NOT use `memory` below this point
-
-  let aiTags: string[] = [];
-
-  try {
-    const res = await fetch("/api/generate-tags", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ text: textToSave }),
-    });
-
-    const data = await res.json();
-    aiTags = data.tags || [];
-  } catch (err) {
-    console.error("Tag error:", err);
-  }
-
-  const manualTags = tags
-    .split(",")
-    .map((t) => t.trim())
-    .filter(Boolean);
-
-  const combinedTags = [...new Set([...manualTags, ...aiTags])];
-
-  let type: Memory["type"] = "note";
-
-// ✅ Detect comma-separated lists
-const lowerText = textToSave.toLowerCase();
-
-if (
-  textToSave.includes("\n") ||
-  textToSave.split(",").length > 1 ||
-  lowerText.includes("shopping list") ||
-  lowerText.includes("grocery list") ||
-  lowerText.includes("checklist") ||
-  lowerText.includes("todo") ||
-  lowerText.includes("to do")
-) {
-  type = "list";
-}
-
-// ✅ Music overrides everything
-if (selectedTrack) {
-  type = "vibe";
-}
-  else if (selectedTrack?.image) type = "snapshot";
-
-  await addDoc(collection(db, "users", user.uid, "memories"), {
-    text: textToSave, // ✅ use stored value
-    tags: combinedTags,
-    spotifyUrl: selectedTrack?.url || null,
-    imageUrl: selectedTrack?.image || null,
-    videoUrl:
-    selectedTrack?.type === "video"
-      ? `https://www.youtube.com/watch?v=${selectedTrack.videoId}`
-      : null,
-
-    type,
-    checked: [], // 
-    createdAt: serverTimestamp(),
-  });
-  setMemory("");
-  setTags("");
-  setSelectedTrack(null);
-  setIsSaving(false);
-
-  fetchMemories(user.uid);
-};
- 
-  
-const searchSpotify = async () => {
-  if (!memory.trim()) return;
-
-  try {
-    const res = await fetch("/api/music-search", {
-      method: "POST",
-      headers: {
-    "Content-Type": "application/json",
-  },
-      body: JSON.stringify({ query: memory }),
-    });
-
-    const data = await res.json();
-    setSpotifyResults(data.tracks || []);
-  } catch (err) {
-    console.error("Spotify error:", err);
-  }
-};
-const searchVideos = async () => {
-  if (!memory.trim()) return;
-
-  const res = await fetch("/api/video-search", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ query: memory }),
-  });
-
-  const data = await res.json();
-  setVideoResults(data.videos || []);
-};
-const [isListening, setIsListening] = useState(false);
-const startRecording = () => {
-  const SpeechRecognition =
-    (window as any).SpeechRecognition ||
-    (window as any).webkitSpeechRecognition;
-
-  if (!SpeechRecognition) {
-    alert("Voice not supported");
-    return;
-  }
-
-  const recognition = new SpeechRecognition();
-
-  recognition.lang = "en-US";
-  recognition.continuous = true;
-  recognition.interimResults = false;
-  recognition.maxAlternatives = 1;
-  recognition.onerror = (event: any) => {
-    if (event.error === "service-not-allowed") {
-    alert("Voice notes work best in Safari on iPhone.");
-    return;
-  }
-  alert(`Mic error: ${event.error}`);
-
-};
-
-  let transcript = "";
-
- 
-
-recognition.onresult = (event: any) => {
-  for (let i = event.resultIndex; i < event.results.length; i++) {
-    transcript += event.results[i][0].transcript + " ";
-  }
-
-  transcript = transcript.trim();
-  console.log("VOICE:", transcript);
-};
- recognition.onend = async () => {
-  if (!transcript || !auth.currentUser) return;
-
-  const lowerText = transcript.toLowerCase();
-
-  let type: Memory["type"] = "note";
-
-  if (
-    lowerText.includes("shopping list") ||
-    lowerText.includes("grocery list") ||
-    lowerText.includes("checklist") ||
-    lowerText.includes("todo") ||
-    lowerText.includes("to do")
-  ) {
-    type = "list";
-  }
-
-  let cleanedTranscript = transcript
-    .replace(/shopping list/i, "")
-    .replace(/grocery list/i, "")
-    .replace(/checklist/i, "")
-    .replace(/todo/i, "")
-    .replace(/to do/i, "")
-    .replace(/done/i, "")
-    .replace(/finished/i, "")
-    .replace(/stop/i, "")
-    .trim();
-
-  cleanedTranscript = cleanedTranscript
-    .split(" ")
-    .join(", ");
-
-  const tempMemory: Memory = {
-    id: Date.now().toString(),
-    text: cleanedTranscript,
-    type,
-    checked: [],
+    setMemories((prev) =>
+      prev.map((m) =>
+        m.id === memoryId ? { ...m, checked: updatedChecked } : m
+      )
+    );
   };
 
-  // Instant UI update
-  setMemories((prev) => [tempMemory, ...prev]);
+  // ── Filtered memories ───────────────────────────────────────────────────────
 
-  // Save to Firebase in background
-  await addDoc(
-    collection(db, "users", auth.currentUser.uid, "memories"),
-    {
-      text: cleanedTranscript,
-      type,
-      checked: [],
-      createdAt: serverTimestamp(),
-    }
-  );
-};
+  const filteredMemories = memories.filter((m) => {
+    const textMatch = [m.text || "", ...(m.tags || [])]
+      .join(" ")
+      .toLowerCase()
+      .includes(search.toLowerCase());
 
-    
-  
-  recognition.start();
-};
+    const tagMatch = activeTag ? m.tags?.includes(activeTag) : true;
 
-const deleteMemory = async (id: string) => {
-  if (!auth.currentUser) return;
+    return textMatch && tagMatch;
+  });
 
-  await deleteDoc(
-    doc(db, "users", auth.currentUser.uid, "memories", id)
-  );
-
-  fetchMemories(auth.currentUser.uid);
-};
-const toggleCheck = async (
-  memoryId: string,
-  index: number,
-  currentChecked: number[] = []
-) => {
-  if (!auth.currentUser) return;
-
-  const updatedChecked = currentChecked.includes(index)
-    ? currentChecked.filter((i) => i !== index)
-    : [...currentChecked, index];
-
-  await updateDoc(
-    doc(
-      db,
-      "users",
-      auth.currentUser.uid,
-      "memories",
-      memoryId
-    ),
-    {
-      checked: updatedChecked,
-    }
-  );
-
-  fetchMemories(auth.currentUser.uid);
-};
-          //CONTENT CARD 
- const filteredMemories = memories.filter((m) => {
- const textMatch = [
-  m.text || "",
-    ...(m.tags || []),
-]
-  .join(" ")
-  .toLowerCase()
-  .includes(search.toLowerCase());
-
-  const tagMatch = activeTag
-    ? m.tags?.includes(activeTag)
-    : true;
-
-  return textMatch && tagMatch;
-});
+  // ── Loading state ───────────────────────────────────────────────────────────
 
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-       <p className="text-gray-500">Loading...</p>
-  </div>
-  );
-}
-     
- return (
-  <div className="min-h-screen bg-gradient-to-br from-purple-100 via-pink-50 to-blue-100 px-3 py-4 flex flex-col">
-    
- 
-    
-    <div className="flex-1 max-w-xl mx-auto w-full backdrop-blur-md bg-white/60 p-4 rounded-2xl shadow-xl border border-white/40">
-      
-      {/* Header */}
-      <h1 className="text-3xl font-semibold mb-1 tracking-wide text-gray-700 drop-shadow-sm">
-        Memory Vault
-      </h1>
-      <p className="text-sm text-gray-500 mb-4 italic">
-        {user?.email}
-      </p>
-    
-
-      {/* Input */}
-   <div className="mb-4 space-y-2">
-  {/* Input row */}
-  <div className="flex items-center gap-2">
-   <input
-  
-  value={memory}
-  onChange={(e) => setMemory(e.target.value)}
-  onKeyDown={(e) => {
-    if (e.key === "Enter") {
-      e.preventDefault(); //  THIS is the key
-      const value = (e.target as HTMLInputElement).value;
-    saveMemory(value); // ✅ pass directly
-    }
-  }}
-  placeholder='Add memory…'
-  className="flex-1 min-w-0 bg-white/60 backdrop-blur-md border border-white/40 p-3 rounded-lg text-base text-gray-900 placeholder-gray-400 focus:outline-none"
-  />
-  
-
-    <button
-  onClick={startRecording}
-  className="p-3 bg-white/60 rounded-lg"
->
-  🎤
-</button>
-
-<button
-  type="button"
-  onClick={() =>
-    alert('Say "shopping list" to create checklist memories')
-  }
-  className="p-3 bg-white/60 rounded-lg text-gray-500"
->
-  ⓘ
-</button>
-  </div>
-{selectedTrack?.type === "video" && (
-  <div className="bg-white p-3 rounded-xl shadow-sm mb-3 border">
-    
-    <div className="flex items-center gap-3">
-      <img
-        src={selectedTrack.thumbnail}
-        className="w-12 h-12 rounded"
-      />
-
-      <div className="flex-1">
-        <p className="text-sm font-medium">
-          {selectedTrack.title}
-        </p>
-        <p className="text-xs text-gray-400">Video selected</p>
+        <p className="text-gray-500">Loading...</p>
       </div>
+    );
+  }
 
-      {/* ❌ Remove */}
-      <button
-        onClick={() => setSelectedTrack(null)}
-        className="text-xs text-red-500"
-      >
-        Remove
-      </button>
-    </div>
+  // ── Render ──────────────────────────────────────────────────────────────────
 
-    {/* Optional: embedded preview */}
-    <iframe
-      src={`https://www.youtube.com/embed/${selectedTrack.videoId}`}
-      className="w-full h-40 rounded mt-2"
-      allowFullScreen
-    />
-  </div>
-)}
-  
+  return (
+    <div className="min-h-screen bg-stone-950 px-3 py-4 flex flex-col">
+      <div className="flex-1 max-w-xl mx-auto w-full bg-stone-900 p-4 rounded-2xl shadow-xl border border-stone-700">
 
+        <div className="flex items-center justify-between mb-1">
+          <div className="flex items-center gap-2">
+            <span className="text-2xl">🎞️</span>
+            <h1 className="text-3xl font-semibold tracking-wide text-stone-100 drop-shadow-sm">
+              Stash
+            </h1>
+          </div>
+          <button
+            onClick={() => { setFeedbackSent(false); setFeedbackText(""); setShowFeedbackModal(true); }}
+            className="text-xs text-stone-500 border border-stone-700 rounded-lg px-2.5 py-1.5 hover:border-stone-500 hover:text-stone-300 transition-colors"
+          >
+            💬 Feedback
+          </button>
+        </div>
+        <p className="text-sm text-stone-500 mb-4 italic">{user?.email}</p>
 
-</div>  {/* ✅ CLOSE INPUT ROW HERE */}
-
-<div className="flex gap-2 mt-2 mb-4">
-  {/* 🎵 Find Music */}
-  <button
-    onClick={searchSpotify}
-    className="flex-1 text-sm text-green-600 bg-white/60 rounded-lg px-3 py-2"
-  >
-    🎵 Find Music
-  </button>
-<button
-  onClick={searchVideos}
-  className="text-sm text-blue-600 bg-white/60 rounded-lg px-3 py-2"
->
-  🎥 Find Video
-</button>
-  {/* ✅ Save */}
-  <button
-    onClick={() => saveMemory()}
-    disabled={!memory.trim() || isSaving}
-    className={`px-4 py-2 rounded-lg font-medium shadow-md transition
-      ${
-        !memory.trim() || isSaving
-          ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-          : "bg-gradient-to-r from-purple-400 to-pink-400 text-white hover:brightness-110 active:brightness-95 active:shadow-inner"
-      }
-    `}
-  >
-    {isSaving ? "Saving..." : "Save Memory"}
-  </button>
-</div>
-{(spotifyResults.length > 0 || videoResults.length > 0) && (
-  <div className="flex justify-end mb-2">
-    <button
-      onClick={() => {
-        setSpotifyResults([]);
-        setVideoResults([]);
-      }}
-      className="text-xs px-2 py-1 bg-white/60 rounded-lg border text-gray-500 hover:bg-gray-100"
-    >
-      Clear results ✕
-    </button>
-  </div>
-)}
-
-{/* 🎵 Results */}
-{spotifyResults.length > 0 && (
-  <div className="mt-3 space-y-2">
-    {spotifyResults.map((track, i) => (
-      <div
-        key={i}
-        onClick={() => {
-          setSelectedTrack(track);
-          setMemory(`${track.title} — ${track.artist}`);
-          setSpotifyResults([]);
-        }}
-        className="bg-white p-4 rounded-xl border flex items-center gap-4 cursor-pointer hover:bg-gray-50"
-      >
-        {track.image && (
-          <img src={track.image} className="w-12 h-12 rounded" />
+        {error && (
+          <div className="mb-3 px-3 py-2 bg-red-900/30 border border-red-700 rounded-lg text-sm text-red-400 flex items-center justify-between">
+            <span>{error}</span>
+            <button
+              onClick={() => setError(null)}
+              className="ml-2 text-red-400 hover:text-red-600 font-medium"
+            >
+              ✕
+            </button>
+          </div>
         )}
 
-        <div className="flex-1">
-          <p className="text-sm font-medium">{track.title}</p>
-          <p className="text-xs text-gray-500">{track.artist}</p>
+        <div className="mb-4 space-y-2">
+          <div className="flex items-center gap-2">
+            <input
+              ref={memoryInputRef}
+              value={memory}
+              onChange={(e) => setMemory(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  saveMemory((e.target as HTMLInputElement).value);
+                }
+              }}
+              placeholder="Add memory…"
+              className="flex-1 min-w-0 bg-stone-800 border border-stone-600 p-3 rounded-lg text-base text-stone-100 placeholder-stone-500 focus:outline-none"
+            />
+
+            <div className="flex flex-col items-center gap-0.5">
+              <button
+                type="button"
+                onClick={() => {
+                  (document.activeElement as HTMLElement)?.blur();
+                  if (isListening && mediaRecorderInstance) {
+                    mediaRecorderInstance.stop();
+                  } else {
+                    startRecording();
+                  }
+                }}
+                className={`p-3 border rounded-lg relative transition-colors ${
+                  isListening
+                    ? "bg-red-500 border-red-400"
+                    : micAllowed
+                    ? "bg-stone-800 border-stone-600"
+                    : "bg-stone-800 border-stone-700 opacity-60"
+                }`}
+                title={isListening ? "Stop recording" : micAllowed ? "Start recording" : "Upgrade to use mic"}
+              >
+                {isListening ? "⏹️" : micAllowed ? "🎤" : "🔒"}
+              </button>
+              {userPlan !== "premium" && trialDaysLeft !== null && trialDaysLeft > 0 && (
+                <span className="text-[9px] text-amber-400 font-medium whitespace-nowrap">
+                  {trialDaysLeft}d left
+                </span>
+              )}
+              {!micAllowed && (
+                <span className="text-[9px] text-stone-500 whitespace-nowrap">Upgrade</span>
+              )}
+            </div>
+
+            <button
+              type="button"
+              onClick={() =>
+                alert('Say "shopping list" to create checklist memories')
+              }
+              className="p-3 bg-stone-800 border border-stone-600 rounded-lg text-stone-400"
+            >
+              ⓘ
+            </button>
+          </div>
+
+          {isListening && (
+            <p className="text-xs text-red-500 animate-pulse px-1">
+              🔴 Listening… stops automatically after 4 seconds
+            </p>
+          )}
+
+          {isDetecting && (
+            <p className="text-xs text-amber-400 animate-pulse px-1">
+              ✨ Identifying what you&apos;re looking for…
+            </p>
+          )}
+
+          {selectedTrack?.type === "video" && (
+            <div className="bg-white p-3 rounded-xl shadow-sm border">
+              <div className="flex items-center gap-3">
+                <img
+                  src={selectedTrack.thumbnail}
+                  className="w-12 h-12 rounded"
+                  alt={selectedTrack.title}
+                />
+                <div className="flex-1">
+                  <p className="text-sm font-medium">{selectedTrack.title}</p>
+                  <p className="text-xs text-gray-400">Video selected</p>
+                </div>
+                <button
+                  onClick={() => setSelectedTrack(null)}
+                  className="text-xs text-red-500"
+                >
+                  Remove
+                </button>
+              </div>
+              <iframe
+                src={`https://www.youtube.com/embed/${selectedTrack.videoId}`}
+                className="w-full h-40 rounded mt-2"
+                allowFullScreen
+              />
+            </div>
+          )}
         </div>
+
+        <div className="flex gap-2 mt-2 mb-4">
+          <button
+            onClick={() => searchSpotify()}
+            className="flex-1 text-sm text-amber-400 bg-stone-800 border border-stone-600 rounded-lg px-3 py-2"
+          >
+            🎵 Find Music
+          </button>
+          <button
+            onClick={() => searchVideos()}
+            className="text-sm text-blue-400 bg-stone-800 border border-stone-600 rounded-lg px-3 py-2"
+          >
+            🎥 Find Video
+          </button>
+          <button
+            onClick={() => searchMovies()}
+            className="text-sm text-red-400 bg-stone-800 border border-stone-600 rounded-lg px-3 py-2"
+          >
+            🎬 Find Movie
+          </button>
+          <button
+            onClick={() => saveMemory()}
+            disabled={!memory.trim() || isSaving}
+            className={`px-4 py-2 rounded-lg font-medium shadow-md transition
+              ${
+                !memory.trim() || isSaving
+                  ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                  : "bg-gradient-to-r from-amber-400 to-orange-400 text-white hover:brightness-110 active:brightness-95 active:shadow-inner"
+              }
+            `}
+          >
+            {isSaving ? "Saving..." : "Save Memory"}
+          </button>
+        </div>
+
+        {(voiceQuery || memory.trim() || spotifyResults.length > 0 || videoResults.length > 0 || movieResults.length > 0) && (
+          <div className="flex items-center justify-between mb-2">
+            {voiceQuery ? (
+              <span className="text-xs text-stone-400 italic">🎤 &ldquo;{voiceQuery}&rdquo;</span>
+            ) : <span />}
+            <button
+              onClick={clearSearchState}
+              className="text-xs px-3 py-1.5 bg-stone-800 rounded-lg border border-stone-600 text-stone-400 hover:bg-stone-700 active:scale-95"
+            >
+              Clear ✕
+            </button>
+          </div>
+        )}
+
+        {spotifyResults.length > 0 && (
+          <div className="mt-3 space-y-2">
+            <p className="text-xs font-semibold text-stone-400 uppercase tracking-wider px-1">🎵 Music</p>
+            {spotifyResults.map((track, i) => {
+              const isSelected = selectedItems.some(s => s.title === track.title && s.kind === "music" && s.artist === track.artist);
+              return (
+                <div
+                  key={i}
+                  onClick={() => {
+                    const idx = selectedItems.findIndex(s => s.title === track.title && s.kind === "music" && s.artist === track.artist);
+                    if (idx >= 0) removeFromSelection(idx);
+                    else addToSelection({ kind: "music", title: track.title || "", image: track.image, artist: track.artist, url: track.url });
+                  }}
+                  className={`p-4 rounded-xl border flex items-center gap-4 cursor-pointer transition-colors ${isSelected ? "border-amber-400 bg-amber-50" : "bg-white hover:bg-gray-50"}`}
+                >
+                  {track.image && (
+                    <img src={track.image} className="w-12 h-12 rounded" alt={track.title} />
+                  )}
+                  <div className="flex-1">
+                    <p className="text-sm font-medium">{track.title}</p>
+                    <p className="text-xs text-gray-500">{track.artist}</p>
+                  </div>
+                  {isSelected && (
+                    <div className="w-6 h-6 rounded-full bg-amber-400 flex items-center justify-center flex-shrink-0">
+                      <span className="text-white text-xs font-bold">✓</span>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {videoResults.length > 0 && (
+          <div className="mt-3 space-y-2">
+            <p className="text-xs font-semibold text-stone-400 uppercase tracking-wider px-1">🎥 Videos</p>
+            {videoResults.map((video, i) => {
+              const isSelected = selectedItems.some(s => s.videoId === video.videoId && s.kind === "video");
+              return (
+                <div
+                  key={i}
+                  onClick={() => {
+                    const idx = selectedItems.findIndex(s => s.videoId === video.videoId && s.kind === "video");
+                    if (idx >= 0) removeFromSelection(idx);
+                    else addToSelection({ kind: "video", title: video.title ?? "", image: video.thumbnail, videoId: video.videoId });
+                  }}
+                  className={`p-3 rounded-lg border flex items-center gap-3 cursor-pointer transition-colors ${isSelected ? "border-amber-400 bg-amber-50" : "bg-white hover:bg-gray-50"}`}
+                >
+                  <img src={video.thumbnail} className="w-12 h-12 rounded" alt={video.title} />
+                  <p className="text-sm flex-1">{video.title}</p>
+                  {isSelected && (
+                    <div className="w-6 h-6 rounded-full bg-amber-400 flex items-center justify-center flex-shrink-0">
+                      <span className="text-white text-xs font-bold">✓</span>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {movieResults.length > 0 && (
+          <div className="mt-3 space-y-2">
+            <p className="text-xs font-semibold text-stone-400 uppercase tracking-wider px-1">🎬 Movies</p>
+            {movieResults.map((movie) => {
+              const isSelected = selectedItems.some(s => s.title === movie.title && s.kind === "movie" && s.year === movie.year);
+              return (
+                <div
+                  key={movie.id}
+                  onClick={() => {
+                    const idx = selectedItems.findIndex(s => s.title === movie.title && s.kind === "movie" && s.year === movie.year);
+                    if (idx >= 0) removeFromSelection(idx);
+                    else addToSelection({ kind: "movie", title: movie.title, image: movie.poster, year: movie.year, movieId: movie.id });
+                  }}
+                  className={`p-3 rounded-xl border flex items-center gap-3 cursor-pointer transition-colors ${isSelected ? "border-amber-400 bg-amber-50" : "bg-white hover:bg-gray-50"}`}
+                >
+                  {movie.poster ? (
+                    <img src={movie.poster} className="w-10 h-14 rounded object-cover" alt={movie.title} />
+                  ) : (
+                    <div className="w-10 h-14 rounded bg-gray-200 flex items-center justify-center text-gray-400 text-xs">?</div>
+                  )}
+                  <div className="flex-1">
+                    <p className="text-sm font-medium">{movie.title}</p>
+                    <p className="text-xs text-gray-400">{movie.year}</p>
+                  </div>
+                  {isSelected && (
+                    <div className="w-6 h-6 rounded-full bg-amber-400 flex items-center justify-center flex-shrink-0">
+                      <span className="text-white text-xs font-bold">✓</span>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* ── Selection tray ── */}
+        {selectedItems.length > 0 && (
+          <div className="mt-3 mb-3 bg-stone-800 border border-stone-600 rounded-xl p-3">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs text-stone-400">{selectedItems.length}/10 selected</span>
+              <button onClick={clearSearchState} className="text-xs text-stone-500 hover:text-stone-300">Clear all</button>
+            </div>
+            <div className="space-y-1 mb-3">
+              {selectedItems.map((item, i) => (
+                <div key={i} className="flex items-center justify-between py-0.5">
+                  <span className="text-sm text-stone-200">{item.kind === "movie" ? "🎬" : item.kind === "video" ? "🎥" : "🎵"} {item.title}</span>
+                  <button onClick={() => removeFromSelection(i)} className="text-stone-500 hover:text-stone-300 text-xs ml-2">✕</button>
+                </div>
+              ))}
+            </div>
+            <button
+              onClick={() => selectedItems.length === 1 ? saveSeparately() : setShowPlaylistModal(true)}
+              className="w-full bg-gradient-to-r from-amber-400 to-orange-400 text-white py-2 rounded-lg text-sm font-medium"
+            >
+              Save{selectedItems.length > 1 ? ` (${selectedItems.length})` : ""}
+            </button>
+          </div>
+        )}
+
+        {/* ── Feedback modal ── */}
+        {showFeedbackModal && (
+          <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 px-4">
+            <div className="bg-stone-900 border border-stone-700 rounded-2xl p-6 w-full max-w-sm">
+              {feedbackSent ? (
+                <div className="text-center py-4">
+                  <div className="text-4xl mb-3">🙏</div>
+                  <h3 className="text-stone-100 font-semibold mb-1">Thanks for the feedback!</h3>
+                  <p className="text-stone-400 text-sm mb-4">It goes directly to the team and helps make Stash better.</p>
+                  <button onClick={() => setShowFeedbackModal(false)} className="text-amber-400 text-sm font-medium">Close</button>
+                </div>
+              ) : (
+                <>
+                  <h3 className="text-stone-100 font-semibold mb-1">Share your thoughts</h3>
+                  <p className="text-stone-400 text-sm mb-4">What's working? What's missing? What's confusing?</p>
+                  <textarea
+                    value={feedbackText}
+                    onChange={(e) => setFeedbackText(e.target.value)}
+                    placeholder="Type your feedback here…"
+                    rows={4}
+                    className="w-full bg-stone-800 border border-stone-600 rounded-xl p-3 text-sm text-stone-100 placeholder-stone-500 focus:outline-none resize-none mb-3"
+                    autoFocus
+                  />
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setShowFeedbackModal(false)}
+                      className="flex-1 py-2 text-stone-500 text-sm"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      disabled={!feedbackText.trim()}
+                      onClick={async () => {
+                        if (!user || !feedbackText.trim()) return;
+                        try {
+                          await addDoc(collection(db, "feedback"), {
+                            uid: user.uid,
+                            email: user.email,
+                            message: feedbackText.trim(),
+                            plan: userPlan,
+                            createdAt: serverTimestamp(),
+                          });
+                          setFeedbackSent(true);
+                        } catch (err) {
+                          console.error("FEEDBACK ERROR:", err);
+                        }
+                      }}
+                      className="flex-1 bg-amber-400 text-stone-900 font-semibold py-2 rounded-xl text-sm disabled:opacity-40 disabled:cursor-not-allowed"
+                    >
+                      Send
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* ── Upgrade modal ── */}
+        {showUpgradeModal && (
+          <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 px-4">
+            <div className="bg-stone-900 border border-stone-700 rounded-2xl p-6 w-full max-w-sm">
+              <div className="text-center mb-5">
+                <div className="text-4xl mb-3">🎤</div>
+                <h3 className="text-stone-100 font-bold text-lg mb-1">Your free trial has ended</h3>
+                <p className="text-stone-400 text-sm">Upgrade to keep using voice search — the fastest way to find and save music, movies, and videos.</p>
+              </div>
+
+              <div className="bg-stone-800 border border-stone-600 rounded-xl p-4 mb-4">
+                <p className="text-amber-400 font-semibold text-sm mb-2">✨ Premium includes:</p>
+                <ul className="space-y-1.5 text-sm text-stone-300">
+                  <li>🎤 Unlimited voice search</li>
+                  <li>🎯 Auto intent detection (music, movies, videos)</li>
+                  <li>🎶 Unlimited playlists</li>
+                  <li>⚡ Priority access to new features</li>
+                </ul>
+              </div>
+
+              <div className="space-y-2">
+                <button
+                  onClick={() => {
+                    // Stripe/payment coming soon — contact for now
+                    window.open("mailto:bnkhan65@gmail.com?subject=Stash Premium Upgrade", "_blank");
+                    setShowUpgradeModal(false);
+                  }}
+                  className="w-full bg-gradient-to-r from-amber-400 to-orange-400 text-white py-3 rounded-xl text-sm font-bold"
+                >
+                  Upgrade to Premium — $5/month
+                </button>
+                <button
+                  onClick={() => setShowUpgradeModal(false)}
+                  className="w-full text-stone-500 py-2 text-sm"
+                >
+                  Maybe later
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ── Playlist modal ── */}
+        {showPlaylistModal && (() => {
+          const playlistType = getPlaylistType();
+          const typeLabel = playlistType === "music" ? "🎵 Music" : playlistType === "movie" ? "🎬 Movie" : playlistType === "video" ? "🎥 Video" : "🎶 Mixed";
+          const existingPlaylists = memories.filter(
+            (m) => m.type === "playlist" && (m.playlistType === playlistType || (!m.playlistType && playlistType !== "mixed"))
+          );
+          return (
+            <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 px-4">
+              <div className="bg-stone-900 border border-stone-700 rounded-2xl p-6 w-full max-w-sm max-h-[80vh] flex flex-col">
+                <h3 className="text-stone-100 font-semibold mb-0.5">Save {selectedItems.length} {typeLabel} item{selectedItems.length > 1 ? "s" : ""}</h3>
+                <p className="text-stone-400 text-sm mb-4">How would you like to save these?</p>
+
+                <div className="space-y-2 overflow-y-auto flex-1">
+                  {/* Existing playlists */}
+                  {existingPlaylists.length > 0 && (
+                    <div className="mb-1">
+                      <p className="text-xs text-stone-500 uppercase tracking-wide mb-2">Add to existing playlist</p>
+                      {existingPlaylists.map((pl) => (
+                        <button
+                          key={pl.id}
+                          onClick={() => { addToExistingPlaylist(pl.id); setShowPlaylistModal(false); }}
+                          className="w-full bg-stone-800 border border-stone-600 text-stone-200 py-2.5 rounded-xl text-sm font-medium text-left px-4 mb-2 hover:border-amber-500/50 transition-colors"
+                        >
+                          {pl.text}
+                          <p className="text-xs text-stone-500 mt-0.5 font-normal">{(pl.items || []).length} items</p>
+                        </button>
+                      ))}
+                      <p className="text-xs text-stone-600 text-center my-3">— or —</p>
+                    </div>
+                  )}
+
+                  {/* Create new */}
+                  <button
+                    onClick={() => { saveAsPlaylist(); setShowPlaylistModal(false); }}
+                    className="w-full bg-amber-500/20 border border-amber-500/40 text-amber-400 py-3 rounded-xl text-sm font-medium text-left px-4"
+                  >
+                    🎶 Create new playlist
+                    <p className="text-xs text-amber-500/60 mt-0.5 font-normal">All items in one card</p>
+                  </button>
+
+                  {/* Save separately */}
+                  <button
+                    onClick={() => { saveSeparately(); setShowPlaylistModal(false); }}
+                    className="w-full bg-stone-800 border border-stone-600 text-stone-300 py-3 rounded-xl text-sm font-medium text-left px-4"
+                  >
+                    📋 Save Separately
+                    <p className="text-xs text-stone-500 mt-0.5 font-normal">One card per item</p>
+                  </button>
+
+                  <button onClick={() => setShowPlaylistModal(false)} className="w-full text-stone-500 py-2 text-sm">
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </div>
+          );
+        })()}
+
+        <input
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search memories..."
+          className="bg-stone-800 border border-stone-600 p-3 w-full rounded-lg text-base text-stone-100 placeholder-stone-500 mb-2 focus:outline-none"
+        />
+
+        {search && (
+          <p className="text-sm text-stone-500 mb-2">
+            {filteredMemories.length} result(s)
+          </p>
+        )}
+
+        <div className="flex gap-3 mb-4">
+          {search && (
+            <button
+              onClick={() => setSearch("")}
+              className="text-sm text-stone-500 hover:text-stone-300 transition"
+            >
+              Clear search
+            </button>
+          )}
+          {activeTag && (
+            <button
+              onClick={() => setActiveTag(null)}
+              className="text-sm text-purple-500"
+            >
+              Clear tag: #{activeTag}
+            </button>
+          )}
+        </div>
+
+        <div className="space-y-4">
+          {filteredMemories.length === 0 ? (
+            <p className="text-center text-stone-600 mt-6">
+              No memories yet — start capturing your story ✨
+            </p>
+          ) : (
+            filteredMemories.map((m) => (
+              <MemoryCard
+                key={m.id}
+                memory={m}
+                onDelete={deleteMemory}
+                onToggleCheck={toggleCheck}
+              />
+            ))
+          )}
+        </div>
+
       </div>
-    ))}
-  </div>
-)}
-{videoResults.length > 0 && (
-  <div className="mt-3 space-y-2">
-    {videoResults.map((video, i) => (
-      <div
-        key={i}
-        onClick={() => {
-          setMemory(video.title);
 
-          setSelectedTrack({
-            type: "video",
-            videoId: video.videoId,
-            title: video.title,
-            thumbnail: video.thumbnail,
-          });
+      <BottomNav />
 
-          setVideoResults([]);
-        }}
-        className="bg-white p-3 rounded-lg border flex items-center gap-3 cursor-pointer hover:bg-gray-50"
-      >
-        <img src={video.thumbnail} className="w-12 h-12 rounded" />
-        <p className="text-sm">{video.title}</p>
-      </div>
-    ))}
-  </div>
-)}
-
-{/* 🔍 Search */}
-<input
-  value={search}
-  onChange={(e) => setSearch(e.target.value)}
-  placeholder="Search memories..."
-  className="bg-white/60 backdrop-blur-md border border-white/40 p-3 w-full rounded-lg text-base mb-2 focus:outline-none"
-/>
-
-{search && (
-  <p className="text-sm text-gray-500 mb-2">
-    {filteredMemories.length} result(s)
-  </p>
-)}
-
-{/* ✅ Step 2: Clear search */}
-<div className="flex gap-3 mb-4">
-  {search && (
-    <button
-      onClick={() => setSearch("")}
-      className="text-sm text-gray-400 hover:text-gray-600 transition"
-    >
-      Clear search
-    </button>
-  )}
-
-  {activeTag && (
-    <button
-      onClick={() => setActiveTag(null)}
-      className="text-sm text-purple-500"
-    >
-      Clear tag: #{activeTag}
-    </button>
-  )}
-
-</div>
-
-    {/* Memory Card */}
-<div className="space-y-4">
-
-  {filteredMemories.length === 0 ? (
-  <p className="text-center text-gray-400 mt-6">
-    No memories yet — start capturing your story ✨
-  </p>
-) : (
-filteredMemories.map((m) => (
-  <MemoryCard
-    key={m.id}
-    memory={m}
-    onDelete={deleteMemory}
-    onToggleCheck={toggleCheck}
-  />
-))
-)}
-
-</div>
-
-</div> {/* inner */}
-
-<BottomNav />
-
-</div> 
-
-);
-
+      {/* TMDB Attribution — required by TMDB terms of use */}
+      <p className="text-center text-[10px] text-stone-600 py-2">
+        This product uses the TMDB API but is not endorsed or certified by TMDB.
+      </p>
+    </div>
+  );
 }
