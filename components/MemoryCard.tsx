@@ -26,17 +26,15 @@ type Memory = {
   playlistType?: "music" | "movie" | "video" | "mixed";
   checked?: number[];
   items?: PlaylistItem[];
+  listItems?: string[];
 };
 
 type Props = {
   memory: Memory;
   onDelete: (id: string) => void;
   onUpdate?: (id: string, newText: string) => void;
-  onToggleCheck?: (
-    memoryId: string,
-    index: number,
-    currentChecked: number[]
-  ) => void;
+  onToggleCheck?: (memoryId: string, index: number, currentChecked: number[]) => void;
+  onAddListItem?: (memoryId: string, item: string) => void;
 };
 
 export default function MemoryCard({
@@ -44,6 +42,7 @@ export default function MemoryCard({
   onDelete,
   onUpdate,
   onToggleCheck,
+  onAddListItem,
 }: Props) {
   const cardRef = useRef<HTMLDivElement>(null);
 
@@ -59,6 +58,7 @@ export default function MemoryCard({
   const [expandedItem, setExpandedItem] = useState<number | null>(null);
   const [showExport, setShowExport] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [addItemInput, setAddItemInput] = useState("");
 
   type MusicService = "apple" | "spotify" | "youtube" | "amazon";
   const [preferredService, setPreferredService] = useState<MusicService>(() => {
@@ -116,6 +116,20 @@ export default function MemoryCard({
 
     if (onToggleCheck) {
       onToggleCheck(memory.id, index, checkedItems);
+    }
+  };
+
+  // Resolve list items — prefer structured listItems, fall back to comma-parsing
+  const hasStructuredItems = !!(memory.listItems && memory.listItems.length > 0);
+  const resolvedListItems = hasStructuredItems
+    ? memory.listItems!
+    : (memory.text || "").split(",").map((s) => s.trim()).filter(Boolean);
+  const resolvedListTitle = hasStructuredItems ? memory.text : null;
+
+  const handleAddItem = () => {
+    if (onAddListItem && addItemInput.trim()) {
+      onAddListItem(memory.id, addItemInput.trim());
+      setAddItemInput("");
     }
   };
 
@@ -302,40 +316,47 @@ export default function MemoryCard({
         )}
 
         {/* Checklist rendering */}
-        {memory.type === "list" ? (
-          <div className="space-y-2">
-            {(memory.text || "")
-              .split(",")
-              .map((item) => item.trim())
-              .filter(Boolean)
-              .map((item, index) => (
-                <div
-                  key={index}
-                  className="flex items-center gap-2 text-sm"
+        {memory.type === "list" && (
+          <div className="space-y-1">
+            {resolvedListTitle && (
+              <p className="text-sm font-semibold text-gray-800 mb-2">{resolvedListTitle}</p>
+            )}
+            {resolvedListItems.map((item, index) => (
+              <div key={index} className="flex items-center gap-2 text-sm">
+                <button
+                  onClick={(e) => { e.stopPropagation(); toggleCheck(index); }}
+                  className="w-8 h-8 flex items-center justify-center text-lg text-gray-500 rounded-md active:bg-gray-100 shrink-0"
                 >
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      toggleCheck(index);
-                    }}
-                    className="w-8 h-8 flex items-center justify-center text-lg text-gray-500 rounded-md active:bg-gray-100"
-                  >
-                    {checkedItems.includes(index) ? "☑" : "☐"}
-                  </button>
-
-                  <span
-                    className={
-                      checkedItems.includes(index)
-                        ? "line-through text-gray-400"
-                        : ""
-                    }
-                  >
-                    {item}
-                  </span>
-                </div>
-              ))}
+                  {checkedItems.includes(index) ? "☑" : "☐"}
+                </button>
+                <span className={checkedItems.includes(index) ? "line-through text-gray-400" : "text-gray-800"}>
+                  {item}
+                </span>
+              </div>
+            ))}
+            {onAddListItem && (
+              <div className="flex gap-2 mt-3">
+                <input
+                  value={addItemInput}
+                  onChange={(e) => { setAddItemInput(e.target.value); }}
+                  onKeyDown={(e) => { if (e.key === "Enter") { handleAddItem(); } }}
+                  onClick={(e) => { e.stopPropagation(); }}
+                  placeholder="Add item..."
+                  className="flex-1 bg-gray-100 border border-gray-200 rounded-lg px-3 py-1.5 text-sm text-gray-800 placeholder-gray-400 focus:outline-none"
+                />
+                <button
+                  onClick={(e) => { e.stopPropagation(); handleAddItem(); }}
+                  className="px-3 py-1.5 bg-amber-400 text-white rounded-lg text-sm font-bold"
+                >
+                  +
+                </button>
+              </div>
+            )}
           </div>
-        ) : isEditing ? (
+        )}
+
+        {/* Text / edit rendering for non-list memories */}
+        {memory.type !== "list" && isEditing && (
           <textarea
             value={editText}
             onChange={(e) => setEditText(e.target.value)}
@@ -344,7 +365,8 @@ export default function MemoryCard({
             rows={3}
             autoFocus
           />
-        ) : (
+        )}
+        {memory.type !== "list" && !isEditing && (
           <p className="text-sm font-medium text-gray-900 break-words">
             {editText}
           </p>

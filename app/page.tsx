@@ -45,6 +45,7 @@ type Memory = {
   playlistType?: "music" | "movie" | "video" | "mixed";
   checked?: number[];
   items?: SelectedItem[];
+  listItems?: string[];
 };
 
 type Track = {
@@ -92,6 +93,9 @@ export default function Home() {
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
   const [feedbackText, setFeedbackText] = useState("");
   const [feedbackSent, setFeedbackSent] = useState(false);
+  const [showListModal, setShowListModal] = useState(false);
+  const [listTitle, setListTitle] = useState("");
+  const [newListItemInput, setNewListItemInput] = useState("");
   const memoryInputRef = useRef<HTMLInputElement>(null);
 
   const router = useRouter();
@@ -427,6 +431,57 @@ export default function Home() {
     clearSearchState();
   };
 
+  // ── Create list ─────────────────────────────────────────────────────────────
+
+  const createList = async () => {
+    if (!user || !listTitle.trim()) return;
+    const parsedItems = newListItemInput
+      .split("\n")
+      .map((s) => s.trim())
+      .filter(Boolean);
+    try {
+      const newDoc = await addDoc(collection(db, "users", user.uid, "memories"), {
+        text: listTitle.trim(),
+        type: "list",
+        listItems: parsedItems,
+        checked: [],
+        createdAt: serverTimestamp(),
+      });
+      setMemories((prev) => [
+        { id: newDoc.id, text: listTitle.trim(), type: "list", listItems: parsedItems, checked: [] },
+        ...prev,
+      ]);
+      setShowListModal(false);
+      setListTitle("");
+      setNewListItemInput("");
+    } catch (err) {
+      console.error("CREATE LIST ERROR:", err);
+      setError("Failed to create list.");
+    }
+  };
+
+  const addItemToList = async (memoryId: string, item: string) => {
+    if (!user || !item.trim()) return;
+    const listMemory = memories.find((m) => m.id === memoryId);
+    if (!listMemory) return;
+    const currentItems =
+      listMemory.listItems && listMemory.listItems.length > 0
+        ? listMemory.listItems
+        : (listMemory.text || "").split(",").map((s) => s.trim()).filter(Boolean);
+    const updatedItems = [...currentItems, item.trim()];
+    try {
+      await updateDoc(doc(db, "users", user.uid, "memories", memoryId), {
+        listItems: updatedItems,
+      });
+      setMemories((prev) =>
+        prev.map((m) => m.id === memoryId ? { ...m, listItems: updatedItems } : m)
+      );
+    } catch (err) {
+      console.error("ADD LIST ITEM ERROR:", err);
+      setError("Failed to add item to list.");
+    }
+  };
+
   // ── Voice recording (Whisper) ───────────────────────────────────────────────
 
   const micAllowed = userPlan === "premium" || (trialDaysLeft !== null && trialDaysLeft > 0);
@@ -674,12 +729,11 @@ export default function Home() {
 
             <button
               type="button"
-              onClick={() =>
-                alert('Say "shopping list" to create checklist memories')
-              }
+              onClick={() => setShowListModal(true)}
               className="p-3 bg-stone-800 border border-stone-600 rounded-lg text-stone-400"
+              title="Create a new list"
             >
-              ⓘ
+              📝
             </button>
           </div>
 
@@ -891,6 +945,48 @@ export default function Home() {
           </div>
         )}
 
+        {/* ── New list modal ── */}
+        {showListModal && (
+          <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 px-4">
+            <div className="bg-stone-900 border border-stone-700 rounded-2xl p-6 w-full max-w-sm">
+              <h3 className="text-stone-100 font-semibold mb-1">📝 New List</h3>
+              <p className="text-stone-400 text-sm mb-4">Create a shopping list, task list, or anything you want to track and check off.</p>
+
+              <input
+                value={listTitle}
+                onChange={(e) => setListTitle(e.target.value)}
+                placeholder="List name (e.g. Grocery List)"
+                className="w-full bg-stone-800 border border-stone-600 rounded-xl p-3 text-sm text-stone-100 placeholder-stone-500 focus:outline-none mb-3"
+                autoFocus
+              />
+
+              <textarea
+                value={newListItemInput}
+                onChange={(e) => setNewListItemInput(e.target.value)}
+                placeholder={"Add items, one per line…\ne.g.\nMilk\nEggs\nBread"}
+                rows={5}
+                className="w-full bg-stone-800 border border-stone-600 rounded-xl p-3 text-sm text-stone-100 placeholder-stone-500 focus:outline-none resize-none mb-3"
+              />
+
+              <div className="flex gap-2">
+                <button
+                  onClick={() => { setShowListModal(false); setListTitle(""); setNewListItemInput(""); }}
+                  className="flex-1 py-2 text-stone-500 text-sm"
+                >
+                  Cancel
+                </button>
+                <button
+                  disabled={!listTitle.trim()}
+                  onClick={createList}
+                  className="flex-1 bg-amber-400 text-stone-900 font-semibold py-2 rounded-xl text-sm disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  Create List
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* ── Feedback modal ── */}
         {showFeedbackModal && (
           <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 px-4">
@@ -1094,6 +1190,7 @@ export default function Home() {
                 memory={m}
                 onDelete={deleteMemory}
                 onToggleCheck={toggleCheck}
+                onAddListItem={addItemToList}
               />
             ))
           )}
@@ -1110,3 +1207,4 @@ export default function Home() {
     </div>
   );
 }
+               
