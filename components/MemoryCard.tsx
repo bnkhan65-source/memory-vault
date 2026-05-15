@@ -120,7 +120,7 @@ export default function MemoryCard({
   };
 
   // Resolve list items — prefer structured listItems, fall back to comma-parsing
-  const hasStructuredItems = !!(memory.listItems && memory.listItems.length > 0);
+  const hasStructuredItems = Array.isArray(memory.listItems);
   const resolvedListTitle = hasStructuredItems ? (memory.text || null) : null;
   const resolvedListItems = hasStructuredItems
     ? memory.listItems!.filter((item) => item !== resolvedListTitle)
