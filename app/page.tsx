@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { auth, db } from "@/lib/firebase";
-import { onAuthStateChanged, User } from "firebase/auth";
+import { onAuthStateChanged, User, signOut } from "firebase/auth";
 import {
   collection,
   addDoc,
@@ -99,6 +99,11 @@ export default function Home() {
   const memoryInputRef = useRef<HTMLInputElement>(null);
 
   const router = useRouter();
+
+  const handleSignOut = async () => {
+    await signOut(auth);
+    router.push("/login");
+  };
 
   // ── Auth ────────────────────────────────────────────────────────────────────
 
@@ -658,12 +663,20 @@ export default function Home() {
               Stash
             </h1>
           </div>
-          <button
-            onClick={() => { setFeedbackSent(false); setFeedbackText(""); setShowFeedbackModal(true); }}
-            className="text-xs text-stone-500 border border-stone-700 rounded-lg px-2.5 py-1.5 hover:border-stone-500 hover:text-stone-300 transition-colors"
-          >
-            💬 Feedback
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => { setFeedbackSent(false); setFeedbackText(""); setShowFeedbackModal(true); }}
+              className="text-xs text-stone-500 border border-stone-700 rounded-lg px-2.5 py-1.5 hover:border-stone-500 hover:text-stone-300 transition-colors"
+            >
+              💬 Feedback
+            </button>
+            <button
+              onClick={handleSignOut}
+              className="text-xs text-stone-500 border border-stone-700 rounded-lg px-2.5 py-1.5 hover:border-stone-500 hover:text-stone-300 transition-colors"
+            >
+              Sign Out
+            </button>
+          </div>
         </div>
         <p className="text-sm text-stone-500 mb-4 italic">{user?.email}</p>
 
