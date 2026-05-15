@@ -1,54 +1,197 @@
 "use client";
 
-import { signInWithPopup, GoogleAuthProvider, onAuthStateChanged } from "firebase/auth";
+import { useState, useEffect } from "react";
+import {
+  signInWithPopup,
+  GoogleAuthProvider,
+  onAuthStateChanged,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  sendPasswordResetEmail,
+} from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
 
 export default function LoginPage() {
   const router = useRouter();
+  const [mode, setMode] = useState<"signin" | "signup">("signin");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [resetSent, setResetSent] = useState(false);
 
-  // ✅ PUT IT HERE (inside component, before return)
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (user) => {
       if (user) router.push("/");
     });
-
     return () => unsub();
   }, [router]);
 
-  const handleLogin = async () => {
-    const provider = new GoogleAuthProvider();
+  const friendlyError = (code: string): string => {
+    switch (code) {
+      case "auth/invalid-email":          return "That email address doesn't look right.";
+      case "auth/user-not-found":         return "No account found with that email.";
+      case "auth/wrong-password":         return "Incorrect password — try again.";
+      case "auth/email-already-in-use":   return "An account with that email already exists. Try signing in.";
+      case "auth/weak-password":          return "Password must be at least 6 characters.";
+      case "auth/too-many-requests":      return "Too many attempts — wait a moment and try again.";
+      case "auth/invalid-credential":     return "Incorrect email or password.";
+      default:                            return "Something went wrong — please try again.";
+    }
+  };
 
+  const handleEmailAuth = async () => {
+    setError(null);
+    if (!email.trim() || !password) { setError("Please enter your email and password."); return; }
+    if (mode === "signup" && password !== confirm) { setError("Passwords don't match."); return; }
+    if (mode === "signup" && password.length < 6) { setError("Password must be at least 6 characters."); return; }
+
+    setLoading(true);
     try {
-      await signInWithPopup(auth, provider);
+      if (mode === "signup") {
+        await createUserWithEmailAndPassword(auth, email.trim(), password);
+      } else {
+        await signInWithEmailAndPassword(auth, email.trim(), password);
+      }
       router.push("/");
-    } catch (e) {
-      console.error(e);
-      alert("Login failed");
+    } catch (e: unknown) {
+      const code = (e as { code?: string }).code || "";
+      setError(friendlyError(code));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogle = async () => {
+    setError(null);
+    try {
+      await signInWithPopup(auth, new GoogleAuthProvider());
+      router.push("/");
+    } catch (e: unknown) {
+      const code = (e as { code?: string }).code || "";
+      setError(friendlyError(code));
+    }
+  };
+
+  const handleForgotPassword = async () => {
+    setError(null);
+    if (!email.trim()) { setError("Enter your email above first."); return; }
+    try {
+      await sendPasswordResetEmail(auth, email.trim());
+      setResetSent(true);
+    } catch (e: unknown) {
+      const code = (e as { code?: string }).code || "";
+      setError(friendlyError(code));
     }
   };
 
   return (
-    <div className="min-h-screen bg-stone-950 flex justify-center items-center">
-      <div className="bg-stone-900 shadow-xl rounded-2xl p-8 w-full max-w-sm text-center border border-stone-700">
+    <div className="min-h-screen bg-stone-950 flex justify-center items-center px-4">
+      <div className="bg-stone-900 shadow-xl rounded-2xl p-8 w-full max-w-sm border border-stone-700">
 
-        <div className="text-4xl mb-3">🎞️</div>
+        <div className="text-center mb-6">
+          <div className="text-4xl mb-2">🎞️</div>
+          <h1 className="text-3xl font-semibold text-stone-100 tracking-wide">Stash</h1>
+          <p className="text-stone-500 mt-1 italic text-sm">Your memories, all in one place</p>
+        </div>
 
-        <h1 className="text-3xl font-semibold mb-2 text-stone-100 tracking-wide">
-          Stash
-        </h1>
+        {/* Mode toggle */}
+        <div className="flex bg-stone-800 rounded-xl p-1 mb-5">
+          <button
+            onClick={() => { setMode("signin"); setError(null); setResetSent(false); }}
+            className={`flex-1 py-2 text-sm font-medium rounded-lg transition-colors ${
+              mode === "signin" ? "bg-amber-400 text-stone-900" : "text-stone-400"
+            }`}
+          >
+            Sign In
+          </button>
+          <button
+            onClick={() => { setMode("signup"); setError(null); setResetSent(false); }}
+            className={`flex-1 py-2 text-sm font-medium rounded-lg transition-colors ${
+              mode === "signup" ? "bg-amber-400 text-stone-900" : "text-stone-400"
+            }`}
+          >
+            Create Account
+          </button>
+        </div>
 
-        <p className="text-stone-500 mb-6 italic">
-          Your memories, all in one place
-        </p>
+        {/* Fields */}
+        <div className="space-y-3 mb-3">
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="Email address"
+            autoCapitalize="none"
+            className="w-full bg-stone-800 border border-stone-600 text-stone-100 placeholder-stone-500 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-amber-400"
+          />
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="Password"
+            onKeyDown={(e) => { if (e.key === "Enter") handleEmailAuth(); }}
+            className="w-full bg-stone-800 border border-stone-600 text-stone-100 placeholder-stone-500 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-amber-400"
+          />
+          {mode === "signup" && (
+            <input
+              type="password"
+              value={confirm}
+              onChange={(e) => setConfirm(e.target.value)}
+              placeholder="Confirm password"
+              onKeyDown={(e) => { if (e.key === "Enter") handleEmailAuth(); }}
+              className="w-full bg-stone-800 border border-stone-600 text-stone-100 placeholder-stone-500 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-amber-400"
+            />
+          )}
+        </div>
 
+        {/* Forgot password */}
+        {mode === "signin" && (
+          <div className="text-right mb-4">
+            {resetSent ? (
+              <p className="text-xs text-green-400">Reset email sent — check your inbox.</p>
+            ) : (
+              <button
+                onClick={handleForgotPassword}
+                className="text-xs text-stone-500 hover:text-amber-400 transition-colors"
+              >
+                Forgot password?
+              </button>
+            )}
+          </div>
+        )}
+
+        {/* Error */}
+        {error && (
+          <p className="text-xs text-red-400 mb-3 text-center">{error}</p>
+        )}
+
+        {/* Submit */}
         <button
-          onClick={handleLogin}
-          className="w-full bg-gradient-to-r from-amber-400 to-orange-400 hover:brightness-105 text-white py-3 rounded-lg font-medium transition shadow-md"
+          onClick={handleEmailAuth}
+          disabled={loading}
+          className="w-full bg-gradient-to-r from-amber-400 to-orange-400 text-white py-3 rounded-xl font-medium text-sm mb-4 disabled:opacity-50 disabled:cursor-not-allowed transition"
         >
-          Sign in with Google
+          {loading ? "Please wait..." : mode === "signin" ? "Sign In" : "Create Account"}
         </button>
+
+        {/* Divider */}
+        <div className="flex items-center gap-3 mb-4">
+          <div className="flex-1 h-px bg-stone-700" />
+          <span className="text-xs text-stone-600">or</span>
+          <div className="flex-1 h-px bg-stone-700" />
+        </div>
+
+        {/* Google */}
+        <button
+          onClick={handleGoogle}
+          className="w-full bg-stone-800 border border-stone-600 text-stone-300 py-3 rounded-xl text-sm font-medium hover:border-stone-400 transition-colors"
+        >
+          Continue with Google
+        </button>
+
       </div>
     </div>
   );
