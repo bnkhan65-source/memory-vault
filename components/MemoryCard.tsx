@@ -403,30 +403,30 @@ export default function MemoryCard({
           <div onClick={(e) => e.stopPropagation()} className="mt-3">
             <p className="text-[10px] text-gray-400 mb-1.5">Open in:</p>
             <div className="flex gap-1.5 flex-wrap">
-              {SERVICES.map((svc) => (
-                <a
-                  key={svc.id}
-                  href={(() => {
-                    const q = encodeURIComponent(`${individualMusicItem.title}${individualMusicItem.artist ? " " + individualMusicItem.artist : ""}`);
-                    switch (svc.id) {
-                      case "apple":   return individualMusicItem.url || `https://music.apple.com/search?term=${q}`;
-                      case "spotify": return `https://open.spotify.com/search/${q}`;
-                      case "youtube": return `https://music.youtube.com/search?q=${q}`;
-                      case "amazon":  return `https://music.amazon.com/search/${q}`;
-                    }
-                  })()}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  onClick={() => selectService(svc.id)}
-                  className={`px-2.5 py-1 rounded-full text-xs font-medium transition-all ${
-                    preferredService === svc.id
-                      ? `${svc.color} text-white`
-                      : "bg-gray-100 text-gray-500 hover:bg-gray-200"
-                  }`}
-                >
-                  {svc.short}
-                </a>
-              ))}
+              {SERVICES.map((svc) => {
+                const q = encodeURIComponent(`${individualMusicItem.title}${individualMusicItem.artist ? " " + individualMusicItem.artist : ""}`);
+                const href =
+                  svc.id === "apple"   ? (individualMusicItem.url || `https://music.apple.com/search?term=${q}`) :
+                  svc.id === "spotify" ? `https://open.spotify.com/search/${q}` :
+                  svc.id === "youtube" ? `https://music.youtube.com/search?q=${q}` :
+                                          `https://music.amazon.com/search/${q}`;
+                return (
+                  <a
+                    key={svc.id}
+                    href={href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => selectService(svc.id)}
+                    className={`px-2.5 py-1 rounded-full text-xs font-medium border transition-all ${
+                      preferredService === svc.id
+                        ? `${svc.color} text-white border-transparent`
+                        : "bg-white text-gray-600 border-gray-300 hover:border-gray-400"
+                    }`}
+                  >
+                    {svc.short}
+                  </a>
+                );
+              })}
             </div>
           </div>
         )}
