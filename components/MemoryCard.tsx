@@ -68,11 +68,11 @@ export default function MemoryCard({
     return "apple";
   });
 
-  const SERVICES: { id: MusicService; label: string; color: string }[] = [
-    { id: "apple",   label: "Apple Music",   color: "bg-rose-500" },
-    { id: "spotify", label: "Spotify",       color: "bg-green-500" },
-    { id: "youtube", label: "YouTube Music", color: "bg-red-500" },
-    { id: "amazon",  label: "Amazon Music",  color: "bg-blue-500" },
+  const SERVICES: { id: MusicService; label: string; color: string; short: string }[] = [
+    { id: "apple",   label: "Apple Music",   short: "Apple",   color: "bg-rose-500" },
+    { id: "spotify", label: "Spotify",       short: "Spotify", color: "bg-green-500" },
+    { id: "youtube", label: "YouTube Music", short: "YouTube", color: "bg-red-500" },
+    { id: "amazon",  label: "Amazon Music",  short: "Amazon",  color: "bg-blue-500" },
   ];
 
   const getMusicUrl = (item: PlaylistItem): string => {
@@ -133,6 +133,22 @@ export default function MemoryCard({
     }
   };
 
+  // For individual music cards — parse title/artist from "Title — Artist" text
+  const individualMusicItem: PlaylistItem | null =
+    memory.type === "music" && memory.spotifyUrl
+      ? (() => {
+          const parts = (memory.text || "").split(" — ");
+          return {
+            kind: "music",
+            title: parts[0]?.trim() || memory.text || "",
+            artist: parts[1]?.trim(),
+            url: memory.spotifyUrl || undefined,
+          };
+        })()
+      : null;
+
+  const serviceLabel = SERVICES.find((s) => s.id === preferredService)?.label || "Music";
+
   return (
     <div
       ref={cardRef}
@@ -143,6 +159,9 @@ export default function MemoryCard({
       onTouchEnd={() => setIsPressed(false)}
       onClick={() => {
         if (memory.type === "list" || memory.type === "playlist") return;
+
+        // Music cards — tap opens in preferred service
+        if (individualMusicItem) return;
 
         // Video cards — tap to watch
         if (memory.videoUrl) {
@@ -170,7 +189,7 @@ export default function MemoryCard({
             alt="Memory"
             onClick={(e) => {
               e.stopPropagation();
-              if (memory.spotifyUrl) window.open(memory.spotifyUrl, "_blank");
+              if (individualMusicItem) window.open(getMusicUrl(individualMusicItem), "_blank");
               else if (memory.videoUrl) window.open(memory.videoUrl, "_blank");
             }}
             className="w-20 h-20 rounded-lg object-cover cursor-pointer"
@@ -212,7 +231,7 @@ export default function MemoryCard({
                   onClick={(e) => { e.stopPropagation(); setShowExport(!showExport); }}
                   className="text-xs px-3 py-1 bg-stone-100 text-stone-600 rounded-full hover:bg-stone-200 transition"
                 >
-                  {showExport ? "Hide export" : "↗ Export to Apple Music"}
+                  {showExport ? "Hide" : `↗ Open in ${serviceLabel}`}
                 </button>
                 {showExport && (
                   <div onClick={(e) => e.stopPropagation()} className="mt-2 bg-stone-50 border border-stone-200 rounded-xl p-3 space-y-3">
@@ -284,11 +303,11 @@ export default function MemoryCard({
                       {item.artist && <p>{item.artist}</p>}
                       {item.year && <p>{item.year}</p>}
 
-                      {/* Music — open in Apple Music */}
-                      {item.kind === "music" && item.url && (
-                        <a href={item.url} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()}
+                      {/* Music — open in preferred service */}
+                      {item.kind === "music" && (
+                        <a href={getMusicUrl(item)} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()}
                           className="inline-block mt-1 px-3 py-1 bg-gray-800 text-white rounded-full text-xs">
-                          🎵 Open in Apple Music
+                          🎵 Open in {serviceLabel}
                         </a>
                       )}
 
@@ -379,11 +398,37 @@ export default function MemoryCard({
           </p>
         )}
 
-        {/* Spotify helper */}
-        {memory.spotifyUrl && (
-          <p className="text-[10px] text-gray-400 mt-2">
-            Tap artwork to open
-          </p>
+        {/* Music service picker for individual music cards */}
+        {individualMusicItem && (
+          <div onClick={(e) => e.stopPropagation()} className="mt-3">
+            <p className="text-[10px] text-gray-400 mb-1.5">Open in:</p>
+            <div className="flex gap-1.5 flex-wrap">
+              {SERVICES.map((svc) => (
+                <a
+                  key={svc.id}
+                  href={(() => {
+                    const q = encodeURIComponent(`${individualMusicItem.title}${individualMusicItem.artist ? " " + individualMusicItem.artist : ""}`);
+                    switch (svc.id) {
+                      case "apple":   return individualMusicItem.url || `https://music.apple.com/search?term=${q}`;
+                      case "spotify": return `https://open.spotify.com/search/${q}`;
+                      case "youtube": return `https://music.youtube.com/search?q=${q}`;
+                      case "amazon":  return `https://music.amazon.com/search/${q}`;
+                    }
+                  })()}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => selectService(svc.id)}
+                  className={`px-2.5 py-1 rounded-full text-xs font-medium transition-all ${
+                    preferredService === svc.id
+                      ? `${svc.color} text-white`
+                      : "bg-gray-100 text-gray-500 hover:bg-gray-200"
+                  }`}
+                >
+                  {svc.short}
+                </a>
+              ))}
+            </div>
+          </div>
         )}
 
         {/* Video link */}
