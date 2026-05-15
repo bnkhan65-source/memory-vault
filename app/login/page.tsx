@@ -192,6 +192,13 @@ export default function LoginPage() {
           Continue with Google
         </button>
 
+        <p className="text-center text-xs text-stone-600 mt-5">
+          By signing in you agree to our{" "}
+          <a href="/privacy" className="text-stone-500 underline hover:text-stone-300 transition-colors">
+            Privacy Policy
+          </a>
+        </p>
+
       </div>
     </div>
   );
