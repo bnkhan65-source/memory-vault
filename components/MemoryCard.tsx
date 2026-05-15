@@ -135,7 +135,7 @@ export default function MemoryCard({
 
   // For individual music cards — parse title/artist from "Title — Artist" text
   const individualMusicItem: PlaylistItem | null =
-    memory.type === "music" && memory.spotifyUrl
+    memory.spotifyUrl && memory.type !== "playlist"
       ? (() => {
           const parts = (memory.text || "").split(" — ");
           return {
