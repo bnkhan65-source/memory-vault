@@ -121,10 +121,10 @@ export default function MemoryCard({
 
   // Resolve list items — prefer structured listItems, fall back to comma-parsing
   const hasStructuredItems = !!(memory.listItems && memory.listItems.length > 0);
+  const resolvedListTitle = hasStructuredItems ? (memory.text || null) : null;
   const resolvedListItems = hasStructuredItems
-    ? memory.listItems!
+    ? memory.listItems!.filter((item) => item !== resolvedListTitle)
     : (memory.text || "").split(",").map((s) => s.trim()).filter(Boolean);
-  const resolvedListTitle = hasStructuredItems ? memory.text : null;
 
   const handleAddItem = () => {
     if (onAddListItem && addItemInput.trim()) {
