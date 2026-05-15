@@ -305,10 +305,34 @@ export default function MemoryCard({
 
                       {/* Music — open in preferred service */}
                       {item.kind === "music" && (
-                        <a href={getMusicUrl(item)} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()}
-                          className="inline-block mt-1 px-3 py-1 bg-gray-800 text-white rounded-full text-xs">
-                          🎵 Open in {serviceLabel}
-                        </a>
+                        <div onClick={e => e.stopPropagation()} className="mt-1">
+                          <div className="flex gap-1 flex-wrap">
+                            {SERVICES.map((svc) => {
+                              const q = encodeURIComponent(`${item.title}${item.artist ? " " + item.artist : ""}`);
+                              const href =
+                                svc.id === "apple"   ? (item.url || `https://music.apple.com/search?term=${q}`) :
+                                svc.id === "spotify" ? `https://open.spotify.com/search/${q}` :
+                                svc.id === "youtube" ? `https://music.youtube.com/search?q=${q}` :
+                                                        `https://music.amazon.com/search/${q}`;
+                              return (
+                                <a
+                                  key={svc.id}
+                                  href={href}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  onClick={() => selectService(svc.id)}
+                                  className={`px-2 py-1 rounded-full text-xs font-medium border transition-all ${
+                                    preferredService === svc.id
+                                      ? `${svc.color} text-white border-transparent`
+                                      : "bg-white text-gray-600 border-gray-300"
+                                  }`}
+                                >
+                                  {svc.short}
+                                </a>
+                              );
+                            })}
+                          </div>
+                        </div>
                       )}
 
                       {/* Video — watch on YouTube */}
