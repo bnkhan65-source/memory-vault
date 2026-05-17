@@ -424,27 +424,29 @@ export default function MemoryCard({
               </div>
             ))}
             {onAddListItem && (
-              <div className="flex gap-2 mt-3">
+              <div className="flex flex-col gap-2 mt-3">
                 <input
                   value={addItemInput}
                   onChange={(e) => { setAddItemInput(e.target.value); }}
                   onKeyDown={(e) => { if (e.key === "Enter") { handleAddItem(); } }}
                   onClick={(e) => { e.stopPropagation(); }}
                   placeholder={isListening ? "Listening…" : "Add item..."}
-                  className="flex-1 bg-gray-100 border border-gray-200 rounded-lg px-3 py-1.5 text-sm text-gray-800 placeholder-gray-400 focus:outline-none"
+                  className="w-full bg-gray-100 border border-gray-200 rounded-lg px-3 py-1.5 text-sm text-gray-800 placeholder-gray-400 focus:outline-none"
                 />
-                <button
-                  onClick={(e) => { e.stopPropagation(); startListMic(); }}
-                  className={`px-3 py-1.5 rounded-lg text-sm ${isListening ? "bg-red-500 text-white" : "bg-gray-200 text-gray-600"}`}
-                >
-                  {isListening ? "⏹️" : "🎤"}
-                </button>
-                <button
-                  onClick={(e) => { e.stopPropagation(); handleAddItem(); }}
-                  className="px-3 py-1.5 bg-amber-400 text-white rounded-lg text-sm font-bold"
-                >
-                  +
-                </button>
+                <div className="flex gap-2">
+                  <button
+                    onClick={(e) => { e.stopPropagation(); startListMic(); }}
+                    className={`flex-1 py-1.5 rounded-lg text-sm ${isListening ? "bg-red-500 text-white" : "bg-gray-200 text-gray-600"}`}
+                  >
+                    {isListening ? "⏹️ Stop" : "🎤 Speak"}
+                  </button>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); handleAddItem(); }}
+                    className="flex-1 py-1.5 bg-amber-400 text-white rounded-lg text-sm font-bold"
+                  >
+                    + Add
+                  </button>
+                </div>
               </div>
             )}
           </div>
