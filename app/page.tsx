@@ -19,6 +19,7 @@ import {
 import { useRouter } from "next/navigation";
 import BottomNav from "../components/BottomNav";
 import MemoryCard from "@/components/MemoryCard";
+import OnboardingModal from "@/components/OnboardingModal";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -94,6 +95,7 @@ export default function Home() {
   const [feedbackText, setFeedbackText] = useState("");
   const [feedbackSent, setFeedbackSent] = useState(false);
   const [showListModal, setShowListModal] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(false);
   const [listTitle, setListTitle] = useState("");
   const [newListItemInput, setNewListItemInput] = useState("");
   const memoryInputRef = useRef<HTMLInputElement>(null);
@@ -120,6 +122,9 @@ export default function Home() {
         } else {
           setUser(u);
           await Promise.all([fetchMemories(u.uid), loadUserProfile(u.uid)]);
+          if (!localStorage.getItem("stash_onboarded")) {
+            setShowOnboarding(true);
+          }
         }
       } catch (err) {
         console.error("AUTH ERROR:", err);
@@ -678,7 +683,8 @@ export default function Home() {
             </button>
           </div>
         </div>
-        <p className="text-sm text-stone-500 mb-4 italic">{user?.email}</p>
+        <p className="text-sm text-stone-500 mb-1 italic">{user?.email}</p>
+        <p className="text-[10px] text-stone-600 mb-4">🔒 Private &amp; secure — your memories are yours only</p>
 
         {error && (
           <div className="mb-3 px-3 py-2 bg-red-900/30 border border-red-700 rounded-lg text-sm text-red-400 flex items-center justify-between">
@@ -1210,6 +1216,13 @@ export default function Home() {
         </div>
 
       </div>
+
+      {showOnboarding && (
+        <OnboardingModal onDone={() => {
+          localStorage.setItem("stash_onboarded", "1");
+          setShowOnboarding(false);
+        }} />
+      )}
 
       <BottomNav />
 
