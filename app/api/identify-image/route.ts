@@ -47,7 +47,7 @@ export async function POST(req: NextRequest) {
               },
               {
                 type: "text",
-                text: "What is the main object or item in this photo? Reply with only the item name, 1-3 words, no punctuation.",
+                text: "What is the main object or item in this photo? If it is a plant, identify the specific common name (e.g. 'monstera', 'snake plant', 'fiddle leaf fig'). For food, name the specific dish or ingredient. For everything else, give the most specific common name you can. Reply with only the item name, 1-3 words, no punctuation.",
               },
             ],
           },
