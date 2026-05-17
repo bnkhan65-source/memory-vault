@@ -39,8 +39,9 @@ export default function RootLayout({
       <head>
         <link rel="apple-touch-icon" href="/icon-192.png" />
         <meta name="theme-color" content="#1c1917" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
       </head>
-      <body className="min-h-screen">
+      <body className="h-full overflow-hidden">
         {children}
       </body>
     </html>
