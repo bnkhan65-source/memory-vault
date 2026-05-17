@@ -5,7 +5,6 @@ import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { ref, uploadString, getDownloadURL } from "firebase/storage";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import BottomNav from "../../components/BottomNav";
 
 export default function CameraPage() {
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -98,7 +97,6 @@ export default function CameraPage() {
     const uid = auth.currentUser.uid;
 
     try {
-      // Temporary caption (avoid API issues)
       const caption = "New memory 📸";
 
       const storageRef = ref(storage, `memories/${uid}/${Date.now()}.png`);
@@ -115,13 +113,24 @@ export default function CameraPage() {
 
       router.push("/");
     } catch (error: any) {
-  console.error("FULL ERROR:", error);
-  alert(error.message || "Save failed");
+      console.error("FULL ERROR:", error);
+      alert(error.message || "Save failed");
     }
   };
 
   return (
     <div className="relative min-h-screen bg-black">
+
+      {/* Back Button */}
+      <button
+        onClick={() => {
+          stream?.getTracks().forEach(track => track.stop());
+          router.push("/");
+        }}
+        className="absolute top-6 left-6 z-50 bg-black/50 text-white px-4 py-2 rounded-lg"
+      >
+        ← Back
+      </button>
 
       {/* Camera View */}
       {!photo && (
@@ -155,31 +164,32 @@ export default function CameraPage() {
         <img src={photo} className="w-full h-full object-cover" />
       )}
 
-     <div className="absolute bottom-64 left-0 right-0 flex flex-col items-center z-40 px-4">
+      <div className="absolute bottom-64 left-0 right-0 flex flex-col items-center z-40 px-4">
 
-  {/* Selected Category Label */}
-  <div className="text-white text-sm mb-2 bg-black/40 px-3 py-1 rounded-full backdrop-blur-md">
-    Selected: {selectedCategory}
-  </div>
+        {/* Selected Category Label */}
+        <div className="text-white text-sm mb-2 bg-black/40 px-3 py-1 rounded-full backdrop-blur-md">
+          Selected: {selectedCategory}
+        </div>
 
-  {/* Category Buttons */}
-  <div className="flex gap-2 flex-wrap justify-center bg-black/40 backdrop-blur-md px-3 py-2 rounded-full">
-    {["Moments", "People", "Music", "Ideas"].map(cat => (
-      <button
-        key={cat}
-        onClick={() => setSelectedCategory(cat)}
-        className={`px-3 py-1 rounded-full text-sm whitespace-nowrap ${
-          selectedCategory === cat
-            ? "bg-white text-black"
-            : "bg-white/20 text-white"
-        }`}
-      >
-        {cat}
-      </button>
-    ))}
-  </div>
+        {/* Category Buttons */}
+        <div className="flex gap-2 flex-wrap justify-center bg-black/40 backdrop-blur-md px-3 py-2 rounded-full">
+          {["Moments", "People", "Music", "Ideas"].map(cat => (
+            <button
+              key={cat}
+              onClick={() => setSelectedCategory(cat)}
+              className={`px-3 py-1 rounded-full text-sm whitespace-nowrap ${
+                selectedCategory === cat
+                  ? "bg-white text-black"
+                  : "bg-white/20 text-white"
+              }`}
+            >
+              {cat}
+            </button>
+          ))}
+        </div>
 
-</div>
+      </div>
+
       {/* Controls */}
       <div className="absolute bottom-24 left-0 right-0 flex justify-center gap-4 z-50">
         {!photo ? (
@@ -209,7 +219,6 @@ export default function CameraPage() {
         )}
       </div>
 
-      <BottomNav />
     </div>
   );
 }
