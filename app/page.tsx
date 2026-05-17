@@ -17,7 +17,6 @@ import {
   setDoc,
 } from "firebase/firestore";
 import { useRouter } from "next/navigation";
-import BottomNav from "../components/BottomNav";
 import MemoryCard from "@/components/MemoryCard";
 import OnboardingModal from "@/components/OnboardingModal";
 
@@ -823,15 +822,15 @@ export default function Home() {
           <button
             onClick={() => saveMemory()}
             disabled={!memory.trim() || isSaving}
-            className={`px-4 py-2 rounded-lg font-medium shadow-md transition
+            className={`text-sm rounded-lg px-3 py-2 transition
               ${
                 !memory.trim() || isSaving
-                  ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                  : "bg-gradient-to-r from-amber-400 to-orange-400 text-white hover:brightness-110 active:brightness-95 active:shadow-inner"
+                  ? "bg-stone-800 border border-stone-600 text-stone-500 cursor-not-allowed"
+                  : "bg-gradient-to-r from-amber-400 to-orange-400 text-white hover:brightness-110"
               }
             `}
           >
-            {isSaving ? "Saving..." : "Save Memory"}
+            {isSaving ? "Saving..." : "Save"}
           </button>
         </div>
 
@@ -1228,8 +1227,6 @@ export default function Home() {
           setShowOnboarding(false);
         }} />
       )}
-
-      <BottomNav />
 
       {/* TMDB Attribution — required by TMDB terms of use */}
       <p className="text-center text-[10px] text-stone-600 py-2">
