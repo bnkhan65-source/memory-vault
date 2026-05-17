@@ -1,5 +1,4 @@
 // app/api/transcribe/route.ts
-import OpenAI, { toFile } from "openai";
 import { NextResponse } from "next/server";
 import { verifyFirebaseToken } from "@/lib/verifyAuth";
 
@@ -14,6 +13,12 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }
 
+  // ── API key check ─────────────────────────────────────────────────────────
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey) {
+    return NextResponse.json({ error: "OpenAI API key not configured on server." }, { status: 500 });
+  }
+
   // ── Transcribe ────────────────────────────────────────────────────────────
   try {
     const formData = await req.formData();
@@ -23,19 +28,24 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "No audio file received." }, { status: 400 });
     }
 
-    const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-
-    const buffer = Buffer.from(await file.arrayBuffer());
-    const uploadFile = await toFile(buffer, file.name || "audio.webm", {
-      type: file.type || "audio/webm",
+    const res = await fetch("https://api.openai.com/v1/audio/transcriptions", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${apiKey}` },
+      body: (() => {
+        const fd = new FormData();
+        fd.append("file", file, file.name || "audio.webm");
+        fd.append("model", "whisper-1");
+        return fd;
+      })(),
     });
 
-    const transcription = await openai.audio.transcriptions.create({
-      file: uploadFile,
-      model: "whisper-1",
-    });
+    if (!res.ok) {
+      const err = await res.text();
+      return NextResponse.json({ error: `Whisper error: ${err}` }, { status: 500 });
+    }
 
-    return NextResponse.json({ text: transcription.text });
+    const data = await res.json();
+    return NextResponse.json({ text: data.text });
   } catch (error: unknown) {
     const msg = error instanceof Error ? error.message : String(error);
     console.error("TRANSCRIPTION ERROR:", msg);
