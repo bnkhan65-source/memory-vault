@@ -6,11 +6,11 @@ import OpenAI from "openai";
 import { NextResponse } from "next/server";
 import { verifyFirebaseToken } from "@/lib/verifyAuth";
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+
+export const dynamic = "force-dynamic";
 
 export async function POST(req: Request) {
+  const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
   // ── Auth check ────────────────────────────────────────────────────────────
   const authHeader = req.headers.get("Authorization");
   const token = authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : null;
