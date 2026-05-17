@@ -30,7 +30,7 @@ export async function POST(req: Request) {
 
     // Convert to Buffer-backed File for SDK v6 compatibility
     const arrayBuffer = await file.arrayBuffer();
-    const audioFile = new File([arrayBuffer], "audio.webm", { type: "audio/webm" });
+    const audioFile = new File([arrayBuffer], file.name || "audio.webm", { type: file.type || "audio/webm" });
 
     const transcription = await openai.audio.transcriptions.create({
       file: audioFile,

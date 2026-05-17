@@ -515,9 +515,11 @@ export default function Home() {
       mediaRecorder.onstop = async () => {
         setIsListening(false);
 
-        const audioBlob = new Blob(audioChunks, { type: "audio/webm" });
+        const mimeType = MediaRecorder.isTypeSupported("audio/webm") ? "audio/webm" : "audio/mp4";
+        const audioBlob = new Blob(audioChunks, { type: mimeType });
+        const ext = mimeType === "audio/mp4" ? "m4a" : "webm";
         const formData = new FormData();
-        formData.append("file", audioBlob, "recording.webm");
+        formData.append("file", audioBlob, `recording.${ext}`);
 
         try {
           // Step 1: Transcribe audio (send Firebase token to verify identity)
@@ -528,7 +530,10 @@ export default function Home() {
             body: formData,
           });
           const data = await res.json();
-          if (!data.text) return;
+          if (!data.text) {
+            setError(data.error || "Could not hear anything — please try again.");
+            return;
+          }
 
           const spokenText = data.text.trim();
 
