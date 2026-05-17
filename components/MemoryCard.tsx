@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import { MEMORY_TYPE_META } from "@/lib/memoryTypes";
+import { auth } from "@/lib/firebase";
 
 type PlaylistItem = {
   kind: "movie" | "music" | "video";
@@ -59,6 +60,8 @@ export default function MemoryCard({
   const [showExport, setShowExport] = useState(false);
   const [copied, setCopied] = useState(false);
   const [addItemInput, setAddItemInput] = useState("");
+  const [isListening, setIsListening] = useState(false);
+  const listMediaRecorderRef = useRef<MediaRecorder | null>(null);
 
   type MusicService = "apple" | "spotify" | "youtube" | "amazon";
   const [preferredService, setPreferredService] = useState<MusicService>(() => {
@@ -130,6 +133,49 @@ export default function MemoryCard({
     if (onAddListItem && addItemInput.trim()) {
       onAddListItem(memory.id, addItemInput.trim());
       setAddItemInput("");
+    }
+  };
+
+  const startListMic = async () => {
+    if (isListening) {
+      listMediaRecorderRef.current?.stop();
+      return;
+    }
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mimeType = MediaRecorder.isTypeSupported("audio/webm") ? "audio/webm" : "audio/mp4";
+      const recorder = new MediaRecorder(stream, { mimeType });
+      const chunks: BlobPart[] = [];
+
+      recorder.ondataavailable = (e) => { if (e.data.size > 0) chunks.push(e.data); };
+      recorder.onstop = async () => {
+        stream.getTracks().forEach(t => t.stop());
+        setIsListening(false);
+        try {
+          const token = await auth.currentUser?.getIdToken();
+          if (!token) return;
+          const blob = new Blob(chunks, { type: mimeType });
+          const ext = mimeType === "audio/mp4" ? "m4a" : "webm";
+          const fd = new FormData();
+          fd.append("file", blob, `recording.${ext}`);
+          const res = await fetch("/api/transcribe", {
+            method: "POST",
+            headers: { Authorization: `Bearer ${token}` },
+            body: fd,
+          });
+          const data = await res.json();
+          if (data.text) setAddItemInput(data.text.trim());
+        } catch (err) {
+          console.error("List mic transcription error:", err);
+        }
+      };
+
+      recorder.start();
+      setIsListening(true);
+      listMediaRecorderRef.current = recorder;
+      setTimeout(() => { if (recorder.state === "recording") recorder.stop(); }, 4000);
+    } catch (err) {
+      console.error("List mic error:", err);
     }
   };
 
@@ -384,9 +430,15 @@ export default function MemoryCard({
                   onChange={(e) => { setAddItemInput(e.target.value); }}
                   onKeyDown={(e) => { if (e.key === "Enter") { handleAddItem(); } }}
                   onClick={(e) => { e.stopPropagation(); }}
-                  placeholder="Add item..."
+                  placeholder={isListening ? "Listening…" : "Add item..."}
                   className="flex-1 bg-gray-100 border border-gray-200 rounded-lg px-3 py-1.5 text-sm text-gray-800 placeholder-gray-400 focus:outline-none"
                 />
+                <button
+                  onClick={(e) => { e.stopPropagation(); startListMic(); }}
+                  className={`px-3 py-1.5 rounded-lg text-sm ${isListening ? "bg-red-500 text-white" : "bg-gray-200 text-gray-600"}`}
+                >
+                  {isListening ? "⏹️" : "🎤"}
+                </button>
                 <button
                   onClick={(e) => { e.stopPropagation(); handleAddItem(); }}
                   className="px-3 py-1.5 bg-amber-400 text-white rounded-lg text-sm font-bold"
