@@ -1,8 +1,5 @@
 // app/api/transcribe/route.ts
-// Receives an audio file and transcribes it using OpenAI Whisper.
-// Requires a valid Firebase ID token in the Authorization header.
-
-import OpenAI from "openai";
+import OpenAI, { toFile } from "openai";
 import { NextResponse } from "next/server";
 import { verifyFirebaseToken } from "@/lib/verifyAuth";
 
@@ -28,12 +25,13 @@ export async function POST(req: Request) {
 
     const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-    // Convert to Buffer-backed File for SDK v6 compatibility
-    const arrayBuffer = await file.arrayBuffer();
-    const audioFile = new File([arrayBuffer], file.name || "audio.webm", { type: file.type || "audio/webm" });
+    const buffer = Buffer.from(await file.arrayBuffer());
+    const uploadFile = await toFile(buffer, file.name || "audio.webm", {
+      type: file.type || "audio/webm",
+    });
 
     const transcription = await openai.audio.transcriptions.create({
-      file: audioFile,
+      file: uploadFile,
       model: "whisper-1",
     });
 
