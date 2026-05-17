@@ -61,7 +61,9 @@ export default function MemoryCard({
   const [copied, setCopied] = useState(false);
   const [addItemInput, setAddItemInput] = useState("");
   const [isListening, setIsListening] = useState(false);
+  const [isIdentifying, setIsIdentifying] = useState(false);
   const listMediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const photoInputRef = useRef<HTMLInputElement>(null);
 
   type MusicService = "apple" | "spotify" | "youtube" | "amazon";
   const [preferredService, setPreferredService] = useState<MusicService>(() => {
@@ -176,6 +178,27 @@ export default function MemoryCard({
       setTimeout(() => { if (recorder.state === "recording") recorder.stop(); }, 4000);
     } catch (err) {
       console.error("List mic error:", err);
+    }
+  };
+
+  const identifyPhoto = async (file: File) => {
+    setIsIdentifying(true);
+    try {
+      const token = await auth.currentUser?.getIdToken();
+      if (!token) return;
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await fetch("/api/identify-image", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+        body: fd,
+      });
+      const data = await res.json();
+      if (data.item) setAddItemInput(data.item);
+    } catch (err) {
+      console.error("Identify photo error:", err);
+    } finally {
+      setIsIdentifying(false);
     }
   };
 
@@ -430,7 +453,7 @@ export default function MemoryCard({
                   onChange={(e) => { setAddItemInput(e.target.value); }}
                   onKeyDown={(e) => { if (e.key === "Enter") { handleAddItem(); } }}
                   onClick={(e) => { e.stopPropagation(); }}
-                  placeholder={isListening ? "Listening…" : "Add item..."}
+                  placeholder={isListening ? "Listening…" : isIdentifying ? "Identifying…" : "Add item..."}
                   className="w-full bg-gray-100 border border-gray-200 rounded-lg px-3 py-1.5 text-sm text-gray-800 placeholder-gray-400 focus:outline-none"
                 />
                 <div className="flex gap-2">
@@ -441,12 +464,31 @@ export default function MemoryCard({
                     {isListening ? "⏹️ Stop" : "🎤 Speak"}
                   </button>
                   <button
+                    onClick={(e) => { e.stopPropagation(); photoInputRef.current?.click(); }}
+                    disabled={isIdentifying}
+                    className="flex-1 py-1.5 rounded-lg text-sm bg-gray-200 text-gray-600 disabled:opacity-50"
+                  >
+                    {isIdentifying ? "🔍 …" : "📷 Photo"}
+                  </button>
+                  <button
                     onClick={(e) => { e.stopPropagation(); handleAddItem(); }}
                     className="flex-1 py-1.5 bg-amber-400 text-white rounded-lg text-sm font-bold"
                   >
                     + Add
                   </button>
                 </div>
+                <input
+                  ref={photoInputRef}
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) identifyPhoto(file);
+                    e.target.value = "";
+                  }}
+                />
               </div>
             )}
           </div>
