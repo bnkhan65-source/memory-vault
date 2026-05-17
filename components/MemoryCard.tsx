@@ -164,7 +164,7 @@ export default function MemoryCard({
             body: fd,
           });
           const data = await res.json();
-          if (data.text) setAddItemInput(data.text.trim());
+          if (data.text) setAddItemInput(data.text.trim().replace(/[.,!?;:]+$/, ""));
         } catch (err) {
           console.error("List mic transcription error:", err);
         }
