@@ -758,6 +758,15 @@ export default function Home() {
             >
               📝
             </button>
+
+            <button
+              type="button"
+              onClick={() => router.push("/camera")}
+              className="p-3 bg-stone-800 border border-stone-600 rounded-lg text-stone-400"
+              title="Add a photo memory"
+            >
+              📷
+            </button>
           </div>
 
           {isListening && (
