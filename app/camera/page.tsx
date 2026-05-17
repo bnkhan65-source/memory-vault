@@ -119,7 +119,7 @@ export default function CameraPage() {
   };
 
   return (
-    <div className="relative min-h-screen bg-black">
+    <div className="relative h-screen bg-black overflow-hidden">
 
       {/* Back Button */}
       <button
@@ -139,6 +139,7 @@ export default function CameraPage() {
             ref={videoRef}
             autoPlay
             playsInline
+            muted
             className="w-full h-full object-cover"
           />
 
