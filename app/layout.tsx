@@ -41,7 +41,7 @@ export default function RootLayout({
         <meta name="theme-color" content="#1c1917" />
         <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
       </head>
-      <body className="h-full overflow-hidden">
+      <body className="h-full">
         {children}
       </body>
     </html>
