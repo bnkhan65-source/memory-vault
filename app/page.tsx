@@ -412,11 +412,19 @@ export default function Home() {
       return;
     }
     const newMemories: Memory[] = [];
+    let skipped = 0;
     for (const item of selectedItems) {
       try {
         const text = item.kind === "music"
           ? `${item.title}${item.artist ? ` — ${item.artist}` : ""}`
           : `${item.title}${item.year ? ` (${item.year})` : ""}`;
+
+        // Skip if already saved (same title text, case-insensitive)
+        const alreadySaved = memories.some(
+          m => m.text?.toLowerCase().trim() === text.toLowerCase().trim()
+        );
+        if (alreadySaved) { skipped++; continue; }
+
         const type = item.kind === "video" ? "vibe" : item.url ? "vibe" : "snapshot";
         const videoUrl = item.kind === "video" && item.videoId ? `https://www.youtube.com/watch?v=${item.videoId}` : null;
         const newDoc = await addDoc(collection(db, "users", user.uid, "memories"), {
@@ -426,6 +434,9 @@ export default function Home() {
       } catch (err) {
         console.error("SAVE SEPARATE ERROR:", err);
       }
+    }
+    if (skipped > 0) {
+      setError(`${skipped} item${skipped > 1 ? "s were" : " was"} already in your Stash and skipped.`);
     }
     setMemories((prev) => [...newMemories, ...prev]);
     clearSearchState();
