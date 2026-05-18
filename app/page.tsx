@@ -87,9 +87,6 @@ export default function Home() {
   const [voiceQuery, setVoiceQuery] = useState("");
   const [mediaRecorderInstance, setMediaRecorderInstance] =
     useState<MediaRecorder | null>(null);
-  const [userPlan, setUserPlan] = useState<"free" | "premium">("free");
-  const [trialDaysLeft, setTrialDaysLeft] = useState<number | null>(null);
-  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [showBag, setShowBag] = useState(false);
   const [bagBump, setBagBump] = useState(false);
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
@@ -142,35 +139,13 @@ export default function Home() {
     };
   }, [router]);
 
-  // ── User profile (plan + trial) ─────────────────────────────────────────────
+  // ── User profile ────────────────────────────────────────────────────────────
 
   const loadUserProfile = async (uid: string) => {
     const profileRef = doc(db, "users", uid);
     const snap = await getDoc(profileRef);
-
-    const now = new Date();
-
     if (!snap.exists()) {
-      // First sign-in — create profile and start trial
-      await setDoc(profileRef, {
-        plan: "free",
-        trialStartDate: now.toISOString(),
-      });
-      setUserPlan("free");
-      setTrialDaysLeft(7);
-    } else {
-      const data = snap.data();
-      const plan = data.plan || "free";
-      setUserPlan(plan);
-
-      if (plan === "premium") {
-        setTrialDaysLeft(null);
-      } else {
-        const trialStart = data.trialStartDate ? new Date(data.trialStartDate) : now;
-        const daysPassed = Math.floor((now.getTime() - trialStart.getTime()) / (1000 * 60 * 60 * 24));
-        const daysLeft = Math.max(0, 7 - daysPassed);
-        setTrialDaysLeft(daysLeft);
-      }
+      await setDoc(profileRef, { createdAt: new Date().toISOString() });
     }
   };
 
@@ -497,13 +472,7 @@ export default function Home() {
 
   // ── Voice recording (Whisper) ───────────────────────────────────────────────
 
-  const micAllowed = userPlan === "premium" || (trialDaysLeft !== null && trialDaysLeft > 0);
-
   const startRecording = async () => {
-    if (!micAllowed) {
-      setShowUpgradeModal(true);
-      return;
-    }
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const mediaRecorder = new MediaRecorder(stream);
@@ -731,11 +700,11 @@ export default function Home() {
                 }
               }}
               className={`flex flex-col items-center gap-1 px-4 py-1 transition-opacity ${
-                isListening ? "opacity-100" : micAllowed ? "opacity-100" : "opacity-40"
+                isListening ? "opacity-100" : "opacity-100"
               }`}
-              title={isListening ? "Stop recording" : micAllowed ? "Speak a memory" : "Upgrade to use mic"}
+              title={isListening ? "Stop recording" : "Speak a memory"}
             >
-              <span className="text-2xl">{isListening ? "⏹️" : micAllowed ? "🎤" : "🔒"}</span>
+              <span className="text-2xl">{isListening ? "⏹️" : "🎤"}</span>
               <span className={`text-[10px] ${isListening ? "text-red-400" : "text-stone-500"}`}>
                 {isListening ? "Stop" : "Speak"}
               </span>
@@ -762,9 +731,6 @@ export default function Home() {
             </button>
           </div>
 
-          {userPlan !== "premium" && trialDaysLeft !== null && trialDaysLeft > 0 && (
-            <p className="text-[10px] text-amber-400 text-center">{trialDaysLeft} trial days remaining</p>
-          )}
         </div>
 
           {isDetecting && (
@@ -1093,48 +1059,6 @@ export default function Home() {
                   </div>
                 </>
               )}
-            </div>
-          </div>
-        )}
-
-        {/* ── Upgrade modal ── */}
-        {showUpgradeModal && (
-          <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 px-4">
-            <div className="bg-stone-900 border border-stone-700 rounded-2xl p-6 w-full max-w-sm">
-              <div className="text-center mb-5">
-                <div className="text-4xl mb-3">🎤</div>
-                <h3 className="text-stone-100 font-bold text-lg mb-1">Your free trial has ended</h3>
-                <p className="text-stone-400 text-sm">Upgrade to keep using voice search — the fastest way to find and save music, movies, and videos.</p>
-              </div>
-
-              <div className="bg-stone-800 border border-stone-600 rounded-xl p-4 mb-4">
-                <p className="text-amber-400 font-semibold text-sm mb-2">✨ Premium includes:</p>
-                <ul className="space-y-1.5 text-sm text-stone-300">
-                  <li>🎤 Unlimited voice search</li>
-                  <li>🎯 Auto intent detection (music, movies, videos)</li>
-                  <li>🎶 Unlimited playlists</li>
-                  <li>⚡ Priority access to new features</li>
-                </ul>
-              </div>
-
-              <div className="space-y-2">
-                <button
-                  onClick={() => {
-                    // Stripe/payment coming soon — contact for now
-                    window.open("mailto:bnkhan65@gmail.com?subject=Stash Premium Upgrade", "_blank");
-                    setShowUpgradeModal(false);
-                  }}
-                  className="w-full bg-gradient-to-r from-amber-400 to-orange-400 text-white py-3 rounded-xl text-sm font-bold"
-                >
-                  Upgrade to Premium — $5/month
-                </button>
-                <button
-                  onClick={() => setShowUpgradeModal(false)}
-                  className="w-full text-stone-500 py-2 text-sm"
-                >
-                  Maybe later
-                </button>
-              </div>
             </div>
           </div>
         )}

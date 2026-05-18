@@ -34,7 +34,6 @@ export default function PrivacyPage() {
               <li><span className="text-stone-200 font-medium">Account information</span> — your email address and authentication details when you create an account or sign in with Google.</li>
               <li><span className="text-stone-200 font-medium">Memories and lists</span> — the content you save in the app, including titles, notes, playlists, and checklists.</li>
               <li><span className="text-stone-200 font-medium">Voice recordings</span> — when you use the microphone feature, your audio is sent to OpenAI Whisper for transcription. Recordings are not stored after transcription is complete.</li>
-              <li><span className="text-stone-200 font-medium">Usage plan</span> — whether you are on a free trial or premium plan.</li>
               <li><span className="text-stone-200 font-medium">Feedback</span> — messages you voluntarily submit through the in-app feedback form.</li>
             </ul>
           </section>
@@ -45,7 +44,7 @@ export default function PrivacyPage() {
               <li>To provide and operate the Stash service.</li>
               <li>To save and retrieve your memories across devices.</li>
               <li>To process voice searches and identify what you are looking for.</li>
-              <li>To manage your account and subscription plan.</li>
+              <li>To manage your account.</li>
               <li>To respond to feedback and improve the app.</li>
             </ul>
           </section>

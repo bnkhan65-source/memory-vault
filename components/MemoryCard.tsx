@@ -80,13 +80,19 @@ export default function MemoryCard({
     { id: "amazon",  label: "Amazon Music",  short: "Amazon",  color: "bg-blue-500" },
   ];
 
+  // ── Affiliate tokens — replace with real values once approved ──────────────
+  const APPLE_AFFILIATE_TOKEN = "APPLE_TOKEN_HERE";   // affiliate.itunes.apple.com
+  const AMAZON_AFFILIATE_TAG  = "stashapp20-20";      // affiliate-program.amazon.com
+
   const getMusicUrl = (item: PlaylistItem): string => {
     const q = encodeURIComponent(`${item.title}${item.artist ? " " + item.artist : ""}`);
     switch (preferredService) {
-      case "apple":   return item.url || `https://music.apple.com/search?term=${q}`;
+      case "apple":   return item.url
+        ? `${item.url}${item.url.includes("?") ? "&" : "?"}at=${APPLE_AFFILIATE_TOKEN}`
+        : `https://music.apple.com/search?term=${q}&at=${APPLE_AFFILIATE_TOKEN}`;
       case "spotify": return `https://open.spotify.com/search/${q}`;
       case "youtube": return `https://music.youtube.com/search?q=${q}`;
-      case "amazon":  return `https://music.amazon.com/search/${q}`;
+      case "amazon":  return `https://music.amazon.com/search/${q}?tag=${AMAZON_AFFILIATE_TAG}`;
     }
   };
 
