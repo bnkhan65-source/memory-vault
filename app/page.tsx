@@ -558,10 +558,14 @@ export default function Home() {
             await searchVideos(query);
           } else {
             // "all" — search everything in parallel
+            // But don't overwrite a category if the user already has selections from it
+            const hasMusic = selectedItems.some(i => i.kind === "music");
+            const hasMovie = selectedItems.some(i => i.kind === "movie");
+            const hasVideo = selectedItems.some(i => i.kind === "video");
             await Promise.all([
-              searchSpotify(query),
-              searchMovies(query),
-              searchVideos(query),
+              hasMusic ? Promise.resolve() : searchSpotify(query),
+              hasMovie ? Promise.resolve() : searchMovies(query),
+              hasVideo ? Promise.resolve() : searchVideos(query),
             ]);
           }
         } catch (err) {
@@ -950,13 +954,18 @@ export default function Home() {
 
         {/* ── Floating bag button ── */}
         {selectedItems.length > 0 && (
-          <button
-            onClick={() => setShowBag(true)}
-            className={`fixed bottom-8 right-4 z-40 bg-gradient-to-br from-amber-400 to-orange-400 text-stone-900 rounded-full w-16 h-16 shadow-2xl flex flex-col items-center justify-center ${bagBump ? "animate-bag-bump" : ""}`}
-          >
-            <span className="text-2xl leading-none">🎒</span>
-            <span className="text-xs font-bold leading-none mt-0.5">{selectedItems.length}</span>
-          </button>
+          <div className="fixed bottom-6 right-4 z-40 flex flex-col items-end gap-1">
+            <span className="text-[10px] text-amber-300 bg-stone-900/80 backdrop-blur-sm rounded-full px-2 py-0.5 whitespace-nowrap">
+              Search again to add more
+            </span>
+            <button
+              onClick={() => setShowBag(true)}
+              className={`bg-gradient-to-br from-amber-400 to-orange-400 text-stone-900 rounded-full w-16 h-16 shadow-2xl flex flex-col items-center justify-center ${bagBump ? "animate-bag-bump" : ""}`}
+            >
+              <span className="text-2xl leading-none">🎒</span>
+              <span className="text-xs font-bold leading-none mt-0.5">{selectedItems.length}</span>
+            </button>
+          </div>
         )}
 
         {/* ── Bag slide-up panel ── */}
