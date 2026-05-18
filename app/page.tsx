@@ -666,7 +666,7 @@ export default function Home() {
   // ── Render ──────────────────────────────────────────────────────────────────
 
   return (
-    <div className="bg-stone-950 px-3 py-4 flex flex-col overflow-y-auto" style={{ minHeight: "100dvh" }}>
+    <div className="bg-stone-950 px-3 py-4 flex flex-col overflow-y-auto" style={{ position: "fixed", inset: 0 }}>
       <div className="flex-1 max-w-xl mx-auto w-full bg-stone-900 p-4 rounded-2xl shadow-xl border border-stone-700">
 
         <div className="flex items-center justify-between mb-3">
