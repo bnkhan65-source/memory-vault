@@ -719,7 +719,7 @@ export default function Home() {
           />
 
           {/* Action buttons row */}
-          <div className="flex gap-2">
+          <div className="flex justify-around">
             <button
               type="button"
               onClick={() => {
@@ -730,34 +730,35 @@ export default function Home() {
                   startRecording();
                 }
               }}
-              className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl border text-sm transition-colors ${
-                isListening
-                  ? "bg-red-500 border-red-400 text-white"
-                  : micAllowed
-                  ? "bg-stone-800 border-stone-600 text-stone-300"
-                  : "bg-stone-800 border-stone-700 text-stone-500 opacity-60"
+              className={`flex flex-col items-center gap-1 px-4 py-1 transition-opacity ${
+                isListening ? "opacity-100" : micAllowed ? "opacity-100" : "opacity-40"
               }`}
               title={isListening ? "Stop recording" : micAllowed ? "Speak a memory" : "Upgrade to use mic"}
             >
-              {isListening ? "⏹️ Stop" : micAllowed ? "🎤 Speak" : "🔒 Speak"}
+              <span className="text-2xl">{isListening ? "⏹️" : micAllowed ? "🎤" : "🔒"}</span>
+              <span className={`text-[10px] ${isListening ? "text-red-400" : "text-stone-500"}`}>
+                {isListening ? "Stop" : "Speak"}
+              </span>
             </button>
 
             <button
               type="button"
               onClick={() => router.push("/camera")}
-              className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-stone-800 border border-stone-600 rounded-xl text-sm text-stone-300"
+              className="flex flex-col items-center gap-1 px-4 py-1"
               title="Add a photo memory"
             >
-              📷 Photo
+              <span className="text-2xl">📷</span>
+              <span className="text-[10px] text-stone-500">Photo</span>
             </button>
 
             <button
               type="button"
               onClick={() => setShowListModal(true)}
-              className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-stone-800 border border-stone-600 rounded-xl text-sm text-stone-300"
+              className="flex flex-col items-center gap-1 px-4 py-1"
               title="Create a new list"
             >
-              📝 List
+              <span className="text-2xl">📝</span>
+              <span className="text-[10px] text-stone-500">List</span>
             </button>
           </div>
 
