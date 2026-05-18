@@ -669,19 +669,18 @@ export default function Home() {
     <div className="h-full bg-stone-950 px-3 py-4 flex flex-col overflow-y-auto">
       <div className="flex-1 max-w-xl mx-auto w-full bg-stone-900 p-4 rounded-2xl shadow-xl border border-stone-700">
 
-        <div className="flex items-center justify-between mb-1">
+        <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
             <span className="text-2xl">🎞️</span>
-            <h1 className="text-3xl font-semibold tracking-wide text-stone-100 drop-shadow-sm">
-              Stash
-            </h1>
+            <h1 className="text-2xl font-semibold tracking-wide text-stone-100">Stash</h1>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5">
             <button
               onClick={() => { setFeedbackSent(false); setFeedbackText(""); setShowFeedbackModal(true); }}
-              className="text-xs text-stone-500 border border-stone-700 rounded-lg px-2.5 py-1.5 hover:border-stone-500 hover:text-stone-300 transition-colors"
+              className="text-stone-500 border border-stone-700 rounded-lg p-1.5 hover:border-stone-500 hover:text-stone-300 transition-colors"
+              title="Send feedback"
             >
-              💬 Feedback
+              💬
             </button>
             <button
               onClick={handleSignOut}
@@ -691,8 +690,6 @@ export default function Home() {
             </button>
           </div>
         </div>
-        <p className="text-sm text-stone-500 mb-1 italic">{user?.email}</p>
-        <p className="text-[10px] text-stone-600 mb-4">🔒 Private &amp; secure — your memories are yours only</p>
 
         {error && (
           <div className="mb-3 px-3 py-2 bg-red-900/30 border border-red-700 rounded-lg text-sm text-red-400 flex items-center justify-between">
@@ -707,81 +704,70 @@ export default function Home() {
         )}
 
         <div className="mb-4 space-y-2">
-          <p className="text-xs text-amber-400 font-medium px-1">✏️ Type a memory, or use 🎤 to speak, 📷 to snap a photo, or 📝 to create a list</p>
-          <div className="flex items-center gap-2">
-            <input
-              ref={memoryInputRef}
-              value={memory}
-              onChange={(e) => setMemory(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  e.preventDefault();
-                  saveMemory((e.target as HTMLInputElement).value);
-                }
-              }}
-              placeholder="What's on your mind?"
-              className="flex-1 min-w-0 bg-stone-800 border border-stone-600 p-3 rounded-lg text-base text-stone-100 placeholder-stone-500 focus:outline-none"
-            />
+          <input
+            ref={memoryInputRef}
+            value={memory}
+            onChange={(e) => setMemory(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                saveMemory((e.target as HTMLInputElement).value);
+              }
+            }}
+            placeholder="What's on your mind?"
+            className="w-full bg-stone-800 border border-stone-600 p-3 rounded-xl text-base text-stone-100 placeholder-stone-500 focus:outline-none focus:border-amber-500/50"
+          />
 
-            <div className="flex flex-col items-center gap-0.5">
-              <button
-                type="button"
-                onClick={() => {
-                  (document.activeElement as HTMLElement)?.blur();
-                  if (isListening && mediaRecorderInstance) {
-                    mediaRecorderInstance.stop();
-                  } else {
-                    startRecording();
-                  }
-                }}
-                className={`p-3 border rounded-lg relative transition-colors ${
-                  isListening
-                    ? "bg-red-500 border-red-400"
-                    : micAllowed
-                    ? "bg-stone-800 border-stone-600"
-                    : "bg-stone-800 border-stone-700 opacity-60"
-                }`}
-                title={isListening ? "Stop recording" : micAllowed ? "Start recording" : "Upgrade to use mic"}
-              >
-                {isListening ? "⏹️" : micAllowed ? "🎤" : "🔒"}
-              </button>
-              {userPlan !== "premium" && trialDaysLeft !== null && trialDaysLeft > 0 && (
-                <span className="text-[9px] text-amber-400 font-medium whitespace-nowrap">
-                  {trialDaysLeft}d left
-                </span>
-              )}
-              {!micAllowed && (
-                <span className="text-[9px] text-stone-500 whitespace-nowrap">Upgrade</span>
-              )}
-            </div>
-
+          {/* Action buttons row */}
+          <div className="flex gap-2">
             <button
               type="button"
-              onClick={() => setShowListModal(true)}
-              className="p-3 bg-stone-800 border border-stone-600 rounded-lg text-stone-400"
-              title="Create a new list"
+              onClick={() => {
+                (document.activeElement as HTMLElement)?.blur();
+                if (isListening && mediaRecorderInstance) {
+                  mediaRecorderInstance.stop();
+                } else {
+                  startRecording();
+                }
+              }}
+              className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl border text-sm transition-colors ${
+                isListening
+                  ? "bg-red-500 border-red-400 text-white"
+                  : micAllowed
+                  ? "bg-stone-800 border-stone-600 text-stone-300"
+                  : "bg-stone-800 border-stone-700 text-stone-500 opacity-60"
+              }`}
+              title={isListening ? "Stop recording" : micAllowed ? "Speak a memory" : "Upgrade to use mic"}
             >
-              📝
+              {isListening ? "⏹️ Stop" : micAllowed ? "🎤 Speak" : "🔒 Speak"}
             </button>
 
             <button
               type="button"
               onClick={() => router.push("/camera")}
-              className="p-3 bg-stone-800 border border-stone-600 rounded-lg text-stone-400"
+              className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-stone-800 border border-stone-600 rounded-xl text-sm text-stone-300"
               title="Add a photo memory"
             >
-              📷
+              📷 Photo
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setShowListModal(true)}
+              className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-stone-800 border border-stone-600 rounded-xl text-sm text-stone-300"
+              title="Create a new list"
+            >
+              📝 List
             </button>
           </div>
 
-          {isListening && (
-            <p className="text-xs text-red-500 animate-pulse px-1">
-              🔴 Listening… stops automatically after 4 seconds
-            </p>
+          {userPlan !== "premium" && trialDaysLeft !== null && trialDaysLeft > 0 && (
+            <p className="text-[10px] text-amber-400 text-center">{trialDaysLeft} trial days remaining</p>
           )}
+        </div>
 
           {isDetecting && (
-            <p className="text-xs text-amber-400 animate-pulse px-1">
+            <p className="text-xs text-amber-400 animate-pulse px-1 mb-2">
               ✨ Identifying what you&apos;re looking for…
             </p>
           )}
@@ -964,7 +950,7 @@ export default function Home() {
             onClick={() => setShowBag(true)}
             className={`fixed bottom-8 right-4 z-40 bg-gradient-to-br from-amber-400 to-orange-400 text-stone-900 rounded-full w-16 h-16 shadow-2xl flex flex-col items-center justify-center ${bagBump ? "animate-bag-bump" : ""}`}
           >
-            <span className="text-2xl leading-none">🛍️</span>
+            <span className="text-2xl leading-none">🎒</span>
             <span className="text-xs font-bold leading-none mt-0.5">{selectedItems.length}</span>
           </button>
         )}
@@ -978,7 +964,7 @@ export default function Home() {
             >
               <div className="w-10 h-1 bg-stone-600 rounded-full mx-auto mb-4" />
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-stone-100 font-semibold text-lg">🛍️ Your Stash</h3>
+                <h3 className="text-stone-100 font-semibold text-lg">🎒 Your Stash</h3>
                 <span className="text-xs text-stone-500">{selectedItems.length}/10 items</span>
               </div>
               <div className="space-y-2 mb-5 max-h-60 overflow-y-auto">
