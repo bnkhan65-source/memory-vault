@@ -65,6 +65,11 @@ export default function CameraPage() {
 
       if (videoRef.current) {
         videoRef.current.srcObject = newStream;
+        try {
+          await videoRef.current.play();
+        } catch (playErr) {
+          console.warn("Video play failed:", playErr);
+        }
       }
     } catch (error) {
       console.error("Camera error:", error);
