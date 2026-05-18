@@ -200,10 +200,18 @@ export default function Home() {
 
   // ── Save memory ─────────────────────────────────────────────────────────────
 
+  const MAX_MEMORIES = 200;
+
   const saveMemory = async (inputValue?: string) => {
     const textToSave = inputValue ?? memory;
     if (isSaving) return;
     if (!textToSave.trim() || !user) return;
+
+    // Per-user memory cap
+    if (memories.length >= MAX_MEMORIES) {
+      setError(`You've reached the maximum of ${MAX_MEMORIES} saved memories. Please delete some before adding more.`);
+      return;
+    }
 
     setIsSaving(true);
     setMemory("");
@@ -399,6 +407,10 @@ export default function Home() {
 
   const saveSeparately = async () => {
     if (!user || selectedItems.length === 0) return;
+    if (memories.length + selectedItems.length > MAX_MEMORIES) {
+      setError(`Saving these items would exceed the ${MAX_MEMORIES} memory limit. Please delete some first.`);
+      return;
+    }
     const newMemories: Memory[] = [];
     for (const item of selectedItems) {
       try {
@@ -478,6 +490,12 @@ export default function Home() {
       const mediaRecorder = new MediaRecorder(stream);
       const audioChunks: Blob[] = [];
 
+      // Helper to fully release the mic
+      const releaseMic = () => {
+        stream.getTracks().forEach(track => track.stop());
+        setIsListening(false);
+      };
+
       setIsListening(true);
 
       mediaRecorder.ondataavailable = (event) => {
@@ -485,7 +503,7 @@ export default function Home() {
       };
 
       mediaRecorder.onstop = async () => {
-        setIsListening(false);
+        releaseMic();
 
         const mimeType = MediaRecorder.isTypeSupported("audio/webm") ? "audio/webm" : "audio/mp4";
         const audioBlob = new Blob(audioChunks, { type: mimeType });
@@ -555,12 +573,25 @@ export default function Home() {
 
       mediaRecorder.start();
 
-      // Auto-stop after 4 seconds so recording doesn't hang
-      setTimeout(() => {
+      // Auto-stop after 8 seconds
+      const autoStop = setTimeout(() => {
         if (mediaRecorder.state === "recording") {
           mediaRecorder.stop();
         }
-      }, 4000);
+      }, 8000);
+
+      // Safety fallback — force-release mic after 30 seconds no matter what
+      const safetyStop = setTimeout(() => {
+        if (mediaRecorder.state === "recording") {
+          mediaRecorder.stop();
+        }
+        releaseMic();
+      }, 30000);
+
+      mediaRecorder.addEventListener("stop", () => {
+        clearTimeout(autoStop);
+        clearTimeout(safetyStop);
+      }, { once: true });
 
       setMediaRecorderInstance(mediaRecorder);
     } catch (err) {

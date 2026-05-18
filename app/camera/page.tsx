@@ -1,8 +1,11 @@
 "use client";
 
 import { auth, db, storage } from "@/lib/firebase";
-import { addDoc, collection, serverTimestamp } from "firebase/firestore";
+import { addDoc, collection, serverTimestamp, getDocs, query } from "firebase/firestore";
 import { ref, uploadString, getDownloadURL } from "firebase/storage";
+
+const MAX_MEMORIES = 200;   // per-user memory cap
+const MAX_PHOTO_MB = 5;     // max photo size in MB
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
@@ -102,6 +105,22 @@ export default function CameraPage() {
     const uid = auth.currentUser.uid;
 
     try {
+      // Check photo size (base64 is ~4/3 the binary size)
+      const base64Data = photo.split(",")[1] || photo;
+      const sizeBytes = (base64Data.length * 3) / 4;
+      const sizeMB = sizeBytes / (1024 * 1024);
+      if (sizeMB > MAX_PHOTO_MB) {
+        alert(`Photo is too large (${sizeMB.toFixed(1)} MB). Maximum size is ${MAX_PHOTO_MB} MB.`);
+        return;
+      }
+
+      // Check per-user memory cap
+      const memoriesSnap = await getDocs(query(collection(db, "users", uid, "memories")));
+      if (memoriesSnap.size >= MAX_MEMORIES) {
+        alert(`You've reached the maximum of ${MAX_MEMORIES} saved memories. Please delete some before adding more.`);
+        return;
+      }
+
       const caption = "New memory 📸";
 
       const storageRef = ref(storage, `memories/${uid}/${Date.now()}.png`);
