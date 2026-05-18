@@ -278,7 +278,7 @@ export default function Home() {
   // ── Search music ────────────────────────────────────────────────────────────
 
   const searchSpotify = async (q?: string) => {
-    const term = String(q || voiceQuery || memory || "");
+    const term = String(q || memory || voiceQuery || "");
     if (!term.trim()) return;
     try {
       const res = await fetch("/api/music-search", {
@@ -296,7 +296,7 @@ export default function Home() {
   // ── Search videos ───────────────────────────────────────────────────────────
 
   const searchVideos = async (q?: string) => {
-    const term = String(q || voiceQuery || memory || "");
+    const term = String(q || memory || voiceQuery || "");
     if (!term.trim()) return;
     try {
       const res = await fetch("/api/video-search", {
@@ -314,7 +314,7 @@ export default function Home() {
   // ── Search movies ───────────────────────────────────────────────────────────
 
   const searchMovies = async (q?: string) => {
-    const term = String(q ?? voiceQuery ?? memory ?? "");
+    const term = String(q ?? memory ?? voiceQuery ?? "");
     if (!term.trim()) return;
     try {
       const res = await fetch("/api/movie-search", {
