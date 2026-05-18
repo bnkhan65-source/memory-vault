@@ -611,7 +611,12 @@ export default function Home() {
       setMediaRecorderInstance(mediaRecorder);
     } catch (err) {
       console.error("MIC ERROR:", err);
-      alert("Microphone access failed. Please check your browser permissions.");
+      const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
+      if (isIOS) {
+        alert("Microphone access denied.\n\niPhone: Go to Settings → Safari → Microphone → Allow.\n\nThen return to Stash and try again.");
+      } else {
+        alert("Microphone access denied. Please allow microphone access in your browser settings and try again.");
+      }
     }
   };
 

@@ -184,6 +184,12 @@ export default function MemoryCard({
       setTimeout(() => { if (recorder.state === "recording") recorder.stop(); }, 4000);
     } catch (err) {
       console.error("List mic error:", err);
+      const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
+      if (isIOS) {
+        alert("Microphone access denied.\n\niPhone: Go to Settings → Safari → Microphone → Allow.\n\nThen return to Stash and try again.");
+      } else {
+        alert("Microphone access denied. Please allow microphone access in your browser settings.");
+      }
     }
   };
 
