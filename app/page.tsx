@@ -799,7 +799,6 @@ export default function Home() {
               />
             </div>
           )}
-        </div>
 
         <div className="flex justify-around mt-1 mb-4">
           <button
