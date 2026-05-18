@@ -1062,8 +1062,10 @@ export default function Home() {
                             createdAt: serverTimestamp(),
                           });
                           setFeedbackSent(true);
-                        } catch (err) {
-                          console.error("FEEDBACK ERROR:", err);
+                        } catch (err: unknown) {
+                          const msg = err instanceof Error ? err.message : String(err);
+                          console.error("FEEDBACK ERROR:", msg);
+                          alert("Failed to send feedback: " + msg);
                         }
                       }}
                       className="flex-1 bg-amber-400 text-stone-900 font-semibold py-2 rounded-xl text-sm disabled:opacity-40 disabled:cursor-not-allowed"
