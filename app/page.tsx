@@ -801,37 +801,37 @@ export default function Home() {
           )}
         </div>
 
-        <div className="flex gap-2 mt-2 mb-4">
+        <div className="flex justify-around mt-1 mb-4">
           <button
             onClick={() => searchSpotify()}
-            className="flex-1 text-sm text-amber-400 bg-stone-800 border border-stone-600 rounded-lg px-3 py-2"
+            className="flex flex-col items-center gap-1 px-3 py-1"
           >
-            🎵 Find Music
+            <span className="text-2xl">🎵</span>
+            <span className="text-[10px] text-amber-400">Music</span>
           </button>
           <button
             onClick={() => searchVideos()}
-            className="text-sm text-blue-400 bg-stone-800 border border-stone-600 rounded-lg px-3 py-2"
+            className="flex flex-col items-center gap-1 px-3 py-1"
           >
-            🎥 Find Video
+            <span className="text-2xl">🎥</span>
+            <span className="text-[10px] text-blue-400">Video</span>
           </button>
           <button
             onClick={() => searchMovies()}
-            className="text-sm text-red-400 bg-stone-800 border border-stone-600 rounded-lg px-3 py-2"
+            className="flex flex-col items-center gap-1 px-3 py-1"
           >
-            🎬 Find Movie
+            <span className="text-2xl">🎬</span>
+            <span className="text-[10px] text-red-400">Movie</span>
           </button>
           <button
             onClick={() => saveMemory()}
             disabled={!memory.trim() || isSaving}
-            className={`text-sm rounded-lg px-3 py-2 transition
-              ${
-                !memory.trim() || isSaving
-                  ? "bg-stone-800 border border-stone-600 text-stone-500 cursor-not-allowed"
-                  : "bg-gradient-to-r from-amber-400 to-orange-400 text-white hover:brightness-110"
-              }
-            `}
+            className={`flex flex-col items-center gap-1 px-3 py-1 transition ${
+              !memory.trim() || isSaving ? "opacity-30" : "opacity-100"
+            }`}
           >
-            {isSaving ? "Saving..." : "Save"}
+            <span className="text-2xl">💾</span>
+            <span className="text-[10px] text-amber-400">{isSaving ? "Saving…" : "Save"}</span>
           </button>
         </div>
 
