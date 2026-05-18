@@ -19,3 +19,25 @@
 .animate-float-slow {
   animation: floatSlow 6s ease-in-out infinite;
 }
+
+/* Bag bump animation when item is added */
+@keyframes bagBump {
+  0%   { transform: scale(1); }
+  30%  { transform: scale(1.35) rotate(-8deg); }
+  60%  { transform: scale(1.2) rotate(6deg); }
+  100% { transform: scale(1) rotate(0deg); }
+}
+
+.animate-bag-bump {
+  animation: bagBump 0.45s ease-out forwards;
+}
+
+/* Slide up panel */
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+
+.animate-slide-up {
+  animation: slideUp 0.3s cubic-bezier(0.32, 0.72, 0, 1) forwards;
+}

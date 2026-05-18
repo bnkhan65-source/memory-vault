@@ -90,6 +90,8 @@ export default function Home() {
   const [userPlan, setUserPlan] = useState<"free" | "premium">("free");
   const [trialDaysLeft, setTrialDaysLeft] = useState<number | null>(null);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [showBag, setShowBag] = useState(false);
+  const [bagBump, setBagBump] = useState(false);
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
   const [feedbackText, setFeedbackText] = useState("");
   const [feedbackSent, setFeedbackSent] = useState(false);
@@ -352,6 +354,8 @@ export default function Home() {
       if (prev.some((s) => s.title === item.title && s.kind === item.kind && s.artist === item.artist && s.year === item.year)) return prev;
       return [...prev, item];
     });
+    setBagBump(true);
+    setTimeout(() => setBagBump(false), 450);
   };
 
   const removeFromSelection = (index: number) => {
@@ -954,27 +958,54 @@ export default function Home() {
           </div>
         )}
 
-        {/* ── Selection tray ── */}
+        {/* ── Floating bag button ── */}
         {selectedItems.length > 0 && (
-          <div className="mt-3 mb-3 bg-stone-800 border border-stone-600 rounded-xl p-3">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs text-stone-400">{selectedItems.length}/10 selected</span>
-              <button onClick={clearSearchState} className="text-xs text-stone-500 hover:text-stone-300">Clear all</button>
-            </div>
-            <div className="space-y-1 mb-3">
-              {selectedItems.map((item, i) => (
-                <div key={i} className="flex items-center justify-between py-0.5">
-                  <span className="text-sm text-stone-200">{item.kind === "movie" ? "🎬" : item.kind === "video" ? "🎥" : "🎵"} {item.title}</span>
-                  <button onClick={() => removeFromSelection(i)} className="text-stone-500 hover:text-stone-300 text-xs ml-2">✕</button>
-                </div>
-              ))}
-            </div>
-            <button
-              onClick={() => selectedItems.length === 1 ? saveSeparately() : setShowPlaylistModal(true)}
-              className="w-full bg-gradient-to-r from-amber-400 to-orange-400 text-white py-2 rounded-lg text-sm font-medium"
+          <button
+            onClick={() => setShowBag(true)}
+            className={`fixed bottom-8 right-4 z-40 bg-gradient-to-br from-amber-400 to-orange-400 text-stone-900 rounded-full w-16 h-16 shadow-2xl flex flex-col items-center justify-center ${bagBump ? "animate-bag-bump" : ""}`}
+          >
+            <span className="text-2xl leading-none">🛍️</span>
+            <span className="text-xs font-bold leading-none mt-0.5">{selectedItems.length}</span>
+          </button>
+        )}
+
+        {/* ── Bag slide-up panel ── */}
+        {showBag && (
+          <div className="fixed inset-0 z-50 flex flex-col justify-end" onClick={() => setShowBag(false)}>
+            <div
+              className="bg-stone-900 border-t border-stone-700 rounded-t-2xl p-5 animate-slide-up"
+              onClick={(e) => e.stopPropagation()}
             >
-              Save{selectedItems.length > 1 ? ` (${selectedItems.length})` : ""}
-            </button>
+              <div className="w-10 h-1 bg-stone-600 rounded-full mx-auto mb-4" />
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-stone-100 font-semibold text-lg">🛍️ Your Stash</h3>
+                <span className="text-xs text-stone-500">{selectedItems.length}/10 items</span>
+              </div>
+              <div className="space-y-2 mb-5 max-h-60 overflow-y-auto">
+                {selectedItems.map((item, i) => (
+                  <div key={i} className="flex items-center justify-between bg-stone-800 rounded-xl px-3 py-2">
+                    <div className="flex items-center gap-2">
+                      <span className="text-base">{item.kind === "movie" ? "🎬" : item.kind === "video" ? "🎥" : "🎵"}</span>
+                      <div>
+                        <p className="text-sm text-stone-100 font-medium leading-tight">{item.title}</p>
+                        {item.artist && <p className="text-xs text-stone-400">{item.artist}</p>}
+                        {item.year && <p className="text-xs text-stone-400">{item.year}</p>}
+                      </div>
+                    </div>
+                    <button onClick={() => removeFromSelection(i)} className="text-stone-500 hover:text-red-400 text-lg ml-2">✕</button>
+                  </div>
+                ))}
+              </div>
+              <button
+                onClick={() => { setShowBag(false); selectedItems.length === 1 ? saveSeparately() : setShowPlaylistModal(true); }}
+                className="w-full bg-gradient-to-r from-amber-400 to-orange-400 text-stone-900 font-bold py-3.5 rounded-xl text-base shadow-lg"
+              >
+                Stash it! 🎉
+              </button>
+              <button onClick={() => { setShowBag(false); clearSearchState(); }} className="w-full text-stone-500 text-sm py-2 mt-1">
+                Clear all
+              </button>
+            </div>
           </div>
         )}
 
