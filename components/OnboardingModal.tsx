@@ -4,28 +4,53 @@ import { useState } from "react";
 
 const SLIDES = [
   {
-    emoji: "🎞️",
-    title: "Welcome to Stash",
-    body: "Your personal vault for music, movies, and moments you never want to forget. No more \"what was that song?\" moments.",
-    cta: "Next",
+    emoji: "👋",
+    title: "Welcome to Stash!",
+    body: "Stash helps you save music, movies, and videos so you never forget them. Let's show you how it works — it only takes a minute.",
+    tip: null,
+    cta: "Let's go →",
   },
   {
     emoji: "🎤",
-    title: "Just speak it",
-    body: "Tap the mic and describe what you're thinking of — \"that 80s Boston song with the guitar solo\" — and Stash finds it instantly.",
-    cta: "Next",
+    title: "Step 1 — Speak what's on your mind",
+    body: "Tap the Speak button and say something like:\n\"that 80s song with the saxophone\"\nor\n\"movies with Meryl Streep\"",
+    tip: "Stash listens, figures out if it's music or a movie, and searches automatically.",
+    cta: "Next →",
   },
   {
-    emoji: "💾",
-    title: "Save anything",
-    body: "Tap results to select them, then save as individual memories or group them into a playlist. Use the 📝 button to create checklists too.",
-    cta: "Next",
+    emoji: "👆",
+    title: "Step 2 — Tap a result to select it",
+    body: "After Stash searches, you'll see results below. Tap any result to select it — a checkmark ✓ will appear on it.",
+    tip: "You can select multiple things at once before saving.",
+    cta: "Next →",
   },
   {
-    emoji: "🔒",
-    title: "Your memories are safe",
-    body: "Stash uses Firebase — the same security platform trusted by Google. Your data is encrypted, private, and never shared with anyone. Only you can see your memories.",
-    cta: "Get Started",
+    emoji: "🎒",
+    title: "Step 3 — Save your selection",
+    body: "When you select something, a bag icon 🎒 appears at the bottom of the screen. Tap it to review your selections, then tap Save.",
+    tip: "You can save items individually or group them together as a playlist.",
+    cta: "Next →",
+  },
+  {
+    emoji: "📋",
+    title: "Step 4 — Find your saved memories",
+    body: "Everything you save appears below the search area. Tap any card to expand it and open your saved music or movie.",
+    tip: "Use the search bar to find a specific memory quickly.",
+    cta: "Next →",
+  },
+  {
+    emoji: "📝",
+    title: "Bonus — Create lists",
+    body: "Tap the List button to create a checklist — great for grocery lists, to-do lists, or anything else you want to remember.",
+    tip: "You can add items to a list at any time, and check them off as you go.",
+    cta: "Next →",
+  },
+  {
+    emoji: "✅",
+    title: "You're all set!",
+    body: "Tap the ? button in the header any time you want to see these steps again.",
+    tip: null,
+    cta: "Start using Stash",
   },
 ];
 
@@ -46,8 +71,12 @@ export default function OnboardingModal({ onDone }: Props) {
     }
   };
 
+  const goBack = () => {
+    if (slide > 0) setSlide(slide - 1);
+  };
+
   return (
-    <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center px-4">
+    <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center px-4">
       <div className="bg-stone-900 rounded-2xl p-8 w-full max-w-sm border border-stone-700 shadow-2xl">
 
         {/* Progress dots */}
@@ -55,43 +84,64 @@ export default function OnboardingModal({ onDone }: Props) {
           {SLIDES.map((_, i) => (
             <div
               key={i}
-              className={`h-1.5 rounded-full transition-all duration-300 ${
-                i === slide ? "w-6 bg-amber-400" : "w-2 bg-stone-600"
+              className={`h-2 rounded-full transition-all duration-300 ${
+                i === slide ? "w-8 bg-amber-400" : i < slide ? "w-2 bg-amber-700" : "w-2 bg-stone-600"
               }`}
             />
           ))}
         </div>
 
         {/* Emoji */}
-        <div className="text-5xl text-center mb-4">{current.emoji}</div>
+        <div className="text-6xl text-center mb-5">{current.emoji}</div>
 
         {/* Title */}
-        <h2 className="text-xl font-semibold text-stone-100 text-center mb-3">
+        <h2 className="text-xl font-bold text-stone-100 text-center mb-4 leading-snug">
           {current.title}
         </h2>
 
         {/* Body */}
-        <p className="text-stone-400 text-sm text-center leading-relaxed mb-8">
+        <p className="text-stone-300 text-base text-center leading-relaxed mb-4 whitespace-pre-line">
           {current.body}
         </p>
+
+        {/* Tip */}
+        {current.tip && (
+          <div className="bg-amber-950/50 border border-amber-800/40 rounded-xl px-4 py-3 mb-5">
+            <p className="text-amber-300 text-sm text-center leading-relaxed">
+              💡 {current.tip}
+            </p>
+          </div>
+        )}
 
         {/* CTA */}
         <button
           onClick={advance}
-          className="w-full bg-gradient-to-r from-amber-400 to-orange-400 text-white py-3 rounded-xl font-medium text-sm mb-3"
+          className="w-full bg-gradient-to-r from-amber-400 to-orange-400 text-white py-4 rounded-xl font-semibold text-base mb-3"
         >
           {current.cta}
         </button>
 
-        {/* Skip */}
-        {!isLast && (
-          <button
-            onClick={onDone}
-            className="w-full text-stone-600 text-xs py-1 hover:text-stone-400 transition-colors"
-          >
-            Skip
-          </button>
-        )}
+        {/* Back + Skip row */}
+        <div className="flex justify-between items-center">
+          {slide > 0 ? (
+            <button
+              onClick={goBack}
+              className="text-stone-500 text-sm py-1 hover:text-stone-300 transition-colors"
+            >
+              ← Back
+            </button>
+          ) : <span />}
+
+          {!isLast && (
+            <button
+              onClick={onDone}
+              className="text-stone-600 text-sm py-1 hover:text-stone-400 transition-colors"
+            >
+              Skip for now
+            </button>
+          )}
+        </div>
+
       </div>
     </div>
   );

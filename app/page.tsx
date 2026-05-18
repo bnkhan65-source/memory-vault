@@ -676,6 +676,13 @@ export default function Home() {
           </div>
           <div className="flex items-center gap-1.5">
             <button
+              onClick={() => setShowOnboarding(true)}
+              className="text-stone-500 border border-stone-700 rounded-lg p-1.5 hover:border-stone-500 hover:text-stone-300 transition-colors"
+              title="How to use Stash"
+            >
+              ?
+            </button>
+            <button
               onClick={() => { setFeedbackSent(false); setFeedbackText(""); setShowFeedbackModal(true); }}
               className="text-stone-500 border border-stone-700 rounded-lg p-1.5 hover:border-stone-500 hover:text-stone-300 transition-colors"
               title="Send feedback"
