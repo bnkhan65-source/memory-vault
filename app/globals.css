@@ -1,5 +1,14 @@
 @import "tailwindcss";
 
+html {
+  height: 100%;
+}
+
+body {
+  min-height: 100dvh;
+  overscroll-behavior: none;
+}
+
 /* Floating animation */
 @keyframes floatSlow {
   0% {
