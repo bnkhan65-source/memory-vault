@@ -1042,7 +1042,6 @@ export default function Home() {
                             uid: user.uid,
                             email: user.email,
                             message: feedbackText.trim(),
-                            plan: userPlan,
                             createdAt: serverTimestamp(),
                           });
                           setFeedbackSent(true);
