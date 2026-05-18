@@ -1179,6 +1179,13 @@ export default function Home() {
           );
         })()}
 
+        {/* ── Saved Memories divider ── */}
+        <div className="flex items-center gap-3 mt-6 mb-4">
+          <div className="flex-1 h-px bg-stone-700" />
+          <span className="text-xs font-semibold text-amber-400 uppercase tracking-widest whitespace-nowrap">📦 Your Stash</span>
+          <div className="flex-1 h-px bg-stone-700" />
+        </div>
+
         <input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
