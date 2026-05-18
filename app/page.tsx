@@ -806,21 +806,21 @@ export default function Home() {
             className="flex flex-col items-center gap-1 px-3 py-1"
           >
             <span className="text-2xl">🎵</span>
-            <span className="text-[10px] text-amber-400">Music</span>
+            <span className="text-[10px] text-amber-400">Find Music</span>
           </button>
           <button
             onClick={() => searchVideos()}
             className="flex flex-col items-center gap-1 px-3 py-1"
           >
             <span className="text-2xl">🎥</span>
-            <span className="text-[10px] text-blue-400">Video</span>
+            <span className="text-[10px] text-blue-400">Find Video</span>
           </button>
           <button
             onClick={() => searchMovies()}
             className="flex flex-col items-center gap-1 px-3 py-1"
           >
             <span className="text-2xl">🎬</span>
-            <span className="text-[10px] text-red-400">Movie</span>
+            <span className="text-[10px] text-red-400">Find Movie</span>
           </button>
           <button
             onClick={() => saveMemory()}
