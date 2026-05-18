@@ -703,6 +703,7 @@ export default function Home() {
         )}
 
         <div className="mb-4 space-y-2">
+          <p className="text-xs text-amber-400 font-medium px-1">✏️ Type a memory, or use 🎤 to speak, 📷 to snap a photo, or 📝 to create a list</p>
           <div className="flex items-center gap-2">
             <input
               ref={memoryInputRef}
@@ -714,7 +715,7 @@ export default function Home() {
                   saveMemory((e.target as HTMLInputElement).value);
                 }
               }}
-              placeholder="Add memory…"
+              placeholder="What's on your mind?"
               className="flex-1 min-w-0 bg-stone-800 border border-stone-600 p-3 rounded-lg text-base text-stone-100 placeholder-stone-500 focus:outline-none"
             />
 
