@@ -842,7 +842,7 @@ export default function Home() {
             ) : <span />}
             <button
               onClick={clearSearchState}
-              className="text-xs px-3 py-1.5 bg-stone-800 rounded-lg border border-stone-600 text-stone-400 hover:bg-stone-700 active:scale-95"
+              className="text-xs text-stone-500 hover:text-stone-300 active:scale-95"
             >
               Clear ✕
             </button>
@@ -1202,7 +1202,7 @@ export default function Home() {
         <input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search memories..."
+          placeholder="Search saved memories..."
           className="bg-stone-800 border border-stone-600 p-3 w-full rounded-lg text-base text-stone-100 placeholder-stone-500 mb-2 focus:outline-none"
         />
 
