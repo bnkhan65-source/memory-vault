@@ -131,11 +131,14 @@ export default function MemoryCard({
   };
 
   // Resolve list items — prefer structured listItems, fall back to comma-parsing
+  // Never parse memory.text for playlist cards (it's just the card title like "🎵 Playlist (5 items)")
   const hasStructuredItems = Array.isArray(memory.listItems);
   const resolvedListTitle = hasStructuredItems ? (memory.text || null) : null;
   const resolvedListItems = hasStructuredItems
     ? memory.listItems!.filter((item) => item !== resolvedListTitle)
-    : (memory.text || "").split(",").map((s) => s.trim()).filter(Boolean);
+    : memory.type === "playlist"
+      ? []
+      : (memory.text || "").split(",").map((s) => s.trim()).filter(Boolean);
 
   const handleAddItem = () => {
     if (onAddListItem && addItemInput.trim()) {
@@ -506,8 +509,8 @@ export default function MemoryCard({
           </div>
         )}
 
-        {/* Text / edit rendering for non-list memories */}
-        {memory.type !== "list" && isEditing && (
+        {/* Text / edit rendering for non-list, non-playlist memories */}
+        {memory.type !== "list" && memory.type !== "playlist" && isEditing && (
           <textarea
             value={editText}
             onChange={(e) => setEditText(e.target.value)}
@@ -517,7 +520,7 @@ export default function MemoryCard({
             autoFocus
           />
         )}
-        {memory.type !== "list" && !isEditing && (
+        {memory.type !== "list" && memory.type !== "playlist" && !isEditing && (
           <p className="text-sm font-medium text-stone-100 break-words">
             {editText}
           </p>
