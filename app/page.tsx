@@ -95,6 +95,8 @@ export default function Home() {
   const [feedbackSent, setFeedbackSent] = useState(false);
   const [showListModal, setShowListModal] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const [sortBy, setSortBy] = useState<"newest" | "oldest" | "az" | "type">("newest");
+  const [filterType, setFilterType] = useState<string | null>(null);
   const [listTitle, setListTitle] = useState("");
   const [newListItemInput, setNewListItemInput] = useState("");
   const memoryInputRef = useRef<HTMLInputElement>(null);
@@ -672,18 +674,24 @@ export default function Home() {
     );
   };
 
-  // ── Filtered memories ───────────────────────────────────────────────────────
+  // ── Filtered + sorted memories ──────────────────────────────────────────────
 
-  const filteredMemories = memories.filter((m) => {
-    const textMatch = [m.text || "", ...(m.tags || [])]
-      .join(" ")
-      .toLowerCase()
-      .includes(search.toLowerCase());
+  const filteredMemories = (() => {
+    let result = memories.filter((m) => {
+      const textMatch = [m.text || "", ...(m.tags || [])]
+        .join(" ")
+        .toLowerCase()
+        .includes(search.toLowerCase());
+      const tagMatch = activeTag ? m.tags?.includes(activeTag) : true;
+      const typeMatch = filterType ? m.type === filterType : true;
+      return textMatch && tagMatch && typeMatch;
+    });
 
-    const tagMatch = activeTag ? m.tags?.includes(activeTag) : true;
-
-    return textMatch && tagMatch;
-  });
+    if (sortBy === "oldest") return [...result].reverse();
+    if (sortBy === "az") return [...result].sort((a, b) => (a.text || "").toLowerCase().localeCompare((b.text || "").toLowerCase()));
+    if (sortBy === "type") return [...result].sort((a, b) => (a.type || "").localeCompare(b.type || ""));
+    return result; // "newest" — keep Firestore order (already newest-first)
+  })();
 
   // ── Loading state ───────────────────────────────────────────────────────────
 
@@ -1238,23 +1246,63 @@ export default function Home() {
           </p>
         )}
 
-        <div className="flex gap-3 mb-4">
-          {search && (
-            <button
-              onClick={() => setSearch("")}
-              className="text-sm text-stone-500 hover:text-stone-300 transition"
-            >
-              Clear search
-            </button>
-          )}
-          {activeTag && (
-            <button
-              onClick={() => setActiveTag(null)}
-              className="text-sm text-purple-500"
-            >
-              Clear tag: #{activeTag}
-            </button>
-          )}
+        {/* Sort & Filter bar */}
+        <div className="mb-4 space-y-2">
+          {/* Sort row */}
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <span className="text-[10px] text-stone-500 uppercase tracking-widest mr-1">Sort</span>
+            {([["newest", "Newest"], ["oldest", "Oldest"], ["az", "A–Z"], ["type", "Type"]] as const).map(([val, label]) => (
+              <button
+                key={val}
+                onClick={() => setSortBy(val)}
+                className={`text-xs px-2.5 py-1 rounded-full border transition-all active:scale-90 ${
+                  sortBy === val
+                    ? "bg-amber-400 text-stone-900 border-amber-400 font-semibold"
+                    : "bg-stone-800 text-stone-400 border-stone-700 hover:border-stone-500"
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+
+          {/* Filter row */}
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <span className="text-[10px] text-stone-500 uppercase tracking-widest mr-1">Show</span>
+            {([
+              [null, "All"],
+              ["playlist", "🎵 Playlists"],
+              ["list", "📋 Lists"],
+              ["moment", "📸 Photos"],
+              ["note", "📝 Notes"],
+            ] as const).map(([val, label]) => (
+              <button
+                key={String(val)}
+                onClick={() => setFilterType(val)}
+                className={`text-xs px-2.5 py-1 rounded-full border transition-all active:scale-90 ${
+                  filterType === val
+                    ? "bg-amber-400 text-stone-900 border-amber-400 font-semibold"
+                    : "bg-stone-800 text-stone-400 border-stone-700 hover:border-stone-500"
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+
+          {/* Clear filters row */}
+          <div className="flex gap-3">
+            {search && (
+              <button onClick={() => setSearch("")} className="text-sm text-stone-500 hover:text-stone-300 transition">
+                Clear search
+              </button>
+            )}
+            {activeTag && (
+              <button onClick={() => setActiveTag(null)} className="text-sm text-purple-500">
+                Clear tag: #{activeTag}
+              </button>
+            )}
+          </div>
         </div>
 
         <div className="space-y-4">
