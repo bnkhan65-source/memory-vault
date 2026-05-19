@@ -85,6 +85,7 @@ export default function Home() {
   const [isListening, setIsListening] = useState(false);
   const [isDetecting, setIsDetecting] = useState(false);
   const [voiceQuery, setVoiceQuery] = useState("");
+  const [editingVoiceQuery, setEditingVoiceQuery] = useState(false);
   const [mediaRecorderInstance, setMediaRecorderInstance] =
     useState<MediaRecorder | null>(null);
   const [showBag, setShowBag] = useState(false);
@@ -348,6 +349,7 @@ export default function Home() {
   const clearSearchState = () => {
     setMemory("");
     setVoiceQuery("");
+    setEditingVoiceQuery(false);
     setSpotifyResults([]);
     setVideoResults([]);
     setMovieResults([]);
@@ -613,7 +615,7 @@ export default function Home() {
       console.error("MIC ERROR:", err);
       const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
       if (isIOS) {
-        alert("Microphone access denied.\n\niPhone: Go to Settings → Safari → Microphone → Allow.\n\nThen return to Stash and try again.");
+        alert("Microphone access denied.\n\niPhone fix:\n1. Tap the page icon (monitor) in the Safari address bar\n2. Tap the three dots (...)\n3. Under Website Settings, tap Microphone\n4. Set to Allow\n\nThen try again.");
       } else {
         alert("Microphone access denied. Please allow microphone access in your browser settings and try again.");
       }
@@ -859,13 +861,35 @@ export default function Home() {
         </div>
 
         {(voiceQuery || memory.trim() || spotifyResults.length > 0 || videoResults.length > 0 || movieResults.length > 0) && (
-          <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center justify-between mb-2 gap-2">
             {voiceQuery ? (
-              <span className="text-xs text-stone-400 italic">🎤 &ldquo;{voiceQuery}&rdquo;</span>
+              editingVoiceQuery ? (
+                <input
+                  autoFocus
+                  value={voiceQuery}
+                  onChange={(e) => setVoiceQuery(e.target.value)}
+                  onBlur={() => setEditingVoiceQuery(false)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      setEditingVoiceQuery(false);
+                      Promise.all([searchSpotify(voiceQuery), searchMovies(voiceQuery), searchVideos(voiceQuery)]);
+                    }
+                  }}
+                  className="text-xs bg-stone-800 border border-amber-400 rounded px-2 py-1 text-stone-100 flex-1 focus:outline-none"
+                />
+              ) : (
+                <button
+                  onClick={() => setEditingVoiceQuery(true)}
+                  className="text-xs text-stone-400 italic flex items-center gap-1 hover:text-amber-400 transition-colors"
+                  title="Tap to correct"
+                >
+                  🎤 &ldquo;{voiceQuery}&rdquo; ✏️
+                </button>
+              )
             ) : <span />}
             <button
               onClick={clearSearchState}
-              className="text-xs text-stone-500 hover:text-stone-300 active:scale-95"
+              className="text-xs text-stone-500 hover:text-stone-300 active:scale-95 shrink-0"
             >
               Clear ✕
             </button>

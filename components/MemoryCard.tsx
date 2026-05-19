@@ -186,7 +186,7 @@ export default function MemoryCard({
       console.error("List mic error:", err);
       const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
       if (isIOS) {
-        alert("Microphone access denied.\n\niPhone: Go to Settings → Safari → Microphone → Allow.\n\nThen return to Stash and try again.");
+        alert("Microphone access denied.\n\niPhone fix:\n1. Tap the page icon (monitor) in the Safari address bar\n2. Tap the three dots (...)\n3. Under Website Settings, tap Microphone\n4. Set to Allow\n\nThen try again.");
       } else {
         alert("Microphone access denied. Please allow microphone access in your browser settings.");
       }
