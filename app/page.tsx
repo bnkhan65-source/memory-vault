@@ -509,6 +509,20 @@ export default function Home() {
         setIsListening(false);
       };
 
+      // Detect silence using Web Audio API
+      const audioContext = new AudioContext();
+      const analyser = audioContext.createAnalyser();
+      const source = audioContext.createMediaStreamSource(stream);
+      source.connect(analyser);
+      analyser.fftSize = 256;
+      const dataArray = new Uint8Array(analyser.frequencyBinCount);
+      let hasSound = false;
+      const silenceCheck = setInterval(() => {
+        analyser.getByteFrequencyData(dataArray);
+        const avg = dataArray.reduce((a, b) => a + b, 0) / dataArray.length;
+        if (avg > 5) hasSound = true;
+      }, 100);
+
       setIsListening(true);
 
       mediaRecorder.ondataavailable = (event) => {
@@ -517,6 +531,15 @@ export default function Home() {
 
       mediaRecorder.onstop = async () => {
         releaseMic();
+        clearInterval(silenceCheck);
+        audioContext.close();
+
+        if (!hasSound) {
+          setError("No sound detected — please speak closer to your microphone and try again.");
+          setIsListening(false);
+          setIsDetecting(false);
+          return;
+        }
 
         const mimeType = MediaRecorder.isTypeSupported("audio/webm") ? "audio/webm" : "audio/mp4";
         const audioBlob = new Blob(audioChunks, { type: mimeType });
