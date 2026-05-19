@@ -610,7 +610,7 @@ export default function MemoryCard({
             e.stopPropagation();
             onDelete(memory.id);
           }}
-          className="text-red-400 text-xs mt-3"
+          className="text-red-400 text-xs mt-3 transition-all active:text-red-600 active:scale-90"
         >
           Delete
         </button>

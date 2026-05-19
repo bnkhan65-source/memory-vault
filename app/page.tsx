@@ -709,21 +709,21 @@ export default function Home() {
           <div className="flex items-center gap-1.5">
             <button
               onClick={() => setShowOnboarding(true)}
-              className="text-stone-500 border border-stone-700 rounded-lg p-1.5 hover:border-stone-500 hover:text-stone-300 transition-colors"
+              className="text-stone-500 border border-stone-700 rounded-lg p-1.5 hover:border-stone-500 hover:text-stone-300 active:bg-stone-700 active:text-stone-200 active:border-stone-500 active:scale-90 transition-all"
               title="How to use Stash"
             >
               ?
             </button>
             <button
               onClick={() => { setFeedbackSent(false); setFeedbackText(""); setShowFeedbackModal(true); }}
-              className="text-stone-500 border border-stone-700 rounded-lg p-1.5 hover:border-stone-500 hover:text-stone-300 transition-colors"
+              className="text-stone-500 border border-stone-700 rounded-lg p-1.5 hover:border-stone-500 hover:text-stone-300 active:bg-stone-700 active:text-stone-200 active:border-stone-500 active:scale-90 transition-all"
               title="Send feedback"
             >
               💬
             </button>
             <button
               onClick={handleSignOut}
-              className="text-xs text-stone-500 border border-stone-700 rounded-lg px-2.5 py-1.5 hover:border-stone-500 hover:text-stone-300 transition-colors"
+              className="text-xs text-stone-500 border border-stone-700 rounded-lg px-2.5 py-1.5 hover:border-stone-500 hover:text-stone-300 active:bg-stone-700 active:text-stone-200 active:scale-90 transition-all"
             >
               Sign Out
             </button>
@@ -769,7 +769,7 @@ export default function Home() {
                   startRecording();
                 }
               }}
-              className={`flex flex-col items-center gap-1 px-4 py-1 transition-opacity ${
+              className={`flex flex-col items-center gap-1 px-4 py-1 rounded-xl transition-all active:scale-90 active:bg-stone-700 ${
                 isListening ? "opacity-100" : "opacity-100"
               }`}
               title={isListening ? "Stop recording" : "Speak a memory"}
@@ -783,7 +783,7 @@ export default function Home() {
             <button
               type="button"
               onClick={() => router.push("/camera")}
-              className="flex flex-col items-center gap-1 px-4 py-1"
+              className="flex flex-col items-center gap-1 px-4 py-1 rounded-xl transition-all active:scale-90 active:bg-stone-700"
               title="Add a photo memory"
             >
               <span className="text-2xl">📷</span>
@@ -793,7 +793,7 @@ export default function Home() {
             <button
               type="button"
               onClick={() => setShowListModal(true)}
-              className="flex flex-col items-center gap-1 px-4 py-1"
+              className="flex flex-col items-center gap-1 px-4 py-1 rounded-xl transition-all active:scale-90 active:bg-stone-700"
               title="Create a new list"
             >
               <span className="text-2xl">📝</span>
@@ -839,21 +839,21 @@ export default function Home() {
         <div className="flex justify-around mt-1 mb-4">
           <button
             onClick={() => searchSpotify()}
-            className="flex flex-col items-center gap-1 px-3 py-1"
+            className="flex flex-col items-center gap-1 px-3 py-1 rounded-xl transition-all active:scale-90 active:bg-stone-700"
           >
             <span className="text-2xl">🎵</span>
             <span className="text-[10px] text-amber-400">Find Music</span>
           </button>
           <button
             onClick={() => searchVideos()}
-            className="flex flex-col items-center gap-1 px-3 py-1"
+            className="flex flex-col items-center gap-1 px-3 py-1 rounded-xl transition-all active:scale-90 active:bg-stone-700"
           >
             <span className="text-2xl">🎥</span>
             <span className="text-[10px] text-blue-400">Find Video</span>
           </button>
           <button
             onClick={() => searchMovies()}
-            className="flex flex-col items-center gap-1 px-3 py-1"
+            className="flex flex-col items-center gap-1 px-3 py-1 rounded-xl transition-all active:scale-90 active:bg-stone-700"
           >
             <span className="text-2xl">🎬</span>
             <span className="text-[10px] text-red-400">Find Movie</span>
@@ -861,7 +861,7 @@ export default function Home() {
           <button
             onClick={() => saveMemory()}
             disabled={!memory.trim() || isSaving}
-            className={`flex flex-col items-center gap-1 px-3 py-1 transition ${
+            className={`flex flex-col items-center gap-1 px-3 py-1 rounded-xl transition-all active:scale-90 active:bg-stone-700 ${
               !memory.trim() || isSaving ? "opacity-30" : "opacity-100"
             }`}
           >
@@ -1010,7 +1010,7 @@ export default function Home() {
             </span>
             <button
               onClick={() => setShowBag(true)}
-              className={`bg-gradient-to-br from-amber-400 to-orange-400 text-stone-900 rounded-full w-16 h-16 shadow-2xl flex flex-col items-center justify-center ${bagBump ? "animate-bag-bump" : ""}`}
+              className={`bg-gradient-to-br from-amber-400 to-orange-400 text-stone-900 rounded-full w-16 h-16 shadow-2xl flex flex-col items-center justify-center transition-all active:scale-90 active:from-amber-500 active:to-orange-500 ${bagBump ? "animate-bag-bump" : ""}`}
             >
               <span className="text-2xl leading-none">🎒</span>
               <span className="text-xs font-bold leading-none mt-0.5">{selectedItems.length}</span>
@@ -1041,17 +1041,17 @@ export default function Home() {
                         {item.year && <p className="text-xs text-stone-400">{item.year}</p>}
                       </div>
                     </div>
-                    <button onClick={() => removeFromSelection(i)} className="text-stone-500 hover:text-red-400 text-lg ml-2">✕</button>
+                    <button onClick={() => removeFromSelection(i)} className="text-stone-500 hover:text-red-400 active:text-red-500 active:scale-90 transition-all text-lg ml-2">✕</button>
                   </div>
                 ))}
               </div>
               <button
                 onClick={() => { setShowBag(false); selectedItems.length === 1 ? saveSeparately() : setShowPlaylistModal(true); }}
-                className="w-full bg-gradient-to-r from-amber-400 to-orange-400 text-stone-900 font-bold py-3.5 rounded-xl text-base shadow-lg"
+                className="w-full bg-gradient-to-r from-amber-400 to-orange-400 text-stone-900 font-bold py-3.5 rounded-xl text-base shadow-lg transition-all active:scale-95 active:from-amber-500 active:to-orange-500"
               >
                 Stash it! 🎉
               </button>
-              <button onClick={() => { setShowBag(false); clearSearchState(); }} className="w-full text-stone-500 text-sm py-2 mt-1">
+              <button onClick={() => { setShowBag(false); clearSearchState(); }} className="w-full text-stone-500 text-sm py-2 mt-1 rounded-xl transition-all active:text-stone-300 active:bg-stone-800">
                 Clear all
               </button>
             </div>
