@@ -509,20 +509,6 @@ export default function Home() {
         setIsListening(false);
       };
 
-      // Detect silence using Web Audio API
-      const audioContext = new AudioContext();
-      const analyser = audioContext.createAnalyser();
-      const source = audioContext.createMediaStreamSource(stream);
-      source.connect(analyser);
-      analyser.fftSize = 256;
-      const dataArray = new Uint8Array(analyser.frequencyBinCount);
-      let hasSound = false;
-      const silenceCheck = setInterval(() => {
-        analyser.getByteFrequencyData(dataArray);
-        const avg = dataArray.reduce((a, b) => a + b, 0) / dataArray.length;
-        if (avg > 5) hasSound = true;
-      }, 100);
-
       setIsListening(true);
 
       mediaRecorder.ondataavailable = (event) => {
@@ -531,18 +517,19 @@ export default function Home() {
 
       mediaRecorder.onstop = async () => {
         releaseMic();
-        clearInterval(silenceCheck);
-        audioContext.close();
 
-        if (!hasSound) {
+        const mimeType = MediaRecorder.isTypeSupported("audio/webm") ? "audio/webm" : "audio/mp4";
+        const audioBlob = new Blob(audioChunks, { type: mimeType });
+
+        // Silence detection: a recording with no speech is just container headers
+        // (~a few hundred bytes). Real speech is always several KB.
+        // This works reliably across iOS Safari, Android Chrome, and desktop.
+        if (audioBlob.size < 1500) {
           setError("No sound detected — please speak closer to your microphone and try again.");
           setIsListening(false);
           setIsDetecting(false);
           return;
         }
-
-        const mimeType = MediaRecorder.isTypeSupported("audio/webm") ? "audio/webm" : "audio/mp4";
-        const audioBlob = new Blob(audioChunks, { type: mimeType });
         const ext = mimeType === "audio/mp4" ? "m4a" : "webm";
         const formData = new FormData();
         formData.append("file", audioBlob, `recording.${ext}`);
