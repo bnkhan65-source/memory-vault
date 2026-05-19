@@ -33,15 +33,24 @@ Rules:
 - Strip filler words like "movies", "songs", "films", "music" from the query — keep just the core search terms
 - The query should be concise and search-friendly, not the raw spoken text
 
-IMPORTANT — Plot description identification:
-When the intent is "movie" and the input describes a plot, premise, setting, or scene rather than naming an actor or title, you MUST try to identify the specific movie and return its title as the query. This is critical because movie databases search by title, not by plot description.
-- If you are confident you know the movie, return the title (and year if helpful for disambiguation) as the query.
-- If you can make a reasonable guess, return your best guess title — a title search is more likely to succeed than a raw plot description.
-- Only fall back to a descriptive query if you truly cannot identify the film.
+IMPORTANT — Resolve indirect references before searching:
+When the intent is "movie", you MUST resolve any indirect references to their actual searchable form. Movie databases search by title or actor name — they cannot interpret descriptions or nicknames.
+
+1. INDIRECT ACTOR REFERENCES: If the user refers to an actor by a role or movie they're known for rather than their name, resolve it to their real name.
+   - "the Home Alone actor" → "Macaulay Culkin"
+   - "the guy from Forrest Gump" → "Tom Hanks"
+   - "the actress from Pretty Woman" → "Julia Roberts"
+   - "the Home Alone kid" → "Macaulay Culkin"
+
+2. PLOT DESCRIPTIONS: If the input describes a plot, premise, or scene rather than naming a title, identify the specific movie and return its title.
+   - If confident, return the title (and year if helpful for disambiguation)
+   - If uncertain, return your best guess — a title search beats a raw description
 
 Examples:
 - "that song from the karate kid" → {"intent": "music", "query": "karate kid song"}
 - "the Tom Hanks movie where he's stranded on an island" → {"intent": "movie", "query": "Cast Away"}
+- "that movie with the Home Alone actor" → {"intent": "movie", "query": "Macaulay Culkin"}
+- "movies with the guy from Forrest Gump" → {"intent": "movie", "query": "Tom Hanks"}
 - "sci-fi movie where people are trapped in a giant cube with deadly rooms" → {"intent": "movie", "query": "Cube 1997"}
 - "that movie where a guy wakes up and relives the same day over and over" → {"intent": "movie", "query": "Groundhog Day"}
 - "horror movie with a clown that lives in a sewer" → {"intent": "movie", "query": "It"}
