@@ -2,7 +2,8 @@
 
 import { useRef, useState } from "react";
 import { MEMORY_TYPE_META } from "@/lib/memoryTypes";
-import { auth } from "@/lib/firebase";
+import { auth, storage } from "@/lib/firebase";
+import { ref as storageRef, uploadBytes, getDownloadURL } from "firebase/storage";
 
 type PlaylistItem = {
   kind: "movie" | "music" | "video";
@@ -65,6 +66,7 @@ export default function MemoryCard({
   const [isIdentifying, setIsIdentifying] = useState(false);
   const listMediaRecorderRef = useRef<MediaRecorder | null>(null);
   const photoInputRef = useRef<HTMLInputElement>(null);
+  const pendingPhotoUrlRef = useRef<string | null>(null);
 
   type MusicService = "apple" | "spotify" | "youtube" | "amazon";
   const [preferredService, setPreferredService] = useState<MusicService>(() => {
@@ -143,8 +145,13 @@ export default function MemoryCard({
 
   const handleAddItem = () => {
     if (onAddListItem && addItemInput.trim()) {
-      onAddListItem(memory.id, addItemInput.trim());
+      const photoUrl = pendingPhotoUrlRef.current;
+      const encoded = photoUrl
+        ? JSON.stringify({ text: addItemInput.trim(), imageUrl: photoUrl })
+        : addItemInput.trim();
+      onAddListItem(memory.id, encoded);
       setAddItemInput("");
+      pendingPhotoUrlRef.current = null;
     }
   };
 
@@ -199,9 +206,20 @@ export default function MemoryCard({
 
   const identifyPhoto = async (file: File) => {
     setIsIdentifying(true);
+    pendingPhotoUrlRef.current = null;
     try {
+      const uid = auth.currentUser?.uid;
       const token = await auth.currentUser?.getIdToken();
-      if (!token) return;
+      if (!token || !uid) return;
+
+      // Upload photo to Storage so we can show it alongside the text
+      const ext = file.name.split(".").pop() || "jpg";
+      const sRef = storageRef(storage, `listImages/${uid}/${Date.now()}.${ext}`);
+      await uploadBytes(sRef, file);
+      const imageUrl = await getDownloadURL(sRef);
+      pendingPhotoUrlRef.current = imageUrl;
+
+      // Identify what's in the photo
       const fd = new FormData();
       fd.append("file", file);
       const res = await fetch("/api/identify-image", {
@@ -473,19 +491,39 @@ export default function MemoryCard({
             {resolvedListTitle && (
               <p className="text-sm font-semibold text-stone-100 mb-2">{resolvedListTitle}</p>
             )}
-            {resolvedListItems.map((item, index) => (
-              <div key={index} className="flex items-center gap-2 text-sm">
-                <button
-                  onClick={(e) => { e.stopPropagation(); toggleCheck(index); }}
-                  className="w-8 h-8 flex items-center justify-center text-lg text-stone-400 rounded-md active:bg-stone-700 shrink-0"
-                >
-                  {checkedItems.includes(index) ? "☑" : "☐"}
-                </button>
-                <span className={checkedItems.includes(index) ? "line-through text-stone-500" : "text-stone-100"}>
-                  {item}
-                </span>
-              </div>
-            ))}
+            {resolvedListItems.map((item, index) => {
+              // Items may be plain strings or JSON-encoded { text, imageUrl } objects
+              let itemText = item;
+              let itemImage: string | null = null;
+              try {
+                const parsed = JSON.parse(item);
+                if (parsed?.text) { itemText = parsed.text; itemImage = parsed.imageUrl || null; }
+              } catch { /* plain string, no-op */ }
+
+              return (
+                <div key={index} className="flex items-start gap-2 text-sm">
+                  <button
+                    onClick={(e) => { e.stopPropagation(); toggleCheck(index); }}
+                    className="w-8 h-8 flex items-center justify-center text-lg text-stone-400 rounded-md active:bg-stone-700 shrink-0 mt-0.5"
+                  >
+                    {checkedItems.includes(index) ? "☑" : "☐"}
+                  </button>
+                  <div className="flex flex-col gap-1 flex-1">
+                    {itemImage && (
+                      <img
+                        src={itemImage}
+                        alt={itemText}
+                        onClick={(e) => { e.stopPropagation(); window.open(itemImage!, "_blank"); }}
+                        className="w-full max-h-48 object-cover rounded-lg cursor-pointer"
+                      />
+                    )}
+                    <span className={checkedItems.includes(index) ? "line-through text-stone-500" : "text-stone-100"}>
+                      {itemText}
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
             {onAddListItem && (
               <div className="flex flex-col gap-2 mt-3">
                 <input
