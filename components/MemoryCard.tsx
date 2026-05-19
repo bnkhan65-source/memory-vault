@@ -57,6 +57,7 @@ export default function MemoryCard({
     memory.checked || []
   );
   const [expandedItem, setExpandedItem] = useState<number | null>(null);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
   const [showExport, setShowExport] = useState(false);
   const [copied, setCopied] = useState(false);
   const [addItemInput, setAddItemInput] = useState("");
@@ -275,6 +276,7 @@ export default function MemoryCard({
               e.stopPropagation();
               if (individualMusicItem) window.open(getMusicUrl(individualMusicItem), "_blank");
               else if (memory.videoUrl) window.open(memory.videoUrl, "_blank");
+              else setLightboxOpen(true);
             }}
             className="w-20 h-20 rounded-lg object-cover cursor-pointer"
           />
@@ -283,6 +285,29 @@ export default function MemoryCard({
               <span className="text-white text-xl">▶</span>
             </div>
           )}
+        </div>
+      )}
+
+      {/* Photo lightbox — full-screen with pinch-to-zoom */}
+      {lightboxOpen && memory.imageUrl && (
+        <div
+          className="fixed inset-0 z-50 bg-black flex items-center justify-center"
+          onClick={() => setLightboxOpen(false)}
+        >
+          <button
+            onClick={() => setLightboxOpen(false)}
+            className="absolute top-4 right-4 text-white text-3xl font-light leading-none z-10 bg-black/40 rounded-full w-10 h-10 flex items-center justify-center"
+            aria-label="Close"
+          >
+            ×
+          </button>
+          <img
+            src={memory.imageUrl}
+            alt="Memory"
+            onClick={(e) => e.stopPropagation()}
+            style={{ touchAction: "pinch-zoom", maxWidth: "100%", maxHeight: "100%" }}
+            className="object-contain select-none"
+          />
         </div>
       )}
 
