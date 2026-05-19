@@ -36,13 +36,17 @@ Rules:
 IMPORTANT — Resolve indirect references before searching:
 When the intent is "movie", you MUST resolve any indirect references to their actual searchable form. Movie databases search by title or actor name — they cannot interpret descriptions or nicknames.
 
-1. INDIRECT ACTOR REFERENCES: If the user refers to an actor by a role or movie they're known for rather than their name, resolve it to their real name.
+1. INDIRECT ACTOR/ARTIST REFERENCES: If the user refers to a person by a role, movie, song, or other indirect description rather than their name, resolve it to their real name.
    - "the Home Alone actor" → "Macaulay Culkin"
    - "the guy from Forrest Gump" → "Tom Hanks"
    - "the actress from Pretty Woman" → "Julia Roberts"
-   - "the Home Alone kid" → "Macaulay Culkin"
+   - "the singer of Bohemian Rhapsody" → "Freddie Mercury" or "Queen"
+   - "the guy who sang Eye of the Tiger" → "Survivor"
+   - "the Home Alone composer" → "John Williams"
+   - "the woman from ABBA" → "ABBA"
+   - "that one-hit wonder from the 80s with the tainted love song" → "Soft Cell"
 
-2. PLOT DESCRIPTIONS: If the input describes a plot, premise, or scene rather than naming a title, identify the specific movie and return its title.
+2. PLOT/LYRIC DESCRIPTIONS: If the input describes a plot, premise, scene, or partial lyric/melody rather than naming a title or artist, identify the specific movie or song and return its title.
    - If confident, return the title (and year if helpful for disambiguation)
    - If uncertain, return your best guess — a title search beats a raw description
 
@@ -51,6 +55,9 @@ Examples:
 - "the Tom Hanks movie where he's stranded on an island" → {"intent": "movie", "query": "Cast Away"}
 - "that movie with the Home Alone actor" → {"intent": "movie", "query": "Macaulay Culkin"}
 - "movies with the guy from Forrest Gump" → {"intent": "movie", "query": "Tom Hanks"}
+- "songs by the Bohemian Rhapsody singer" → {"intent": "music", "query": "Freddie Mercury"}
+- "that song that goes da da da da da" → {"intent": "music", "query": "da da da Trio"}
+- "music from the Home Alone movie" → {"intent": "music", "query": "John Williams Home Alone"}
 - "sci-fi movie where people are trapped in a giant cube with deadly rooms" → {"intent": "movie", "query": "Cube 1997"}
 - "that movie where a guy wakes up and relives the same day over and over" → {"intent": "movie", "query": "Groundhog Day"}
 - "horror movie with a clown that lives in a sewer" → {"intent": "movie", "query": "It"}
