@@ -494,6 +494,26 @@ export default function Home() {
     }
   };
 
+  const removeListItems = async (memoryId: string, indicesToRemove: number[]) => {
+    if (!user) return;
+    const listMemory = memories.find((m) => m.id === memoryId);
+    if (!listMemory) return;
+    const currentItems = listMemory.listItems || [];
+    const updatedItems = currentItems.filter((_, i) => !indicesToRemove.includes(i));
+    try {
+      await updateDoc(doc(db, "users", user.uid, "memories", memoryId), {
+        listItems: updatedItems,
+        checked: [],
+      });
+      setMemories((prev) =>
+        prev.map((m) => m.id === memoryId ? { ...m, listItems: updatedItems, checked: [] } : m)
+      );
+    } catch (err) {
+      console.error("REMOVE LIST ITEMS ERROR:", err);
+      setError("Failed to remove items.");
+    }
+  };
+
   const addItemToList = async (memoryId: string, item: string) => {
     if (!user || !item.trim()) return;
     const listMemory = memories.find((m) => m.id === memoryId);
@@ -940,7 +960,7 @@ export default function Home() {
             }`}
           >
             <span className="text-2xl">💾</span>
-            <span className="text-[10px] text-amber-400">{isSaving ? "Saving…" : "Save"}</span>
+            <span className="text-[10px] text-amber-400">{isSaving ? "Saving…" : "Save note"}</span>
           </button>
         </div>
 
@@ -1388,6 +1408,7 @@ export default function Home() {
                 onDelete={deleteMemory}
                 onToggleCheck={toggleCheck}
                 onAddListItem={addItemToList}
+                onRemoveListItems={removeListItems}
               />
             ))
           )}

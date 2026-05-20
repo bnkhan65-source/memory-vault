@@ -37,12 +37,14 @@ type Props = {
   onUpdate?: (id: string, newText: string) => void;
   onToggleCheck?: (memoryId: string, index: number, currentChecked: number[]) => void;
   onAddListItem?: (memoryId: string, item: string) => void;
+  onRemoveListItems?: (memoryId: string, indicesToRemove: number[]) => void;
 };
 
 export default function MemoryCard({
   memory,
   onDelete,
   onUpdate,
+  onRemoveListItems,
   onToggleCheck,
   onAddListItem,
 }: Props) {
@@ -514,6 +516,18 @@ export default function MemoryCard({
                 </div>
               );
             })}
+            {checkedItems.length > 0 && onRemoveListItems && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onRemoveListItems(memory.id, checkedItems);
+                  setCheckedItems([]);
+                }}
+                className="text-xs text-stone-500 hover:text-red-400 active:text-red-500 transition-all mt-2"
+              >
+                🗑 Clear checked ({checkedItems.length})
+              </button>
+            )}
             {onAddListItem && (
               <div className="flex flex-col gap-2 mt-3">
                 <input
