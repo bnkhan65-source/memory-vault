@@ -298,10 +298,12 @@ export default function MemoryCard({
         <div
           className="fixed inset-0 z-50 bg-black flex items-center justify-center"
           onClick={() => setLightboxOpen(false)}
+          onTouchEnd={() => setLightboxOpen(false)}
         >
           <button
-            onClick={() => setLightboxOpen(false)}
-            className="absolute top-4 right-4 text-white text-3xl font-light leading-none z-10 bg-black/40 rounded-full w-10 h-10 flex items-center justify-center"
+            onClick={(e) => { e.stopPropagation(); setLightboxOpen(false); }}
+            onTouchEnd={(e) => { e.stopPropagation(); setLightboxOpen(false); }}
+            className="absolute top-4 right-4 text-white text-3xl font-light leading-none z-20 bg-black/60 rounded-full w-14 h-14 flex items-center justify-center active:bg-black/80"
             aria-label="Close"
           >
             ×
@@ -310,6 +312,7 @@ export default function MemoryCard({
             src={memory.imageUrl}
             alt="Memory"
             onClick={(e) => e.stopPropagation()}
+            onTouchEnd={(e) => e.stopPropagation()}
             style={{ touchAction: "pinch-zoom", maxWidth: "100%", maxHeight: "100%" }}
             className="object-contain select-none"
           />
