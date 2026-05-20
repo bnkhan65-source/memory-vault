@@ -19,14 +19,14 @@ export const MEMORY_TYPE_META = {
     color: "bg-purple-100 text-purple-700",
   },
   snapshot: {
-    label: "Snapshot",
+    label: "Pic",
     icon: "📸",
     color: "bg-pink-100 text-pink-700",
   },
   moment: {
-    label: "Moment",
-    icon: "✨",
-    color: "bg-yellow-100 text-yellow-700",
+    label: "Pic",
+    icon: "📸",
+    color: "bg-pink-100 text-pink-700",
   },
   collection: {
     label: "Collection",

@@ -262,22 +262,9 @@ export default function MemoryCard({
       onTouchEnd={() => setIsPressed(false)}
       onClick={() => {
         if (memory.type === "list" || memory.type === "playlist") return;
-
-        // Music cards — tap opens in preferred service
         if (individualMusicItem) return;
-
-        // Video cards — tap to watch
-        if (memory.videoUrl) {
-          window.open(memory.videoUrl, "_blank");
-          return;
-        }
-
-        if (isEditing) {
-          handleSaveEdit();
-          return;
-        }
-
-        setIsEditing(true);
+        if (memory.videoUrl) { window.open(memory.videoUrl, "_blank"); return; }
+        // No longer entering edit mode on card tap — use the ✏️ button instead
       }}
       className={`bg-stone-800 border border-stone-700 p-4 rounded-xl shadow-sm flex gap-3 items-start transition-all duration-150 ease-out cursor-pointer hover:shadow-lg hover:-translate-y-1 hover:bg-stone-750 hover:border-stone-600
         ${isPulsing ? "scale-[1.03] shadow-lg" : ""}
@@ -573,27 +560,53 @@ export default function MemoryCard({
         )}
 
         {/* Text / edit rendering for non-list, non-playlist memories */}
-        {memory.type !== "list" && memory.type !== "playlist" && isEditing && (
-          <textarea
-            value={editText}
-            onChange={(e) => setEditText(e.target.value)}
-            onClick={(e) => e.stopPropagation()}
-            className="w-full border rounded-lg p-2 text-sm"
-            rows={3}
-            autoFocus
-          />
-        )}
-        {memory.type !== "list" && memory.type !== "playlist" && !isEditing && (
-          <p className="text-sm font-medium text-stone-100 break-words">
-            {editText}
-          </p>
-        )}
-
-        {/* Saved indicator */}
-        {justSaved && (
-          <p className="text-[10px] text-green-500 mt-1">
-            Saved ✓
-          </p>
+        {memory.type !== "list" && memory.type !== "playlist" && (
+          <div>
+            {isEditing ? (
+              <div onClick={(e) => e.stopPropagation()} className="space-y-2">
+                <p className="text-[10px] text-amber-400 font-medium uppercase tracking-wide">Editing description</p>
+                <textarea
+                  value={editText}
+                  onChange={(e) => setEditText(e.target.value)}
+                  className="w-full bg-stone-700 border border-amber-500/50 rounded-lg p-2.5 text-sm text-stone-100 focus:outline-none focus:border-amber-400 resize-none"
+                  rows={3}
+                  autoFocus
+                />
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => { setEditText(memory.text || ""); setIsEditing(false); }}
+                    className="flex-1 py-1.5 rounded-lg text-sm bg-stone-700 text-stone-400 border border-stone-600 active:bg-stone-600 transition-all"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleSaveEdit}
+                    className="flex-1 py-1.5 rounded-lg text-sm bg-amber-400 text-stone-900 font-semibold active:bg-amber-500 transition-all"
+                  >
+                    Save ✓
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="flex items-start justify-between gap-2">
+                <p className="text-sm font-medium text-stone-100 break-words flex-1">
+                  {editText}
+                </p>
+                {!individualMusicItem && !memory.videoUrl && (
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setIsEditing(true); }}
+                    className="shrink-0 text-stone-600 hover:text-stone-400 active:text-amber-400 active:scale-90 transition-all p-1 -mt-0.5"
+                    title="Edit description"
+                  >
+                    ✏️
+                  </button>
+                )}
+              </div>
+            )}
+            {justSaved && (
+              <p className="text-[10px] text-green-500 mt-1">Saved ✓</p>
+            )}
+          </div>
         )}
 
         {/* Music service picker for individual music cards */}

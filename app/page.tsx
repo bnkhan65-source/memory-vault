@@ -63,6 +63,7 @@ type Movie = {
   title: string;
   year: string;
   poster: string | null;
+  mediaType?: "movie" | "tv";
 };
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -94,6 +95,8 @@ export default function Home() {
   const [feedbackText, setFeedbackText] = useState("");
   const [feedbackSent, setFeedbackSent] = useState(false);
   const [showListModal, setShowListModal] = useState(false);
+  const [showAddToListSheet, setShowAddToListSheet] = useState(false);
+  const [resultSourceQuery, setResultSourceQuery] = useState({ music: "", video: "", movie: "" });
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [sortBy, setSortBy] = useState<"newest" | "oldest" | "az" | "type">("newest");
   const [filterType, setFilterType] = useState<string | null>(null);
@@ -291,6 +294,7 @@ export default function Home() {
       });
       const data = await res.json();
       setSpotifyResults(data.tracks || []);
+      setResultSourceQuery((prev) => ({ ...prev, music: term }));
     } catch (err) {
       console.error("Music search error:", err);
     }
@@ -309,6 +313,7 @@ export default function Home() {
       });
       const data = await res.json();
       setVideoResults(data.videos || []);
+      setResultSourceQuery((prev) => ({ ...prev, video: term }));
     } catch (err) {
       console.error("Video search error:", err);
     }
@@ -327,6 +332,7 @@ export default function Home() {
       });
       const data = await res.json();
       setMovieResults(data.movies || []);
+      setResultSourceQuery((prev) => ({ ...prev, movie: term }));
     } catch (err) {
       console.error("[searchMovies] fetch error:", err);
     }
@@ -356,6 +362,7 @@ export default function Home() {
     setVideoResults([]);
     setMovieResults([]);
     setSelectedItems([]);
+    setResultSourceQuery({ music: "", video: "", movie: "" });
   };
 
   const getPlaylistType = (): "music" | "movie" | "video" | "mixed" => {
@@ -494,6 +501,49 @@ export default function Home() {
     } catch (err) {
       console.error("ADD LIST ITEM ERROR:", err);
       setError("Failed to add item to list.");
+    }
+  };
+
+  // ── Typed search (same flow as voice, minus transcription) ─────────────────
+
+  const handleTypedSearch = async () => {
+    const text = memory.trim();
+    if (!text) return;
+
+    setMemory("");
+    setIsDetecting(true);
+
+    let detectedQuery = text;
+    let intent: "music" | "movie" | "video" | "all" = "all";
+
+    try {
+      const intentRes = await fetch("/api/detect-intent", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text }),
+      });
+      const intentData = await intentRes.json();
+      detectedQuery = intentData.query || text;
+      intent = intentData.intent || "all";
+    } catch {
+      console.warn("Intent detection failed, defaulting to 'all'");
+    }
+
+    setVoiceQuery(detectedQuery);
+    setIsDetecting(false);
+
+    if (intent === "music") {
+      await searchSpotify(detectedQuery);
+    } else if (intent === "movie") {
+      await searchMovies(detectedQuery);
+    } else if (intent === "video") {
+      await searchVideos(detectedQuery);
+    } else {
+      await Promise.all([
+        searchSpotify(detectedQuery),
+        searchMovies(detectedQuery),
+        searchVideos(detectedQuery),
+      ]);
     }
   };
 
@@ -683,7 +733,11 @@ export default function Home() {
         .toLowerCase()
         .includes(search.toLowerCase());
       const tagMatch = activeTag ? m.tags?.includes(activeTag) : true;
-      const typeMatch = filterType ? m.type === filterType : true;
+      const typeMatch = filterType
+        ? filterType === "pic"
+          ? (m.type === "snapshot" || m.type === "moment" || (!m.type && !!m.imageUrl))
+          : m.type === filterType
+        : true;
       return textMatch && tagMatch && typeMatch;
     });
 
@@ -758,10 +812,10 @@ export default function Home() {
             onKeyDown={(e) => {
               if (e.key === "Enter") {
                 e.preventDefault();
-                saveMemory((e.target as HTMLInputElement).value);
+                handleTypedSearch();
               }
             }}
-            placeholder="What's on your mind?"
+            placeholder="Type or speak what you're looking for…"
             className="w-full bg-stone-800 border border-stone-600 p-3 rounded-xl text-base text-stone-100 placeholder-stone-500 focus:outline-none focus:border-amber-500/50"
           />
 
@@ -879,44 +933,66 @@ export default function Home() {
         </div>
 
         {(voiceQuery || memory.trim() || spotifyResults.length > 0 || videoResults.length > 0 || movieResults.length > 0) && (
-          <div className="flex items-center justify-between mb-2 gap-2">
-            {voiceQuery ? (
-              editingVoiceQuery ? (
-                <input
-                  autoFocus
-                  value={voiceQuery}
-                  onChange={(e) => setVoiceQuery(e.target.value)}
-                  onBlur={() => setEditingVoiceQuery(false)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      setEditingVoiceQuery(false);
-                      Promise.all([searchSpotify(voiceQuery), searchMovies(voiceQuery), searchVideos(voiceQuery)]);
-                    }
-                  }}
-                  className="text-xs bg-stone-800 border border-amber-400 rounded px-2 py-1 text-stone-100 flex-1 focus:outline-none"
-                />
-              ) : (
-                <button
-                  onClick={() => setEditingVoiceQuery(true)}
-                  className="text-xs text-stone-400 italic flex items-center gap-1 hover:text-amber-400 transition-colors"
-                  title="Tap to correct"
-                >
-                  🎤 &ldquo;{voiceQuery}&rdquo; ✏️
-                </button>
-              )
-            ) : <span />}
-            <button
-              onClick={clearSearchState}
-              className="text-xs text-stone-500 hover:text-stone-300 active:scale-95 shrink-0"
-            >
-              Clear ✕
-            </button>
+          <div className="flex flex-col gap-1.5 mb-2">
+            <div className="flex items-center justify-between gap-2">
+              {voiceQuery ? (
+                editingVoiceQuery ? (
+                  <input
+                    autoFocus
+                    value={voiceQuery}
+                    onChange={(e) => setVoiceQuery(e.target.value)}
+                    onBlur={() => setEditingVoiceQuery(false)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        setEditingVoiceQuery(false);
+                        Promise.all([searchSpotify(voiceQuery), searchMovies(voiceQuery), searchVideos(voiceQuery)]);
+                      }
+                    }}
+                    className="text-xs bg-stone-800 border border-amber-400 rounded px-2 py-1 text-stone-100 flex-1 focus:outline-none"
+                  />
+                ) : (
+                  <button
+                    onClick={() => setEditingVoiceQuery(true)}
+                    className="text-xs text-stone-400 italic flex items-center gap-1 hover:text-amber-400 transition-colors"
+                    title="Tap to correct"
+                  >
+                    🎤 &ldquo;{voiceQuery}&rdquo; ✏️
+                  </button>
+                )
+              ) : <span />}
+              <button
+                onClick={clearSearchState}
+                className="text-xs text-stone-500 hover:text-stone-300 active:scale-95 shrink-0"
+              >
+                Clear ✕
+              </button>
+            </div>
+            {voiceQuery && memories.some((m) => m.type === "list") && (
+              <button
+                onClick={() => setShowAddToListSheet(true)}
+                className="self-start text-xs text-stone-400 border border-stone-700 rounded-full px-3 py-1 hover:border-amber-500/50 hover:text-amber-400 active:scale-95 active:bg-stone-800 transition-all"
+              >
+                📋 Add &ldquo;{voiceQuery}&rdquo; to a list
+              </button>
+            )}
           </div>
         )}
 
-        {spotifyResults.length > 0 && (
-          <div className="mt-3 space-y-2">
-            <p className="text-xs font-semibold text-stone-400 uppercase tracking-wider px-1">🎵 Music</p>
+        {spotifyResults.length > 0 && (() => {
+          const activeQueries = [
+            spotifyResults.length > 0 ? resultSourceQuery.music : null,
+            videoResults.length > 0 ? resultSourceQuery.video : null,
+            movieResults.length > 0 ? resultSourceQuery.movie : null,
+          ].filter(Boolean) as string[];
+          const hasMultipleSources = new Set(activeQueries).size > 1;
+          const latestQuery = activeQueries[activeQueries.length - 1] ?? "";
+          const isSecondary = hasMultipleSources && resultSourceQuery.music !== latestQuery;
+          return (
+          <div className={`mt-3 space-y-2 rounded-xl p-2 transition-all ${isSecondary ? "bg-stone-800/50 border border-stone-700" : ""}`}>
+            <div className="flex items-center gap-2 px-1">
+              <p className={`text-xs font-semibold uppercase tracking-wider ${isSecondary ? "text-stone-500" : "text-stone-400"}`}>🎵 Music</p>
+              {isSecondary && <span className="text-[10px] text-stone-600 italic">from: &ldquo;{resultSourceQuery.music}&rdquo;</span>}
+            </div>
             {spotifyResults.map((track, i) => {
               const isSelected = selectedItems.some(s => s.title === track.title && s.kind === "music" && s.artist === track.artist);
               return (
@@ -945,11 +1021,24 @@ export default function Home() {
               );
             })}
           </div>
-        )}
+          );
+        })()}
 
-        {videoResults.length > 0 && (
-          <div className="mt-3 space-y-2">
-            <p className="text-xs font-semibold text-stone-400 uppercase tracking-wider px-1">🎥 Videos</p>
+        {videoResults.length > 0 && (() => {
+          const activeQueries = [
+            spotifyResults.length > 0 ? resultSourceQuery.music : null,
+            videoResults.length > 0 ? resultSourceQuery.video : null,
+            movieResults.length > 0 ? resultSourceQuery.movie : null,
+          ].filter(Boolean) as string[];
+          const hasMultipleSources = new Set(activeQueries).size > 1;
+          const latestQuery = activeQueries[activeQueries.length - 1] ?? "";
+          const isSecondary = hasMultipleSources && resultSourceQuery.video !== latestQuery;
+          return (
+          <div className={`mt-3 space-y-2 rounded-xl p-2 transition-all ${isSecondary ? "bg-stone-800/50 border border-stone-700" : ""}`}>
+            <div className="flex items-center gap-2 px-1">
+              <p className={`text-xs font-semibold uppercase tracking-wider ${isSecondary ? "text-stone-500" : "text-stone-400"}`}>🎥 Videos</p>
+              {isSecondary && <span className="text-[10px] text-stone-600 italic">from: &ldquo;{resultSourceQuery.video}&rdquo;</span>}
+            </div>
             {videoResults.map((video, i) => {
               const isSelected = selectedItems.some(s => s.videoId === video.videoId && s.kind === "video");
               return (
@@ -973,11 +1062,24 @@ export default function Home() {
               );
             })}
           </div>
-        )}
+          );
+        })()}
 
-        {movieResults.length > 0 && (
-          <div className="mt-3 space-y-2">
-            <p className="text-xs font-semibold text-stone-400 uppercase tracking-wider px-1">🎬 Movies</p>
+        {movieResults.length > 0 && (() => {
+          const activeQueries = [
+            spotifyResults.length > 0 ? resultSourceQuery.music : null,
+            videoResults.length > 0 ? resultSourceQuery.video : null,
+            movieResults.length > 0 ? resultSourceQuery.movie : null,
+          ].filter(Boolean) as string[];
+          const hasMultipleSources = new Set(activeQueries).size > 1;
+          const latestQuery = activeQueries[activeQueries.length - 1] ?? "";
+          const isSecondary = hasMultipleSources && resultSourceQuery.movie !== latestQuery;
+          return (
+          <div className={`mt-3 space-y-2 rounded-xl p-2 transition-all ${isSecondary ? "bg-stone-800/50 border border-stone-700" : ""}`}>
+            <div className="flex items-center gap-2 px-1">
+              <p className={`text-xs font-semibold uppercase tracking-wider ${isSecondary ? "text-stone-500" : "text-stone-400"}`}>🎬 Movies</p>
+              {isSecondary && <span className="text-[10px] text-stone-600 italic">from: &ldquo;{resultSourceQuery.movie}&rdquo;</span>}
+            </div>
             {movieResults.map((movie) => {
               const isSelected = selectedItems.some(s => s.title === movie.title && s.kind === "movie" && s.year === movie.year);
               return (
@@ -997,7 +1099,12 @@ export default function Home() {
                   )}
                   <div className="flex-1">
                     <p className="text-sm font-medium">{movie.title}</p>
-                    <p className="text-xs text-gray-400">{movie.year}</p>
+                    <p className="text-xs text-gray-400">
+                      {movie.year}
+                      {movie.mediaType === "tv" && (
+                        <span className="ml-1.5 text-[10px] bg-blue-100 text-blue-600 rounded px-1 py-0.5 font-medium">Series</span>
+                      )}
+                    </p>
                   </div>
                   {isSelected && (
                     <div className="w-6 h-6 rounded-full bg-amber-400 flex items-center justify-center flex-shrink-0">
@@ -1008,7 +1115,8 @@ export default function Home() {
               );
             })}
           </div>
-        )}
+          );
+        })()}
 
         {/* ── Floating bag button ── */}
         {selectedItems.length > 0 && (
@@ -1273,7 +1381,7 @@ export default function Home() {
               [null, "All"],
               ["playlist", "🎵 Playlists"],
               ["list", "📋 Lists"],
-              ["moment", "📸 Photos"],
+              ["pic", "📸 Pics"],
               ["note", "📝 Notes"],
             ] as const).map(([val, label]) => (
               <button
@@ -1330,6 +1438,45 @@ export default function Home() {
           localStorage.setItem("stash_onboarded", "1");
           setShowOnboarding(false);
         }} />
+      )}
+
+      {/* ── Add to list sheet ── */}
+      {showAddToListSheet && (
+        <div className="fixed inset-0 z-50 flex flex-col justify-end" onClick={() => setShowAddToListSheet(false)}>
+          <div
+            className="bg-stone-900 border-t border-stone-700 rounded-t-2xl p-5 animate-slide-up"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="w-10 h-1 bg-stone-600 rounded-full mx-auto mb-4" />
+            <h3 className="text-stone-100 font-semibold text-base mb-1">📋 Add to a list</h3>
+            <p className="text-stone-400 text-xs mb-4">Pick a list to add &ldquo;{voiceQuery}&rdquo; to</p>
+            <div className="space-y-2 max-h-72 overflow-y-auto">
+              {memories
+                .filter((m) => m.type === "list")
+                .map((list) => (
+                  <button
+                    key={list.id}
+                    onClick={async () => {
+                      await addItemToList(list.id, voiceQuery);
+                      setShowAddToListSheet(false);
+                    }}
+                    className="w-full bg-stone-800 border border-stone-600 text-stone-200 py-3 px-4 rounded-xl text-sm font-medium text-left hover:border-amber-500/50 active:scale-95 active:bg-stone-700 transition-all"
+                  >
+                    {list.text}
+                    <p className="text-xs text-stone-500 mt-0.5 font-normal">
+                      {(list.listItems || []).length} item{(list.listItems || []).length !== 1 ? "s" : ""}
+                    </p>
+                  </button>
+                ))}
+            </div>
+            <button
+              onClick={() => setShowAddToListSheet(false)}
+              className="w-full text-stone-500 text-sm py-3 mt-2 rounded-xl transition-all active:text-stone-300 active:bg-stone-800"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
       )}
 
       {/* TMDB Attribution — required by TMDB terms of use */}
