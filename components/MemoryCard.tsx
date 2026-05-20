@@ -38,6 +38,8 @@ type Props = {
   onToggleCheck?: (memoryId: string, index: number, currentChecked: number[]) => void;
   onAddListItem?: (memoryId: string, item: string) => void;
   onRemoveListItems?: (memoryId: string, indicesToRemove: number[]) => void;
+  onPin?: (id: string, pinned: boolean) => void;
+  dragHandleProps?: Record<string, any>;
 };
 
 export default function MemoryCard({
@@ -47,6 +49,8 @@ export default function MemoryCard({
   onRemoveListItems,
   onToggleCheck,
   onAddListItem,
+  onPin,
+  dragHandleProps,
 }: Props) {
   const cardRef = useRef<HTMLDivElement>(null);
 
@@ -321,23 +325,41 @@ export default function MemoryCard({
         </div>
       )}
 
+      {/* Drag handle */}
+      {dragHandleProps && (
+        <div
+          {...dragHandleProps}
+          className="shrink-0 flex items-center px-1 cursor-grab active:cursor-grabbing touch-none text-stone-600 hover:text-stone-400 self-stretch"
+        >
+          ⠿
+        </div>
+      )}
+
       {/* Right-side content */}
       <div className="flex-1 min-w-0">
-        {/* Category + Type badges */}
+        {/* Category + Type badges + Pin */}
         <div className="flex items-center gap-2 mb-3 flex-wrap">
           {memory.category && (
             <span className="text-xs px-3 py-1 bg-gray-800 text-white rounded-full font-medium">
               {memory.category}
             </span>
           )}
-
           {memory.type && (
-            <span
-              className={`text-xs px-3 py-1 rounded-full ${meta.color}`}
-            >
+            <span className={`text-xs px-3 py-1 rounded-full ${meta.color}`}>
               {meta.icon} {meta.label}
             </span>
           )}
+          <div className="ml-auto flex items-center gap-1">
+            {onPin && (
+              <button
+                onClick={(e) => { e.stopPropagation(); onPin(memory.id, !!memory.pinned); }}
+                className={`text-base transition-all active:scale-90 ${memory.pinned ? "opacity-100" : "opacity-30 hover:opacity-60"}`}
+                title={memory.pinned ? "Unpin" : "Pin to top"}
+              >
+                📌
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Playlist rendering */}

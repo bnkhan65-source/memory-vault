@@ -18,7 +18,22 @@ import {
 } from "firebase/firestore";
 import { useRouter } from "next/navigation";
 import MemoryCard from "@/components/MemoryCard";
+import SortableMemoryCard from "@/components/SortableMemoryCard";
 import OnboardingModal from "@/components/OnboardingModal";
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  TouchSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+  arrayMove,
+} from "@dnd-kit/sortable";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -46,6 +61,7 @@ type Memory = {
   checked?: number[];
   items?: SelectedItem[];
   listItems?: string[];
+  pinned?: boolean;
 };
 
 type Track = {
@@ -99,7 +115,13 @@ export default function Home() {
   const [showListModal, setShowListModal] = useState(false);
   const [showAddToListSheet, setShowAddToListSheet] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
-  const [sortBy, setSortBy] = useState<"newest" | "oldest" | "az" | "type">("newest");
+  const [sortBy, setSortBy] = useState<"newest" | "oldest" | "az" | "type" | "custom">("newest");
+  const [cardOrder, setCardOrder] = useState<string[]>([]);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 5 } })
+  );
   const [filterType, setFilterType] = useState<string | null>(null);
   const [listTitle, setListTitle] = useState("");
   const [newListItemInput, setNewListItemInput] = useState("");
@@ -153,6 +175,9 @@ export default function Home() {
     const snap = await getDoc(profileRef);
     if (!snap.exists()) {
       await setDoc(profileRef, { createdAt: new Date().toISOString() });
+    } else {
+      const data = snap.data();
+      if (data?.cardOrder) setCardOrder(data.cardOrder);
     }
   };
 
@@ -514,6 +539,41 @@ export default function Home() {
     }
   };
 
+  const togglePin = async (memoryId: string, currentlyPinned: boolean) => {
+    if (!user) return;
+    try {
+      await updateDoc(doc(db, "users", user.uid, "memories", memoryId), {
+        pinned: !currentlyPinned,
+      });
+      setMemories((prev) =>
+        prev.map((m) => m.id === memoryId ? { ...m, pinned: !currentlyPinned } : m)
+      );
+    } catch (err) {
+      console.error("PIN ERROR:", err);
+    }
+  };
+
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+
+    const currentOrder = cardOrder.length > 0 ? cardOrder : memories.map((m) => m.id);
+    const oldIndex = currentOrder.indexOf(active.id as string);
+    const newIndex = currentOrder.indexOf(over.id as string);
+    if (oldIndex === -1 || newIndex === -1) return;
+
+    const newOrder = arrayMove(currentOrder, oldIndex, newIndex);
+    setCardOrder(newOrder);
+
+    if (user) {
+      try {
+        await updateDoc(doc(db, "users", user.uid), { cardOrder: newOrder });
+      } catch (err) {
+        console.error("SAVE ORDER ERROR:", err);
+      }
+    }
+  };
+
   const addItemToList = async (memoryId: string, item: string) => {
     if (!user || !item.trim()) return;
     const listMemory = memories.find((m) => m.id === memoryId);
@@ -773,10 +833,26 @@ export default function Home() {
       return textMatch && tagMatch && typeMatch;
     });
 
-    if (sortBy === "oldest") return [...result].reverse();
-    if (sortBy === "az") return [...result].sort((a, b) => (a.text || "").toLowerCase().localeCompare((b.text || "").toLowerCase()));
-    if (sortBy === "type") return [...result].sort((a, b) => (a.type || "").localeCompare(b.type || ""));
-    return result; // "newest" — keep Firestore order (already newest-first)
+    const pinned = result.filter((m) => m.pinned);
+    const unpinned = result.filter((m) => !m.pinned);
+
+    const byCustomOrder = (arr: Memory[]) => {
+      if (cardOrder.length === 0) return arr;
+      return [...arr].sort((a, b) => {
+        const ai = cardOrder.indexOf(a.id);
+        const bi = cardOrder.indexOf(b.id);
+        if (ai === -1 && bi === -1) return 0;
+        if (ai === -1) return 1;
+        if (bi === -1) return -1;
+        return ai - bi;
+      });
+    };
+
+    if (sortBy === "custom") return [...byCustomOrder(pinned), ...byCustomOrder(unpinned)];
+    if (sortBy === "oldest") return [...pinned, ...[...unpinned].reverse()];
+    if (sortBy === "az") return [...pinned, ...[...unpinned].sort((a, b) => (a.text || "").toLowerCase().localeCompare((b.text || "").toLowerCase()))];
+    if (sortBy === "type") return [...pinned, ...[...unpinned].sort((a, b) => (a.type || "").localeCompare(b.type || ""))];
+    return [...pinned, ...unpinned]; // "newest"
   })();
 
   // ── Loading state ───────────────────────────────────────────────────────────
@@ -1341,7 +1417,7 @@ export default function Home() {
           {/* Sort row */}
           <div className="flex items-center gap-1.5 flex-wrap">
             <span className="text-[10px] text-stone-500 uppercase tracking-widest mr-1">Sort</span>
-            {([["newest", "Newest"], ["oldest", "Oldest"], ["az", "A–Z"], ["type", "Type"]] as const).map(([val, label]) => (
+            {([["newest", "Newest"], ["oldest", "Oldest"], ["az", "A–Z"], ["type", "Type"], ["custom", "Custom ↕"]] as const).map(([val, label]) => (
               <button
                 key={val}
                 onClick={() => setSortBy(val)}
@@ -1395,13 +1471,35 @@ export default function Home() {
           </div>
         </div>
 
-        <div className="space-y-4">
-          {filteredMemories.length === 0 ? (
-            <p className="text-center text-stone-600 mt-6">
-              No memories yet — start capturing your story ✨
-            </p>
-          ) : (
-            filteredMemories.map((m) => (
+        {filteredMemories.length === 0 ? (
+          <p className="text-center text-stone-600 mt-6">
+            No memories yet — start capturing your story ✨
+          </p>
+        ) : sortBy === "custom" ? (
+          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+            <SortableContext
+              items={filteredMemories.map((m) => m.id)}
+              strategy={verticalListSortingStrategy}
+            >
+              <div className="space-y-4">
+                {filteredMemories.map((m) => (
+                  <SortableMemoryCard
+                    key={m.id}
+                    memory={m}
+                    showDragHandle={true}
+                    onDelete={deleteMemory}
+                    onToggleCheck={toggleCheck}
+                    onAddListItem={addItemToList}
+                    onRemoveListItems={removeListItems}
+                    onPin={togglePin}
+                  />
+                ))}
+              </div>
+            </SortableContext>
+          </DndContext>
+        ) : (
+          <div className="space-y-4">
+            {filteredMemories.map((m) => (
               <MemoryCard
                 key={m.id}
                 memory={m}
@@ -1409,10 +1507,11 @@ export default function Home() {
                 onToggleCheck={toggleCheck}
                 onAddListItem={addItemToList}
                 onRemoveListItems={removeListItems}
+                onPin={togglePin}
               />
-            ))
-          )}
-        </div>
+            ))}
+          </div>
+        )}
 
       </div>
 
