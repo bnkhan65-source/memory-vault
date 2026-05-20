@@ -29,6 +29,7 @@ type Memory = {
   checked?: number[];
   items?: PlaylistItem[];
   listItems?: string[];
+  pinned?: boolean;
 };
 
 type Props = {
