@@ -66,6 +66,8 @@ type Movie = {
   mediaType?: "movie" | "tv";
 };
 
+type ResultBatch<T> = { query: string; items: T[]; time: number };
+
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export default function Home() {
@@ -76,11 +78,11 @@ export default function Home() {
   const [memories, setMemories] = useState<Memory[]>([]);
   const [search, setSearch] = useState("");
   const [activeTag, setActiveTag] = useState<string | null>(null);
-  const [spotifyResults, setSpotifyResults] = useState<Track[]>([]);
+  const [musicBatches, setMusicBatches] = useState<ResultBatch<Track>[]>([]);
+  const [videoBatches, setVideoBatches] = useState<ResultBatch<Track>[]>([]);
+  const [movieBatches, setMovieBatches] = useState<ResultBatch<Movie>[]>([]);
   const [selectedTrack, setSelectedTrack] = useState<Track | null>(null);
   const [isSaving, setIsSaving] = useState(false);
-  const [videoResults, setVideoResults] = useState<Track[]>([]);
-  const [movieResults, setMovieResults] = useState<Movie[]>([]);
   const [selectedItems, setSelectedItems] = useState<SelectedItem[]>([]);
   const [showPlaylistModal, setShowPlaylistModal] = useState(false);
   const [isListening, setIsListening] = useState(false);
@@ -96,8 +98,6 @@ export default function Home() {
   const [feedbackSent, setFeedbackSent] = useState(false);
   const [showListModal, setShowListModal] = useState(false);
   const [showAddToListSheet, setShowAddToListSheet] = useState(false);
-  const [resultSourceQuery, setResultSourceQuery] = useState({ music: "", video: "", movie: "" });
-  const [resultSearchTime, setResultSearchTime] = useState({ music: 0, video: 0, movie: 0 });
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [sortBy, setSortBy] = useState<"newest" | "oldest" | "az" | "type">("newest");
   const [filterType, setFilterType] = useState<string | null>(null);
@@ -294,9 +294,12 @@ export default function Home() {
         body: JSON.stringify({ query: term }),
       });
       const data = await res.json();
-      setSpotifyResults(data.tracks || []);
-      setResultSourceQuery((prev) => ({ ...prev, music: term }));
-      setResultSearchTime((prev) => ({ ...prev, music: Date.now() }));
+      const items: Track[] = data.tracks || [];
+      setMusicBatches((prev) => {
+        const idx = prev.findIndex((b) => b.query === term);
+        if (idx >= 0) { const u = [...prev]; u[idx] = { query: term, items, time: Date.now() }; return u; }
+        return [...prev, { query: term, items, time: Date.now() }];
+      });
     } catch (err) {
       console.error("Music search error:", err);
     }
@@ -314,9 +317,12 @@ export default function Home() {
         body: JSON.stringify({ query: term }),
       });
       const data = await res.json();
-      setVideoResults(data.videos || []);
-      setResultSourceQuery((prev) => ({ ...prev, video: term }));
-      setResultSearchTime((prev) => ({ ...prev, video: Date.now() }));
+      const items: Track[] = data.videos || [];
+      setVideoBatches((prev) => {
+        const idx = prev.findIndex((b) => b.query === term);
+        if (idx >= 0) { const u = [...prev]; u[idx] = { query: term, items, time: Date.now() }; return u; }
+        return [...prev, { query: term, items, time: Date.now() }];
+      });
     } catch (err) {
       console.error("Video search error:", err);
     }
@@ -334,9 +340,12 @@ export default function Home() {
         body: JSON.stringify({ query: term }),
       });
       const data = await res.json();
-      setMovieResults(data.movies || []);
-      setResultSourceQuery((prev) => ({ ...prev, movie: term }));
-      setResultSearchTime((prev) => ({ ...prev, movie: Date.now() }));
+      const items: Movie[] = data.movies || [];
+      setMovieBatches((prev) => {
+        const idx = prev.findIndex((b) => b.query === term);
+        if (idx >= 0) { const u = [...prev]; u[idx] = { query: term, items, time: Date.now() }; return u; }
+        return [...prev, { query: term, items, time: Date.now() }];
+      });
     } catch (err) {
       console.error("[searchMovies] fetch error:", err);
     }
@@ -362,12 +371,10 @@ export default function Home() {
     setMemory("");
     setVoiceQuery("");
     setEditingVoiceQuery(false);
-    setSpotifyResults([]);
-    setVideoResults([]);
-    setMovieResults([]);
+    setMusicBatches([]);
+    setVideoBatches([]);
+    setMovieBatches([]);
     setSelectedItems([]);
-    setResultSourceQuery({ music: "", video: "", movie: "" });
-    setResultSearchTime({ music: 0, video: 0, movie: 0 });
   };
 
   const getPlaylistType = (): "music" | "movie" | "video" | "mixed" => {
@@ -937,7 +944,7 @@ export default function Home() {
           </button>
         </div>
 
-        {(voiceQuery || memory.trim() || spotifyResults.length > 0 || videoResults.length > 0 || movieResults.length > 0) && (
+        {(voiceQuery || memory.trim() || musicBatches.length > 0 || videoBatches.length > 0 || movieBatches.length > 0) && (
           <div className="flex flex-col gap-1.5 mb-2">
             <div className="flex items-center justify-between gap-2">
               {voiceQuery ? (
@@ -983,145 +990,95 @@ export default function Home() {
           </div>
         )}
 
-        {spotifyResults.length > 0 && (() => {
-          const activeEntries = [
-            spotifyResults.length > 0 ? { q: resultSourceQuery.music, t: resultSearchTime.music } : null,
-            videoResults.length > 0  ? { q: resultSourceQuery.video,  t: resultSearchTime.video  } : null,
-            movieResults.length > 0  ? { q: resultSourceQuery.movie,  t: resultSearchTime.movie  } : null,
-          ].filter(Boolean) as { q: string; t: number }[];
-          const hasMultipleSources = new Set(activeEntries.map(e => e.q)).size > 1;
-          const latestQuery = activeEntries.reduce((a, b) => b.t > a.t ? b : a, activeEntries[0])?.q ?? "";
-          const isSecondary = hasMultipleSources && resultSourceQuery.music !== latestQuery;
-          return (
-          <div className={`mt-3 space-y-2 rounded-xl p-2 transition-all ${isSecondary ? "bg-stone-800/50 border border-stone-700" : ""}`}>
+        {/* ── Music results — one section per search ── */}
+        {musicBatches.map((batch, batchIdx) => (
+          <div key={batch.query + batch.time} className={`mt-3 space-y-2 rounded-xl p-2 ${batchIdx > 0 ? "bg-amber-950/40 border border-amber-700/40" : ""}`}>
             <div className="flex items-center gap-2 px-1">
-              <p className={`text-xs font-semibold uppercase tracking-wider ${isSecondary ? "text-stone-500" : "text-stone-400"}`}>🎵 Music</p>
-              {isSecondary && <span className="text-[10px] text-stone-600 italic">from: &ldquo;{resultSourceQuery.music}&rdquo;</span>}
+              <p className={`text-xs font-semibold uppercase tracking-wider ${batchIdx > 0 ? "text-amber-500" : "text-stone-400"}`}>🎵 Music</p>
+              {batchIdx > 0 && <span className="text-[10px] text-amber-600/80 italic">&ldquo;{batch.query}&rdquo;</span>}
             </div>
-            {spotifyResults.map((track, i) => {
+            {batch.items.map((track, i) => {
               const isSelected = selectedItems.some(s => s.title === track.title && s.kind === "music" && s.artist === track.artist);
               return (
-                <div
-                  key={i}
-                  onClick={() => {
-                    const idx = selectedItems.findIndex(s => s.title === track.title && s.kind === "music" && s.artist === track.artist);
-                    if (idx >= 0) removeFromSelection(idx);
-                    else addToSelection({ kind: "music", title: track.title || "", image: track.image, artist: track.artist, url: track.url });
-                  }}
+                <div key={i} onClick={() => {
+                  const idx = selectedItems.findIndex(s => s.title === track.title && s.kind === "music" && s.artist === track.artist);
+                  if (idx >= 0) removeFromSelection(idx);
+                  else addToSelection({ kind: "music", title: track.title || "", image: track.image, artist: track.artist, url: track.url });
+                }}
                   className={`p-4 rounded-xl border flex items-center gap-4 cursor-pointer transition-colors ${isSelected ? "border-amber-400 bg-amber-50" : "bg-white hover:bg-gray-50"}`}
                 >
-                  {track.image && (
-                    <img src={track.image} className="w-12 h-12 rounded" alt={track.title} />
-                  )}
+                  {track.image && <img src={track.image} className="w-12 h-12 rounded" alt={track.title} />}
                   <div className="flex-1">
                     <p className="text-sm font-medium">{track.title}</p>
                     <p className="text-xs text-gray-500">{track.artist}</p>
                   </div>
-                  {isSelected && (
-                    <div className="w-6 h-6 rounded-full bg-amber-400 flex items-center justify-center flex-shrink-0">
-                      <span className="text-white text-xs font-bold">✓</span>
-                    </div>
-                  )}
+                  {isSelected && <div className="w-6 h-6 rounded-full bg-amber-400 flex items-center justify-center flex-shrink-0"><span className="text-white text-xs font-bold">✓</span></div>}
                 </div>
               );
             })}
           </div>
-          );
-        })()}
+        ))}
 
-        {videoResults.length > 0 && (() => {
-          const activeEntries = [
-            spotifyResults.length > 0 ? { q: resultSourceQuery.music, t: resultSearchTime.music } : null,
-            videoResults.length > 0  ? { q: resultSourceQuery.video,  t: resultSearchTime.video  } : null,
-            movieResults.length > 0  ? { q: resultSourceQuery.movie,  t: resultSearchTime.movie  } : null,
-          ].filter(Boolean) as { q: string; t: number }[];
-          const hasMultipleSources = new Set(activeEntries.map(e => e.q)).size > 1;
-          const latestQuery = activeEntries.reduce((a, b) => b.t > a.t ? b : a, activeEntries[0])?.q ?? "";
-          const isSecondary = hasMultipleSources && resultSourceQuery.video !== latestQuery;
-          return (
-          <div className={`mt-3 space-y-2 rounded-xl p-2 transition-all ${isSecondary ? "bg-stone-800/50 border border-stone-700" : ""}`}>
+        {/* ── Video results — one section per search ── */}
+        {videoBatches.map((batch, batchIdx) => (
+          <div key={batch.query + batch.time} className={`mt-3 space-y-2 rounded-xl p-2 ${batchIdx > 0 ? "bg-amber-950/40 border border-amber-700/40" : ""}`}>
             <div className="flex items-center gap-2 px-1">
-              <p className={`text-xs font-semibold uppercase tracking-wider ${isSecondary ? "text-stone-500" : "text-stone-400"}`}>🎥 Videos</p>
-              {isSecondary && <span className="text-[10px] text-stone-600 italic">from: &ldquo;{resultSourceQuery.video}&rdquo;</span>}
+              <p className={`text-xs font-semibold uppercase tracking-wider ${batchIdx > 0 ? "text-amber-500" : "text-stone-400"}`}>🎥 Videos</p>
+              {batchIdx > 0 && <span className="text-[10px] text-amber-600/80 italic">&ldquo;{batch.query}&rdquo;</span>}
             </div>
-            {videoResults.map((video, i) => {
+            {batch.items.map((video, i) => {
               const isSelected = selectedItems.some(s => s.videoId === video.videoId && s.kind === "video");
               return (
-                <div
-                  key={i}
-                  onClick={() => {
-                    const idx = selectedItems.findIndex(s => s.videoId === video.videoId && s.kind === "video");
-                    if (idx >= 0) removeFromSelection(idx);
-                    else addToSelection({ kind: "video", title: video.title ?? "", image: video.thumbnail, videoId: video.videoId });
-                  }}
+                <div key={i} onClick={() => {
+                  const idx = selectedItems.findIndex(s => s.videoId === video.videoId && s.kind === "video");
+                  if (idx >= 0) removeFromSelection(idx);
+                  else addToSelection({ kind: "video", title: video.title ?? "", image: video.thumbnail, videoId: video.videoId });
+                }}
                   className={`p-3 rounded-lg border flex items-center gap-3 cursor-pointer transition-colors ${isSelected ? "border-amber-400 bg-amber-50" : "bg-white hover:bg-gray-50"}`}
                 >
                   <img src={video.thumbnail} className="w-12 h-12 rounded" alt={video.title} />
                   <p className="text-sm flex-1">{video.title}</p>
-                  {isSelected && (
-                    <div className="w-6 h-6 rounded-full bg-amber-400 flex items-center justify-center flex-shrink-0">
-                      <span className="text-white text-xs font-bold">✓</span>
-                    </div>
-                  )}
+                  {isSelected && <div className="w-6 h-6 rounded-full bg-amber-400 flex items-center justify-center flex-shrink-0"><span className="text-white text-xs font-bold">✓</span></div>}
                 </div>
               );
             })}
           </div>
-          );
-        })()}
+        ))}
 
-        {movieResults.length > 0 && (() => {
-          const activeEntries = [
-            spotifyResults.length > 0 ? { q: resultSourceQuery.music, t: resultSearchTime.music } : null,
-            videoResults.length > 0  ? { q: resultSourceQuery.video,  t: resultSearchTime.video  } : null,
-            movieResults.length > 0  ? { q: resultSourceQuery.movie,  t: resultSearchTime.movie  } : null,
-          ].filter(Boolean) as { q: string; t: number }[];
-          const hasMultipleSources = new Set(activeEntries.map(e => e.q)).size > 1;
-          const latestQuery = activeEntries.reduce((a, b) => b.t > a.t ? b : a, activeEntries[0])?.q ?? "";
-          const isSecondary = hasMultipleSources && resultSourceQuery.movie !== latestQuery;
-          return (
-          <div className={`mt-3 space-y-2 rounded-xl p-2 transition-all ${isSecondary ? "bg-stone-800/50 border border-stone-700" : ""}`}>
+        {/* ── Movie results — one section per search ── */}
+        {movieBatches.map((batch, batchIdx) => (
+          <div key={batch.query + batch.time} className={`mt-3 space-y-2 rounded-xl p-2 ${batchIdx > 0 ? "bg-amber-950/40 border border-amber-700/40" : ""}`}>
             <div className="flex items-center gap-2 px-1">
-              <p className={`text-xs font-semibold uppercase tracking-wider ${isSecondary ? "text-stone-500" : "text-stone-400"}`}>🎬 Movies</p>
-              {isSecondary && <span className="text-[10px] text-stone-600 italic">from: &ldquo;{resultSourceQuery.movie}&rdquo;</span>}
+              <p className={`text-xs font-semibold uppercase tracking-wider ${batchIdx > 0 ? "text-amber-500" : "text-stone-400"}`}>🎬 Movies &amp; Series</p>
+              {batchIdx > 0 && <span className="text-[10px] text-amber-600/80 italic">&ldquo;{batch.query}&rdquo;</span>}
             </div>
-            {movieResults.map((movie) => {
+            {batch.items.map((movie) => {
               const isSelected = selectedItems.some(s => s.title === movie.title && s.kind === "movie" && s.year === movie.year);
               return (
-                <div
-                  key={movie.id}
-                  onClick={() => {
-                    const idx = selectedItems.findIndex(s => s.title === movie.title && s.kind === "movie" && s.year === movie.year);
-                    if (idx >= 0) removeFromSelection(idx);
-                    else addToSelection({ kind: "movie", title: movie.title, image: movie.poster, year: movie.year, movieId: movie.id });
-                  }}
+                <div key={movie.id} onClick={() => {
+                  const idx = selectedItems.findIndex(s => s.title === movie.title && s.kind === "movie" && s.year === movie.year);
+                  if (idx >= 0) removeFromSelection(idx);
+                  else addToSelection({ kind: "movie", title: movie.title, image: movie.poster, year: movie.year, movieId: movie.id });
+                }}
                   className={`p-3 rounded-xl border flex items-center gap-3 cursor-pointer transition-colors ${isSelected ? "border-amber-400 bg-amber-50" : "bg-white hover:bg-gray-50"}`}
                 >
-                  {movie.poster ? (
-                    <img src={movie.poster} className="w-10 h-14 rounded object-cover" alt={movie.title} />
-                  ) : (
-                    <div className="w-10 h-14 rounded bg-gray-200 flex items-center justify-center text-gray-400 text-xs">?</div>
-                  )}
+                  {movie.poster
+                    ? <img src={movie.poster} className="w-10 h-14 rounded object-cover" alt={movie.title} />
+                    : <div className="w-10 h-14 rounded bg-gray-200 flex items-center justify-center text-gray-400 text-xs">?</div>
+                  }
                   <div className="flex-1">
                     <p className="text-sm font-medium">{movie.title}</p>
                     <p className="text-xs text-gray-400">
                       {movie.year}
-                      {movie.mediaType === "tv" && (
-                        <span className="ml-1.5 text-[10px] bg-blue-100 text-blue-600 rounded px-1 py-0.5 font-medium">Series</span>
-                      )}
+                      {movie.mediaType === "tv" && <span className="ml-1.5 text-[10px] bg-blue-100 text-blue-600 rounded px-1 py-0.5 font-medium">Series</span>}
                     </p>
                   </div>
-                  {isSelected && (
-                    <div className="w-6 h-6 rounded-full bg-amber-400 flex items-center justify-center flex-shrink-0">
-                      <span className="text-white text-xs font-bold">✓</span>
-                    </div>
-                  )}
+                  {isSelected && <div className="w-6 h-6 rounded-full bg-amber-400 flex items-center justify-center flex-shrink-0"><span className="text-white text-xs font-bold">✓</span></div>}
                 </div>
               );
             })}
           </div>
-          );
-        })()}
+        ))}
 
         {/* ── Floating bag button ── */}
         {selectedItems.length > 0 && (
