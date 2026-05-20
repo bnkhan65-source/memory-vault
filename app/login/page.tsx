@@ -8,6 +8,7 @@ import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   sendPasswordResetEmail,
+  sendEmailVerification,
 } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import { useRouter } from "next/navigation";
@@ -24,7 +25,12 @@ export default function LoginPage() {
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (user) => {
-      if (user) router.push("/");
+      if (!user) return;
+      if (!user.emailVerified && user.providerData[0]?.providerId === "password") {
+        router.push("/verify");
+      } else {
+        router.push("/");
+      }
     });
     return () => unsub();
   }, [router]);
@@ -51,7 +57,10 @@ export default function LoginPage() {
     setLoading(true);
     try {
       if (mode === "signup") {
-        await createUserWithEmailAndPassword(auth, email.trim(), password);
+        const credential = await createUserWithEmailAndPassword(auth, email.trim(), password);
+        await sendEmailVerification(credential.user);
+        router.push("/verify");
+        return;
       } else {
         await signInWithEmailAndPassword(auth, email.trim(), password);
       }

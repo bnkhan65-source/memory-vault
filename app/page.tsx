@@ -146,6 +146,8 @@ export default function Home() {
       try {
         if (!u) {
           router.push("/login");
+        } else if (!u.emailVerified && u.providerData[0]?.providerId === "password") {
+          router.push("/verify");
         } else {
           setUser(u);
           await Promise.all([fetchMemories(u.uid), loadUserProfile(u.uid)]);
