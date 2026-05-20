@@ -97,6 +97,7 @@ export default function Home() {
   const [showListModal, setShowListModal] = useState(false);
   const [showAddToListSheet, setShowAddToListSheet] = useState(false);
   const [resultSourceQuery, setResultSourceQuery] = useState({ music: "", video: "", movie: "" });
+  const [resultSearchTime, setResultSearchTime] = useState({ music: 0, video: 0, movie: 0 });
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [sortBy, setSortBy] = useState<"newest" | "oldest" | "az" | "type">("newest");
   const [filterType, setFilterType] = useState<string | null>(null);
@@ -295,6 +296,7 @@ export default function Home() {
       const data = await res.json();
       setSpotifyResults(data.tracks || []);
       setResultSourceQuery((prev) => ({ ...prev, music: term }));
+      setResultSearchTime((prev) => ({ ...prev, music: Date.now() }));
     } catch (err) {
       console.error("Music search error:", err);
     }
@@ -314,6 +316,7 @@ export default function Home() {
       const data = await res.json();
       setVideoResults(data.videos || []);
       setResultSourceQuery((prev) => ({ ...prev, video: term }));
+      setResultSearchTime((prev) => ({ ...prev, video: Date.now() }));
     } catch (err) {
       console.error("Video search error:", err);
     }
@@ -333,6 +336,7 @@ export default function Home() {
       const data = await res.json();
       setMovieResults(data.movies || []);
       setResultSourceQuery((prev) => ({ ...prev, movie: term }));
+      setResultSearchTime((prev) => ({ ...prev, movie: Date.now() }));
     } catch (err) {
       console.error("[searchMovies] fetch error:", err);
     }
@@ -363,6 +367,7 @@ export default function Home() {
     setMovieResults([]);
     setSelectedItems([]);
     setResultSourceQuery({ music: "", video: "", movie: "" });
+    setResultSearchTime({ music: 0, video: 0, movie: 0 });
   };
 
   const getPlaylistType = (): "music" | "movie" | "video" | "mixed" => {
@@ -979,13 +984,13 @@ export default function Home() {
         )}
 
         {spotifyResults.length > 0 && (() => {
-          const activeQueries = [
-            spotifyResults.length > 0 ? resultSourceQuery.music : null,
-            videoResults.length > 0 ? resultSourceQuery.video : null,
-            movieResults.length > 0 ? resultSourceQuery.movie : null,
-          ].filter(Boolean) as string[];
-          const hasMultipleSources = new Set(activeQueries).size > 1;
-          const latestQuery = activeQueries[activeQueries.length - 1] ?? "";
+          const activeEntries = [
+            spotifyResults.length > 0 ? { q: resultSourceQuery.music, t: resultSearchTime.music } : null,
+            videoResults.length > 0  ? { q: resultSourceQuery.video,  t: resultSearchTime.video  } : null,
+            movieResults.length > 0  ? { q: resultSourceQuery.movie,  t: resultSearchTime.movie  } : null,
+          ].filter(Boolean) as { q: string; t: number }[];
+          const hasMultipleSources = new Set(activeEntries.map(e => e.q)).size > 1;
+          const latestQuery = activeEntries.reduce((a, b) => b.t > a.t ? b : a, activeEntries[0])?.q ?? "";
           const isSecondary = hasMultipleSources && resultSourceQuery.music !== latestQuery;
           return (
           <div className={`mt-3 space-y-2 rounded-xl p-2 transition-all ${isSecondary ? "bg-stone-800/50 border border-stone-700" : ""}`}>
@@ -1025,13 +1030,13 @@ export default function Home() {
         })()}
 
         {videoResults.length > 0 && (() => {
-          const activeQueries = [
-            spotifyResults.length > 0 ? resultSourceQuery.music : null,
-            videoResults.length > 0 ? resultSourceQuery.video : null,
-            movieResults.length > 0 ? resultSourceQuery.movie : null,
-          ].filter(Boolean) as string[];
-          const hasMultipleSources = new Set(activeQueries).size > 1;
-          const latestQuery = activeQueries[activeQueries.length - 1] ?? "";
+          const activeEntries = [
+            spotifyResults.length > 0 ? { q: resultSourceQuery.music, t: resultSearchTime.music } : null,
+            videoResults.length > 0  ? { q: resultSourceQuery.video,  t: resultSearchTime.video  } : null,
+            movieResults.length > 0  ? { q: resultSourceQuery.movie,  t: resultSearchTime.movie  } : null,
+          ].filter(Boolean) as { q: string; t: number }[];
+          const hasMultipleSources = new Set(activeEntries.map(e => e.q)).size > 1;
+          const latestQuery = activeEntries.reduce((a, b) => b.t > a.t ? b : a, activeEntries[0])?.q ?? "";
           const isSecondary = hasMultipleSources && resultSourceQuery.video !== latestQuery;
           return (
           <div className={`mt-3 space-y-2 rounded-xl p-2 transition-all ${isSecondary ? "bg-stone-800/50 border border-stone-700" : ""}`}>
@@ -1066,13 +1071,13 @@ export default function Home() {
         })()}
 
         {movieResults.length > 0 && (() => {
-          const activeQueries = [
-            spotifyResults.length > 0 ? resultSourceQuery.music : null,
-            videoResults.length > 0 ? resultSourceQuery.video : null,
-            movieResults.length > 0 ? resultSourceQuery.movie : null,
-          ].filter(Boolean) as string[];
-          const hasMultipleSources = new Set(activeQueries).size > 1;
-          const latestQuery = activeQueries[activeQueries.length - 1] ?? "";
+          const activeEntries = [
+            spotifyResults.length > 0 ? { q: resultSourceQuery.music, t: resultSearchTime.music } : null,
+            videoResults.length > 0  ? { q: resultSourceQuery.video,  t: resultSearchTime.video  } : null,
+            movieResults.length > 0  ? { q: resultSourceQuery.movie,  t: resultSearchTime.movie  } : null,
+          ].filter(Boolean) as { q: string; t: number }[];
+          const hasMultipleSources = new Set(activeEntries.map(e => e.q)).size > 1;
+          const latestQuery = activeEntries.reduce((a, b) => b.t > a.t ? b : a, activeEntries[0])?.q ?? "";
           const isSecondary = hasMultipleSources && resultSourceQuery.movie !== latestQuery;
           return (
           <div className={`mt-3 space-y-2 rounded-xl p-2 transition-all ${isSecondary ? "bg-stone-800/50 border border-stone-700" : ""}`}>
