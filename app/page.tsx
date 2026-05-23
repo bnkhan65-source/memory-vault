@@ -973,6 +973,16 @@ export default function Home() {
               <span className="text-2xl">📝</span>
               <span className="text-[10px] text-stone-500">List</span>
             </button>
+
+            <button
+              type="button"
+              onClick={() => router.push("/guide")}
+              className="flex flex-col items-center gap-1 px-4 py-1 rounded-xl transition-all active:scale-90 active:bg-stone-700"
+              title="User Guide"
+            >
+              <span className="text-2xl">❓</span>
+              <span className="text-[10px] text-stone-500">Help</span>
+            </button>
           </div>
 
         </div>
