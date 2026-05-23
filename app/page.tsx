@@ -925,6 +925,8 @@ export default function Home() {
                 handleTypedSearch();
               }
             }}
+            onTouchStart={(e) => e.stopPropagation()}
+            onTouchEnd={(e) => e.stopPropagation()}
             placeholder="Type or speak what you're looking for…"
             className="w-full bg-stone-800 border border-stone-600 p-3 rounded-xl text-base text-stone-100 placeholder-stone-500 focus:outline-none focus:border-amber-500/50"
           />
@@ -1244,6 +1246,8 @@ export default function Home() {
               <input
                 value={listTitle}
                 onChange={(e) => setListTitle(e.target.value)}
+                onTouchStart={(e) => e.stopPropagation()}
+                onTouchEnd={(e) => e.stopPropagation()}
                 placeholder="List name (e.g. Grocery List)"
                 className="w-full bg-stone-800 border border-stone-600 rounded-xl p-3 text-sm text-stone-100 placeholder-stone-500 focus:outline-none mb-3"
                 autoFocus
@@ -1252,6 +1256,8 @@ export default function Home() {
               <textarea
                 value={newListItemInput}
                 onChange={(e) => setNewListItemInput(e.target.value)}
+                onTouchStart={(e) => e.stopPropagation()}
+                onTouchEnd={(e) => e.stopPropagation()}
                 placeholder={"Items (one per line):\nMilk\nEggs\nBread"}
                 rows={5}
                 className="w-full bg-stone-800 border border-stone-600 rounded-xl p-3 text-sm text-stone-100 placeholder-stone-500 focus:outline-none resize-none mb-3"

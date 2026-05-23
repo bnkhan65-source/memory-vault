@@ -55,6 +55,7 @@ export default function MemoryCard({
 }: Props) {
   const cardRef = useRef<HTMLDivElement>(null);
 
+  const [isCollapsed, setIsCollapsed] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editText, setEditText] = useState(memory.text || "");
   const [justSaved, setJustSaved] = useState(false);
@@ -162,6 +163,15 @@ export default function MemoryCard({
     }
   };
 
+  const handlePasteClipboard = async () => {
+    try {
+      const text = await navigator.clipboard.readText();
+      if (text) setAddItemInput(text.trim());
+    } catch {
+      // Clipboard access denied or not supported — silent fail
+    }
+  };
+
   const startListMic = async () => {
     if (isListening) {
       listMediaRecorderRef.current?.stop();
@@ -259,6 +269,17 @@ export default function MemoryCard({
 
   const serviceLabel = SERVICES.find((s) => s.id === preferredService)?.label || "Music";
 
+  // Short label shown when card is collapsed
+  const previewLabel = (() => {
+    if (memory.type === "list") {
+      return resolvedListTitle || (resolvedListItems.length > 0 ? `${resolvedListItems.length} items` : "Empty list");
+    }
+    if (memory.type === "playlist") {
+      return memory.text || (memory.items?.length ? `${memory.items.length} items` : "Empty playlist");
+    }
+    return memory.text || "";
+  })();
+
   return (
     <div
       ref={cardRef}
@@ -278,8 +299,8 @@ export default function MemoryCard({
         ${isPressed ? "scale-[0.97]" : ""}
       `}
     >
-      {/* Left-side image */}
-      {memory.imageUrl && (
+      {/* Left-side image — hidden when collapsed */}
+      {memory.imageUrl && !isCollapsed && (
         <div className="relative shrink-0 w-20 h-20">
           <img
             src={memory.imageUrl}
@@ -338,8 +359,8 @@ export default function MemoryCard({
 
       {/* Right-side content */}
       <div className="flex-1 min-w-0">
-        {/* Category + Type badges + Pin */}
-        <div className="flex items-center gap-2 mb-3 flex-wrap">
+        {/* Category + Type badges + preview (when collapsed) + Pin + Collapse toggle */}
+        <div className={`flex items-center gap-2 flex-wrap ${isCollapsed ? "" : "mb-3"}`}>
           {memory.category && (
             <span className="text-xs px-3 py-1 bg-gray-800 text-white rounded-full font-medium">
               {memory.category}
@@ -350,7 +371,13 @@ export default function MemoryCard({
               {meta.icon} {meta.label}
             </span>
           )}
-          <div className="ml-auto flex items-center gap-1">
+          {/* Inline preview title shown only when collapsed */}
+          {isCollapsed && previewLabel && (
+            <span className="text-sm text-stone-300 truncate flex-1 min-w-0">
+              {previewLabel}
+            </span>
+          )}
+          <div className="ml-auto flex items-center gap-1 shrink-0">
             {onPin && (
               <button
                 onClick={(e) => { e.stopPropagation(); onPin(memory.id, !!memory.pinned); }}
@@ -360,11 +387,18 @@ export default function MemoryCard({
                 📌
               </button>
             )}
+            <button
+              onClick={(e) => { e.stopPropagation(); setIsCollapsed(!isCollapsed); }}
+              className="text-stone-500 hover:text-stone-300 active:text-amber-400 transition-all px-1 py-0.5 rounded text-xs"
+              title={isCollapsed ? "Expand" : "Collapse"}
+            >
+              {isCollapsed ? "▶" : "▼"}
+            </button>
           </div>
         </div>
 
         {/* Playlist rendering */}
-        {memory.type === "playlist" && memory.items && (
+        {!isCollapsed && memory.type === "playlist" && memory.items && (
           <div className="space-y-1 mt-1">
             {/* Export panel for music playlists */}
             {(memory.playlistType === "music" || (!memory.playlistType && memory.items.every(i => i.kind === "music"))) && (
@@ -501,7 +535,7 @@ export default function MemoryCard({
         )}
 
         {/* Checklist rendering */}
-        {memory.type === "list" && (
+        {!isCollapsed && memory.type === "list" && (
           <div className="space-y-1">
             {resolvedListTitle && (
               <p className="text-sm font-semibold text-stone-100 mb-2">{resolvedListTitle}</p>
@@ -558,6 +592,8 @@ export default function MemoryCard({
                   onChange={(e) => { setAddItemInput(e.target.value); }}
                   onKeyDown={(e) => { if (e.key === "Enter") { handleAddItem(); } }}
                   onClick={(e) => { e.stopPropagation(); }}
+                  onTouchStart={(e) => { e.stopPropagation(); }}
+                  onTouchEnd={(e) => { e.stopPropagation(); }}
                   placeholder={isListening ? "Listening…" : isIdentifying ? "Identifying…" : "Add item..."}
                   className="w-full bg-stone-700 border border-stone-600 rounded-lg px-3 py-1.5 text-sm text-stone-100 placeholder-stone-400 focus:outline-none"
                 />
@@ -574,6 +610,13 @@ export default function MemoryCard({
                     className="flex-1 py-1.5 rounded-lg text-sm bg-stone-700 text-stone-300 disabled:opacity-50"
                   >
                     {isIdentifying ? "🔍 …" : "📷 Photo"}
+                  </button>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); handlePasteClipboard(); }}
+                    className="flex-1 py-1.5 rounded-lg text-sm bg-stone-700 text-stone-300"
+                    title="Paste from clipboard"
+                  >
+                    📋 Paste
                   </button>
                   <button
                     onClick={(e) => { e.stopPropagation(); handleAddItem(); }}
@@ -600,7 +643,7 @@ export default function MemoryCard({
         )}
 
         {/* Text / edit rendering for non-list, non-playlist memories */}
-        {memory.type !== "list" && memory.type !== "playlist" && (
+        {!isCollapsed && memory.type !== "list" && memory.type !== "playlist" && (
           <div>
             {isEditing ? (
               <div onClick={(e) => e.stopPropagation()} className="space-y-2">
@@ -608,6 +651,8 @@ export default function MemoryCard({
                 <textarea
                   value={editText}
                   onChange={(e) => setEditText(e.target.value)}
+                  onTouchStart={(e) => e.stopPropagation()}
+                  onTouchEnd={(e) => e.stopPropagation()}
                   className="w-full bg-stone-700 border border-amber-500/50 rounded-lg p-2.5 text-sm text-stone-100 focus:outline-none focus:border-amber-400 resize-none"
                   rows={3}
                   autoFocus
@@ -650,7 +695,7 @@ export default function MemoryCard({
         )}
 
         {/* Music service picker for individual music cards */}
-        {individualMusicItem && (
+        {!isCollapsed && individualMusicItem && (
           <div onClick={(e) => e.stopPropagation()} className="mt-3">
             <p className="text-[10px] text-stone-400 mb-1.5">Open in:</p>
             <div className="flex gap-1.5 flex-wrap">
@@ -683,7 +728,7 @@ export default function MemoryCard({
         )}
 
         {/* Video link */}
-        {memory.videoUrl && (
+        {!isCollapsed && memory.videoUrl && (
           <a
             href={memory.videoUrl}
             target="_blank"
@@ -695,16 +740,18 @@ export default function MemoryCard({
           </a>
         )}
 
-        {/* Delete */}
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onDelete(memory.id);
-          }}
-          className="text-red-400 text-xs mt-3 transition-all active:text-red-600 active:scale-90"
-        >
-          Delete
-        </button>
+        {/* Delete — hidden when collapsed */}
+        {!isCollapsed && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete(memory.id);
+            }}
+            className="text-red-400 text-xs mt-3 transition-all active:text-red-600 active:scale-90"
+          >
+            Delete
+          </button>
+        )}
       </div>
     </div>
   );
