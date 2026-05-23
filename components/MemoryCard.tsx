@@ -55,7 +55,13 @@ export default function MemoryCard({
 }: Props) {
   const cardRef = useRef<HTMLDivElement>(null);
 
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(() => {
+    if (typeof window === "undefined") return false;
+    try {
+      const stored: string[] = JSON.parse(localStorage.getItem("stash_collapsed") || "[]");
+      return stored.includes(memory.id);
+    } catch { return false; }
+  });
   const [isEditing, setIsEditing] = useState(false);
   const [editText, setEditText] = useState(memory.text || "");
   const [justSaved, setJustSaved] = useState(false);
@@ -388,7 +394,18 @@ export default function MemoryCard({
               </button>
             )}
             <button
-              onClick={(e) => { e.stopPropagation(); setIsCollapsed(!isCollapsed); }}
+              onClick={(e) => {
+                e.stopPropagation();
+                const next = !isCollapsed;
+                setIsCollapsed(next);
+                try {
+                  const stored: string[] = JSON.parse(localStorage.getItem("stash_collapsed") || "[]");
+                  const updated = next
+                    ? [...new Set([...stored, memory.id])]
+                    : stored.filter((id) => id !== memory.id);
+                  localStorage.setItem("stash_collapsed", JSON.stringify(updated));
+                } catch { /* silent */ }
+              }}
               className="text-stone-500 hover:text-stone-300 active:text-amber-400 transition-all px-1 py-0.5 rounded text-xs"
               title={isCollapsed ? "Expand" : "Collapse"}
             >
