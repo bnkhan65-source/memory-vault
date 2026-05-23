@@ -598,9 +598,21 @@ export default function MemoryCard({
                         className="w-full max-h-48 object-cover rounded-lg cursor-pointer"
                       />
                     )}
-                    <span className={checkedItems.includes(index) ? "line-through text-stone-500" : "text-stone-100"}>
-                      {itemText}
-                    </span>
+                    {/^https?:\/\//i.test(itemText) ? (
+                      <a
+                        href={itemText}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={(e) => e.stopPropagation()}
+                        className={`underline break-all ${checkedItems.includes(index) ? "line-through text-stone-500" : "text-sky-400"}`}
+                      >
+                        {(() => { try { return new URL(itemText).hostname.replace(/^www\./, ""); } catch { return itemText; } })()}
+                      </a>
+                    ) : (
+                      <span className={checkedItems.includes(index) ? "line-through text-stone-500" : "text-stone-100"}>
+                        {itemText}
+                      </span>
+                    )}
                   </div>
                 </div>
               );
