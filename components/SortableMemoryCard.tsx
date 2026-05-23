@@ -12,6 +12,7 @@ type Props = {
   onAddListItem?: (memoryId: string, item: string) => void;
   onRemoveListItems?: (memoryId: string, indicesToRemove: number[]) => void;
   onPin: (id: string, pinned: boolean) => void;
+  collapsedOverride?: boolean | null;
 };
 
 export default function SortableMemoryCard({ memory, showDragHandle, onPin, ...props }: Props) {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { MEMORY_TYPE_META } from "@/lib/memoryTypes";
 import { auth, storage } from "@/lib/firebase";
 import { ref as storageRef, uploadBytes, getDownloadURL } from "firebase/storage";
@@ -41,6 +41,7 @@ type Props = {
   onRemoveListItems?: (memoryId: string, indicesToRemove: number[]) => void;
   onPin?: (id: string, pinned: boolean) => void;
   dragHandleProps?: Record<string, any>;
+  collapsedOverride?: boolean | null;
 };
 
 export default function MemoryCard({
@@ -52,6 +53,7 @@ export default function MemoryCard({
   onAddListItem,
   onPin,
   dragHandleProps,
+  collapsedOverride,
 }: Props) {
   const cardRef = useRef<HTMLDivElement>(null);
 
@@ -62,6 +64,19 @@ export default function MemoryCard({
       return stored.includes(memory.id);
     } catch { return false; }
   });
+
+  // Sync when a "collapse all / expand all" override is fired from the parent
+  useEffect(() => {
+    if (collapsedOverride == null) return;
+    setIsCollapsed(collapsedOverride);
+    try {
+      const stored: string[] = JSON.parse(localStorage.getItem("stash_collapsed") || "[]");
+      const updated = collapsedOverride
+        ? [...new Set([...stored, memory.id])]
+        : stored.filter((id) => id !== memory.id);
+      localStorage.setItem("stash_collapsed", JSON.stringify(updated));
+    } catch { /* silent */ }
+  }, [collapsedOverride, memory.id]);
   const [isEditing, setIsEditing] = useState(false);
   const [editText, setEditText] = useState(memory.text || "");
   const [justSaved, setJustSaved] = useState(false);
@@ -745,7 +760,7 @@ export default function MemoryCard({
         )}
 
         {/* Video link */}
-        {!isCollapsed && memory.videoUrl && (
+        {!isCollapsed && memory.videoUrl && memory.type !== "link" && (
           <a
             href={memory.videoUrl}
             target="_blank"
@@ -754,6 +769,19 @@ export default function MemoryCard({
             className="inline-block mt-2 px-3 py-1 bg-red-600 text-white rounded-full text-xs"
           >
             ▶ Watch on YouTube
+          </a>
+        )}
+
+        {/* Link memory — open URL button */}
+        {!isCollapsed && memory.type === "link" && memory.videoUrl && (
+          <a
+            href={memory.videoUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={(e) => e.stopPropagation()}
+            className="inline-flex items-center gap-1 mt-2 px-3 py-1 bg-sky-700 hover:bg-sky-600 text-white rounded-full text-xs transition-colors"
+          >
+            🔗 Open link
           </a>
         )}
 

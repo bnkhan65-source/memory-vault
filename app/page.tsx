@@ -56,7 +56,7 @@ type Memory = {
   category?: string | null;
   tags?: string[] | null;
   spotifyUrl?: string | null;
-  type?: "vibe" | "snapshot" | "note" | "collection" | "moment" | "list" | "playlist";
+  type?: "vibe" | "snapshot" | "note" | "collection" | "moment" | "list" | "playlist" | "link";
   playlistType?: "music" | "movie" | "video" | "mixed";
   checked?: number[];
   items?: SelectedItem[];
@@ -117,6 +117,7 @@ export default function Home() {
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [sortBy, setSortBy] = useState<"newest" | "oldest" | "az" | "type" | "custom">("newest");
   const [cardOrder, setCardOrder] = useState<string[]>([]);
+  const [collapseAll, setCollapseAll] = useState<boolean | null>(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -304,6 +305,46 @@ export default function Home() {
     } catch (err) {
       console.error("SAVE ERROR:", err);
       setError("Failed to save memory. Please try again.");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // ── Save a pasted URL as a link memory ────────────────────────────────────
+  const saveLinkMemory = async (url: string) => {
+    if (!user) return;
+    if (memories.length >= MAX_MEMORIES) {
+      setError(`You've reached the maximum of ${MAX_MEMORIES} saved memories.`);
+      return;
+    }
+    setIsSaving(true);
+    try {
+      const token = await auth.currentUser?.getIdToken();
+      let title: string | null = null;
+      try {
+        const res = await fetch("/api/fetch-title", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+          body: JSON.stringify({ url }),
+        });
+        const data = await res.json();
+        title = data.title || null;
+      } catch { /* title stays null */ }
+
+      const text = title || url;
+      const newDoc = await addDoc(collection(db, "users", user.uid, "memories"), {
+        text,
+        videoUrl: url,
+        type: "link",
+        tags: [],
+        checked: [],
+        createdAt: serverTimestamp(),
+      });
+      setMemories((prev) => [{ id: newDoc.id, text, videoUrl: url, type: "link", checked: [] }, ...prev]);
+      setMemory("");
+    } catch (err) {
+      console.error("SAVE LINK ERROR:", err);
+      setError("Failed to save link. Please try again.");
     } finally {
       setIsSaving(false);
     }
@@ -927,6 +968,13 @@ export default function Home() {
             }}
             onTouchStart={(e) => e.stopPropagation()}
             onTouchEnd={(e) => e.stopPropagation()}
+            onPaste={(e) => {
+              const pasted = e.clipboardData.getData("text").trim();
+              if (/^https?:\/\//i.test(pasted)) {
+                e.preventDefault();
+                saveLinkMemory(pasted);
+              }
+            }}
             placeholder="Type or speak what you're looking for…"
             className="w-full bg-stone-800 border border-stone-600 p-3 rounded-xl text-base text-stone-100 placeholder-stone-500 focus:outline-none focus:border-amber-500/50"
           />
@@ -1474,8 +1522,8 @@ export default function Home() {
             ))}
           </div>
 
-          {/* Clear filters row */}
-          <div className="flex gap-3">
+          {/* Clear filters + collapse all row */}
+          <div className="flex items-center gap-3 flex-wrap">
             {search && (
               <button onClick={() => setSearch("")} className="text-sm text-stone-500 hover:text-stone-300 transition">
                 Clear search
@@ -1486,6 +1534,34 @@ export default function Home() {
                 Clear tag: #{activeTag}
               </button>
             )}
+            <div className="ml-auto flex gap-1.5">
+              <button
+                onClick={() => {
+                  setCollapseAll(true);
+                  try {
+                    const allIds = memories.map((m) => m.id);
+                    const stored: string[] = JSON.parse(localStorage.getItem("stash_collapsed") || "[]");
+                    localStorage.setItem("stash_collapsed", JSON.stringify([...new Set([...stored, ...allIds])]));
+                  } catch { /* silent */ }
+                  setTimeout(() => setCollapseAll(null), 100);
+                }}
+                className="text-xs px-2.5 py-1 rounded-full border border-stone-700 bg-stone-800 text-stone-400 hover:border-stone-500 hover:text-stone-200 transition-all active:scale-90"
+                title="Collapse all cards"
+              >&#x229F; Min all</button>
+              <button
+                onClick={() => {
+                  setCollapseAll(false);
+                  try {
+                    const allIds = memories.map((m) => m.id);
+                    const stored: string[] = JSON.parse(localStorage.getItem("stash_collapsed") || "[]");
+                    localStorage.setItem("stash_collapsed", JSON.stringify(stored.filter((id) => !allIds.includes(id))));
+                  } catch { /* silent */ }
+                  setTimeout(() => setCollapseAll(null), 100);
+                }}
+                className="text-xs px-2.5 py-1 rounded-full border border-stone-700 bg-stone-800 text-stone-400 hover:border-stone-500 hover:text-stone-200 transition-all active:scale-90"
+                title="Expand all cards"
+              >&#x229E; Max all</button>
+            </div>
           </div>
         </div>
 
@@ -1510,6 +1586,7 @@ export default function Home() {
                     onAddListItem={addItemToList}
                     onRemoveListItems={removeListItems}
                     onPin={togglePin}
+                    collapsedOverride={collapseAll}
                   />
                 ))}
               </div>
@@ -1526,6 +1603,7 @@ export default function Home() {
                 onAddListItem={addItemToList}
                 onRemoveListItems={removeListItems}
                 onPin={togglePin}
+                collapsedOverride={collapseAll}
               />
             ))}
           </div>

@@ -38,6 +38,11 @@ export const MEMORY_TYPE_META = {
     icon: "🎶",
     color: "bg-amber-100 text-amber-700",
   },
+  link: {
+    label: "Link",
+    icon: "🔗",
+    color: "bg-sky-100 text-sky-700",
+  },
 } as const;
 
 export type MemoryType = keyof typeof MEMORY_TYPE_META;
