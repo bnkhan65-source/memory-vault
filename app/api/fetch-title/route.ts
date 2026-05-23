@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { verifyAuth } from "@/lib/verifyAuth";
+import { verifyFirebaseToken } from "@/lib/verifyAuth";
 
 export async function POST(req: NextRequest) {
-  const uid = await verifyAuth(req);
-  if (!uid) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const token = req.headers.get("Authorization")?.replace("Bearer ", "") || "";
+  const valid = await verifyFirebaseToken(token);
+  if (!valid) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const { url } = await req.json();
   if (!url || typeof url !== "string") {
