@@ -1,6 +1,20 @@
+"use client";
+import { useRouter } from "next/navigation";
+
 export default function GuidePage() {
+  const router = useRouter();
+
   return (
     <div className="min-h-screen bg-stone-950 text-stone-100 px-4 py-8 max-w-2xl mx-auto">
+
+      {/* Back button */}
+      <button
+        onClick={() => router.push("/")}
+        className="flex items-center gap-2 text-sm text-stone-400 hover:text-amber-400 transition-colors mb-6"
+      >
+        <span className="text-lg leading-none">←</span>
+        <span>Back to Stash</span>
+      </button>
 
       {/* Header */}
       <div className="text-center mb-10">
