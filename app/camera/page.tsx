@@ -236,7 +236,7 @@ export default function CameraPage() {
 
             <button
               onClick={savePhoto}
-              className="bg-gradient-to-r from-amber-400 to-orange-400 text-white px-6 py-3 rounded-lg shadow-md"
+              className="bg-gradient-to-r from-violet-400 to-orange-400 text-white px-6 py-3 rounded-lg shadow-md"
             >
               Save Photo
             </button>

@@ -315,7 +315,7 @@ export default function MemoryCard({
         if (memory.videoUrl) { window.open(memory.videoUrl, "_blank"); return; }
         // No longer entering edit mode on card tap — use the ✏️ button instead
       }}
-      className={`bg-stone-800 border border-stone-700 p-4 rounded-xl shadow-sm flex gap-3 items-start transition-all duration-150 ease-out cursor-pointer hover:shadow-lg hover:-translate-y-1 hover:bg-stone-750 hover:border-stone-600
+      className={`bg-slate-800 border border-slate-700 p-4 rounded-xl shadow-sm flex gap-3 items-start transition-all duration-150 ease-out cursor-pointer hover:shadow-lg hover:-translate-y-1 hover:bg-stone-750 hover:border-slate-600
         ${isPulsing ? "scale-[1.03] shadow-lg" : ""}
         ${isPressed ? "scale-[0.97]" : ""}
       `}
@@ -372,7 +372,7 @@ export default function MemoryCard({
       {dragHandleProps && (
         <div
           {...dragHandleProps}
-          className="shrink-0 flex items-center px-1 cursor-grab active:cursor-grabbing touch-none text-stone-600 hover:text-stone-400 self-stretch"
+          className="shrink-0 flex items-center px-1 cursor-grab active:cursor-grabbing touch-none text-slate-600 hover:text-slate-400 self-stretch"
         >
           ⠿
         </div>
@@ -394,7 +394,7 @@ export default function MemoryCard({
           )}
           {/* Inline preview title shown only when collapsed */}
           {isCollapsed && previewLabel && (
-            <span className="text-sm text-stone-300 truncate flex-1 min-w-0">
+            <span className="text-sm text-slate-300 truncate flex-1 min-w-0">
               {previewLabel}
             </span>
           )}
@@ -421,7 +421,7 @@ export default function MemoryCard({
                   localStorage.setItem("stash_collapsed", JSON.stringify(updated));
                 } catch { /* silent */ }
               }}
-              className="text-stone-500 hover:text-stone-300 active:text-amber-400 transition-all px-1 py-0.5 rounded text-xs"
+              className="text-slate-500 hover:text-slate-300 active:text-violet-400 transition-all px-1 py-0.5 rounded text-xs"
               title={isCollapsed ? "Expand" : "Collapse"}
             >
               {isCollapsed ? "▶" : "▼"}
@@ -437,15 +437,15 @@ export default function MemoryCard({
               <div className="mb-2">
                 <button
                   onClick={(e) => { e.stopPropagation(); setShowExport(!showExport); }}
-                  className="text-xs px-3 py-1 bg-stone-700 text-stone-300 rounded-full hover:bg-stone-600 transition"
+                  className="text-xs px-3 py-1 bg-slate-700 text-slate-300 rounded-full hover:bg-stone-600 transition"
                 >
                   {showExport ? "Hide" : `↗ Open in ${serviceLabel}`}
                 </button>
                 {showExport && (
-                  <div onClick={(e) => e.stopPropagation()} className="mt-2 bg-stone-900 border border-stone-600 rounded-xl p-3 space-y-3">
+                  <div onClick={(e) => e.stopPropagation()} className="mt-2 bg-slate-900 border border-slate-600 rounded-xl p-3 space-y-3">
                     {/* Service picker */}
                     <div>
-                      <p className="text-xs text-stone-400 mb-2">Open songs in:</p>
+                      <p className="text-xs text-slate-400 mb-2">Open songs in:</p>
                       <div className="grid grid-cols-2 gap-1.5">
                         {SERVICES.map((svc) => (
                           <button
@@ -454,7 +454,7 @@ export default function MemoryCard({
                             className={`py-1.5 px-2 rounded-lg text-xs font-medium transition-all ${
                               preferredService === svc.id
                                 ? `${svc.color} text-white`
-                                : "bg-stone-200 text-stone-500"
+                                : "bg-stone-200 text-slate-500"
                             }`}
                           >
                             {svc.label}
@@ -471,16 +471,16 @@ export default function MemoryCard({
                           href={getMusicUrl(item)}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="flex items-center gap-3 bg-stone-800 border border-stone-600 rounded-xl px-3 py-2.5 hover:border-stone-500 transition-colors active:bg-stone-700"
+                          className="flex items-center gap-3 bg-slate-800 border border-slate-600 rounded-xl px-3 py-2.5 hover:border-slate-500 transition-colors active:bg-slate-700"
                         >
                           {item.image && (
                             <img src={item.image} className="w-10 h-10 rounded object-cover shrink-0" alt={item.title} />
                           )}
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-stone-100 truncate">{item.title}</p>
-                            {item.artist && <p className="text-xs text-stone-400 truncate">{item.artist}</p>}
+                            <p className="text-sm font-medium text-slate-100 truncate">{item.title}</p>
+                            {item.artist && <p className="text-xs text-slate-400 truncate">{item.artist}</p>}
                           </div>
-                          <span className="text-stone-400 text-sm shrink-0">↗</span>
+                          <span className="text-slate-400 text-sm shrink-0">↗</span>
                         </a>
                       ))}
                     </div>
@@ -499,15 +499,15 @@ export default function MemoryCard({
                   className="flex items-center gap-2 w-full text-left py-1 hover:opacity-70 transition"
                 >
                   <span className="text-xs">{item.kind === "movie" ? "🎬" : item.kind === "video" ? "🎥" : "🎵"}</span>
-                  <span className="text-sm text-stone-200 flex-1 truncate">{item.title}</span>
-                  <span className="text-xs text-stone-400">{expandedItem === i ? "▲" : "▼"}</span>
+                  <span className="text-sm text-slate-200 flex-1 truncate">{item.title}</span>
+                  <span className="text-xs text-slate-400">{expandedItem === i ? "▲" : "▼"}</span>
                 </button>
                 {expandedItem === i && (
                   <div className="flex gap-3 pl-5 pb-2 pt-1">
                     {item.image && (
                       <img src={item.image} className="w-12 h-14 rounded object-cover shrink-0" alt={item.title} />
                     )}
-                    <div className="text-xs text-stone-400 space-y-1">
+                    <div className="text-xs text-slate-400 space-y-1">
                       {item.artist && <p>{item.artist}</p>}
                       {item.year && <p>{item.year}</p>}
 
@@ -532,7 +532,7 @@ export default function MemoryCard({
                                   className={`px-2 py-1 rounded-full text-xs font-medium border transition-all ${
                                     preferredService === svc.id
                                       ? `${svc.color} text-white border-transparent`
-                                      : "bg-stone-700 text-stone-300 border-stone-600"
+                                      : "bg-slate-700 text-slate-300 border-slate-600"
                                   }`}
                                 >
                                   {svc.short}
@@ -570,7 +570,7 @@ export default function MemoryCard({
         {!isCollapsed && memory.type === "list" && (
           <div className="space-y-1">
             {resolvedListTitle && (
-              <p className="text-sm font-semibold text-stone-100 mb-2">{resolvedListTitle}</p>
+              <p className="text-sm font-semibold text-slate-100 mb-2">{resolvedListTitle}</p>
             )}
             {resolvedListItems.map((item, index) => {
               // Items may be plain strings or JSON-encoded { text, imageUrl } objects
@@ -585,7 +585,7 @@ export default function MemoryCard({
                 <div key={index} className="flex items-start gap-2 text-sm">
                   <button
                     onClick={(e) => { e.stopPropagation(); toggleCheck(index); }}
-                    className="w-8 h-8 flex items-center justify-center text-lg text-stone-400 rounded-md active:bg-stone-700 shrink-0 mt-0.5"
+                    className="w-8 h-8 flex items-center justify-center text-lg text-slate-400 rounded-md active:bg-slate-700 shrink-0 mt-0.5"
                   >
                     {checkedItems.includes(index) ? "☑" : "☐"}
                   </button>
@@ -604,12 +604,12 @@ export default function MemoryCard({
                         target="_blank"
                         rel="noopener noreferrer"
                         onClick={(e) => e.stopPropagation()}
-                        className={`underline break-all ${checkedItems.includes(index) ? "line-through text-stone-500" : "text-sky-400"}`}
+                        className={`underline break-all ${checkedItems.includes(index) ? "line-through text-slate-500" : "text-sky-400"}`}
                       >
                         {(() => { try { return new URL(itemText).hostname.replace(/^www\./, ""); } catch { return itemText; } })()}
                       </a>
                     ) : (
-                      <span className={checkedItems.includes(index) ? "line-through text-stone-500" : "text-stone-100"}>
+                      <span className={checkedItems.includes(index) ? "line-through text-slate-500" : "text-slate-100"}>
                         {itemText}
                       </span>
                     )}
@@ -624,7 +624,7 @@ export default function MemoryCard({
                   onRemoveListItems(memory.id, checkedItems);
                   setCheckedItems([]);
                 }}
-                className="text-xs text-stone-500 hover:text-red-400 active:text-red-500 transition-all mt-2"
+                className="text-xs text-slate-500 hover:text-red-400 active:text-red-500 transition-all mt-2"
               >
                 🗑 Clear checked ({checkedItems.length})
               </button>
@@ -639,32 +639,32 @@ export default function MemoryCard({
                   onTouchStart={(e) => { e.stopPropagation(); }}
                   onTouchEnd={(e) => { e.stopPropagation(); }}
                   placeholder={isListening ? "Listening…" : isIdentifying ? "Identifying…" : "Add item..."}
-                  className="w-full bg-stone-700 border border-stone-600 rounded-lg px-3 py-1.5 text-sm text-stone-100 placeholder-stone-400 focus:outline-none"
+                  className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-1.5 text-sm text-slate-100 placeholder-stone-400 focus:outline-none"
                 />
                 <div className="flex gap-2">
                   <button
                     onClick={(e) => { e.stopPropagation(); startListMic(); }}
-                    className={`flex-1 py-1.5 rounded-lg text-sm ${isListening ? "bg-red-500 text-white" : "bg-stone-700 text-stone-300"}`}
+                    className={`flex-1 py-1.5 rounded-lg text-sm ${isListening ? "bg-red-500 text-white" : "bg-slate-700 text-slate-300"}`}
                   >
                     {isListening ? "⏹️ Stop" : "🎤 Speak"}
                   </button>
                   <button
                     onClick={(e) => { e.stopPropagation(); photoInputRef.current?.click(); }}
                     disabled={isIdentifying}
-                    className="flex-1 py-1.5 rounded-lg text-sm bg-stone-700 text-stone-300 disabled:opacity-50"
+                    className="flex-1 py-1.5 rounded-lg text-sm bg-slate-700 text-slate-300 disabled:opacity-50"
                   >
                     {isIdentifying ? "🔍 …" : "📷 Photo"}
                   </button>
                   <button
                     onClick={(e) => { e.stopPropagation(); handlePasteClipboard(); }}
-                    className="flex-1 py-1.5 rounded-lg text-sm bg-stone-700 text-stone-300"
+                    className="flex-1 py-1.5 rounded-lg text-sm bg-slate-700 text-slate-300"
                     title="Paste from clipboard"
                   >
                     📋 Paste
                   </button>
                   <button
                     onClick={(e) => { e.stopPropagation(); handleAddItem(); }}
-                    className="flex-1 py-1.5 bg-amber-400 text-white rounded-lg text-sm font-bold"
+                    className="flex-1 py-1.5 bg-violet-500 text-white rounded-lg text-sm font-bold"
                   >
                     + Add
                   </button>
@@ -691,26 +691,26 @@ export default function MemoryCard({
           <div>
             {isEditing ? (
               <div onClick={(e) => e.stopPropagation()} className="space-y-2">
-                <p className="text-[10px] text-amber-400 font-medium uppercase tracking-wide">Editing description</p>
+                <p className="text-[10px] text-violet-400 font-medium uppercase tracking-wide">Editing description</p>
                 <textarea
                   value={editText}
                   onChange={(e) => setEditText(e.target.value)}
                   onTouchStart={(e) => e.stopPropagation()}
                   onTouchEnd={(e) => e.stopPropagation()}
-                  className="w-full bg-stone-700 border border-amber-500/50 rounded-lg p-2.5 text-sm text-stone-100 focus:outline-none focus:border-amber-400 resize-none"
+                  className="w-full bg-slate-700 border border-violet-500/50 rounded-lg p-2.5 text-sm text-slate-100 focus:outline-none focus:border-violet-400 resize-none"
                   rows={3}
                   autoFocus
                 />
                 <div className="flex gap-2">
                   <button
                     onClick={() => { setEditText(memory.text || ""); setIsEditing(false); }}
-                    className="flex-1 py-1.5 rounded-lg text-sm bg-stone-700 text-stone-400 border border-stone-600 active:bg-stone-600 transition-all"
+                    className="flex-1 py-1.5 rounded-lg text-sm bg-slate-700 text-slate-400 border border-slate-600 active:bg-stone-600 transition-all"
                   >
                     Cancel
                   </button>
                   <button
                     onClick={handleSaveEdit}
-                    className="flex-1 py-1.5 rounded-lg text-sm bg-amber-400 text-stone-900 font-semibold active:bg-amber-500 transition-all"
+                    className="flex-1 py-1.5 rounded-lg text-sm bg-violet-500 text-stone-900 font-semibold active:bg-violet-600 transition-all"
                   >
                     Save ✓
                   </button>
@@ -718,13 +718,13 @@ export default function MemoryCard({
               </div>
             ) : (
               <div className="flex items-start justify-between gap-2">
-                <p className="text-sm font-medium text-stone-100 break-words flex-1">
+                <p className="text-sm font-medium text-slate-100 break-words flex-1">
                   {editText}
                 </p>
                 {!individualMusicItem && !memory.videoUrl && (
                   <button
                     onClick={(e) => { e.stopPropagation(); setIsEditing(true); }}
-                    className="shrink-0 text-stone-600 hover:text-stone-400 active:text-amber-400 active:scale-90 transition-all p-1 -mt-0.5"
+                    className="shrink-0 text-slate-600 hover:text-slate-400 active:text-violet-400 active:scale-90 transition-all p-1 -mt-0.5"
                     title="Edit description"
                   >
                     ✏️
@@ -741,7 +741,7 @@ export default function MemoryCard({
         {/* Music service picker for individual music cards */}
         {!isCollapsed && individualMusicItem && (
           <div onClick={(e) => e.stopPropagation()} className="mt-3">
-            <p className="text-[10px] text-stone-400 mb-1.5">Open in:</p>
+            <p className="text-[10px] text-slate-400 mb-1.5">Open in:</p>
             <div className="flex gap-1.5 flex-wrap">
               {SERVICES.map((svc) => {
                 const q = encodeURIComponent(`${individualMusicItem.title}${individualMusicItem.artist ? " " + individualMusicItem.artist : ""}`);
@@ -760,7 +760,7 @@ export default function MemoryCard({
                     className={`px-2.5 py-1 rounded-full text-xs font-medium border transition-all ${
                       preferredService === svc.id
                         ? `${svc.color} text-white border-transparent`
-                        : "bg-stone-700 text-stone-300 border-stone-600 hover:border-stone-400"
+                        : "bg-slate-700 text-slate-300 border-slate-600 hover:border-stone-400"
                     }`}
                   >
                     {svc.short}

@@ -97,21 +97,21 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-stone-950 flex justify-center items-center px-4">
-      <div className="bg-stone-900 shadow-xl rounded-2xl p-8 w-full max-w-sm border border-stone-700">
+    <div className="min-h-screen bg-slate-950 flex justify-center items-center px-4">
+      <div className="bg-slate-900 shadow-xl rounded-2xl p-8 w-full max-w-sm border border-slate-700">
 
         <div className="text-center mb-6">
           <div className="text-4xl mb-2">🎞️</div>
-          <h1 className="text-3xl font-semibold text-stone-100 tracking-wide">Stash</h1>
-          <p className="text-stone-500 mt-1 italic text-sm">Your memories, all in one place</p>
+          <h1 className="text-3xl font-semibold text-slate-100 tracking-wide">Stash</h1>
+          <p className="text-slate-500 mt-1 italic text-sm">Your memories, all in one place</p>
         </div>
 
         {/* Mode toggle */}
-        <div className="flex bg-stone-800 rounded-xl p-1 mb-5">
+        <div className="flex bg-slate-800 rounded-xl p-1 mb-5">
           <button
             onClick={() => { setMode("signin"); setError(null); setResetSent(false); }}
             className={`flex-1 py-2 text-sm font-medium rounded-lg transition-colors ${
-              mode === "signin" ? "bg-amber-400 text-stone-900" : "text-stone-400"
+              mode === "signin" ? "bg-violet-500 text-stone-900" : "text-slate-400"
             }`}
           >
             Sign In
@@ -119,7 +119,7 @@ export default function LoginPage() {
           <button
             onClick={() => { setMode("signup"); setError(null); setResetSent(false); }}
             className={`flex-1 py-2 text-sm font-medium rounded-lg transition-colors ${
-              mode === "signup" ? "bg-amber-400 text-stone-900" : "text-stone-400"
+              mode === "signup" ? "bg-violet-500 text-stone-900" : "text-slate-400"
             }`}
           >
             Create Account
@@ -134,7 +134,7 @@ export default function LoginPage() {
             onChange={(e) => setEmail(e.target.value)}
             placeholder="Email address"
             autoCapitalize="none"
-            className="w-full bg-stone-800 border border-stone-600 text-stone-100 placeholder-stone-500 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-amber-400"
+            className="w-full bg-slate-800 border border-slate-600 text-slate-100 placeholder-stone-500 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-violet-400"
           />
           <input
             type="password"
@@ -142,7 +142,7 @@ export default function LoginPage() {
             onChange={(e) => setPassword(e.target.value)}
             placeholder="Password"
             onKeyDown={(e) => { if (e.key === "Enter") handleEmailAuth(); }}
-            className="w-full bg-stone-800 border border-stone-600 text-stone-100 placeholder-stone-500 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-amber-400"
+            className="w-full bg-slate-800 border border-slate-600 text-slate-100 placeholder-stone-500 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-violet-400"
           />
           {mode === "signup" && (
             <input
@@ -151,7 +151,7 @@ export default function LoginPage() {
               onChange={(e) => setConfirm(e.target.value)}
               placeholder="Confirm password"
               onKeyDown={(e) => { if (e.key === "Enter") handleEmailAuth(); }}
-              className="w-full bg-stone-800 border border-stone-600 text-stone-100 placeholder-stone-500 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-amber-400"
+              className="w-full bg-slate-800 border border-slate-600 text-slate-100 placeholder-stone-500 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-violet-400"
             />
           )}
         </div>
@@ -164,7 +164,7 @@ export default function LoginPage() {
             ) : (
               <button
                 onClick={handleForgotPassword}
-                className="text-xs text-stone-500 hover:text-amber-400 transition-colors"
+                className="text-xs text-slate-500 hover:text-violet-400 transition-colors"
               >
                 Forgot password?
               </button>
@@ -181,29 +181,29 @@ export default function LoginPage() {
         <button
           onClick={handleEmailAuth}
           disabled={loading}
-          className="w-full bg-gradient-to-r from-amber-400 to-orange-400 text-white py-3 rounded-xl font-medium text-sm mb-4 disabled:opacity-50 disabled:cursor-not-allowed transition"
+          className="w-full bg-gradient-to-r from-violet-400 to-orange-400 text-white py-3 rounded-xl font-medium text-sm mb-4 disabled:opacity-50 disabled:cursor-not-allowed transition"
         >
           {loading ? "Please wait..." : mode === "signin" ? "Sign In" : "Create Account"}
         </button>
 
         {/* Divider */}
         <div className="flex items-center gap-3 mb-4">
-          <div className="flex-1 h-px bg-stone-700" />
-          <span className="text-xs text-stone-600">or</span>
-          <div className="flex-1 h-px bg-stone-700" />
+          <div className="flex-1 h-px bg-slate-700" />
+          <span className="text-xs text-slate-600">or</span>
+          <div className="flex-1 h-px bg-slate-700" />
         </div>
 
         {/* Google */}
         <button
           onClick={handleGoogle}
-          className="w-full bg-stone-800 border border-stone-600 text-stone-300 py-3 rounded-xl text-sm font-medium hover:border-stone-400 transition-colors"
+          className="w-full bg-slate-800 border border-slate-600 text-slate-300 py-3 rounded-xl text-sm font-medium hover:border-stone-400 transition-colors"
         >
           Continue with Google
         </button>
 
-        <p className="text-center text-xs text-stone-600 mt-5">
+        <p className="text-center text-xs text-slate-600 mt-5">
           By signing in you agree to our{" "}
-          <a href="/privacy" className="text-stone-500 underline hover:text-stone-300 transition-colors">
+          <a href="/privacy" className="text-slate-500 underline hover:text-slate-300 transition-colors">
             Privacy Policy
           </a>
         </p>

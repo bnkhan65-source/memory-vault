@@ -79,19 +79,19 @@ export default function VerifyPage() {
   };
 
   return (
-    <div className="min-h-screen bg-stone-950 flex justify-center items-center px-4">
-      <div className="bg-stone-900 shadow-xl rounded-2xl p-8 w-full max-w-sm border border-stone-700 text-center">
+    <div className="min-h-screen bg-slate-950 flex justify-center items-center px-4">
+      <div className="bg-slate-900 shadow-xl rounded-2xl p-8 w-full max-w-sm border border-slate-700 text-center">
 
         <div className="text-5xl mb-4">📬</div>
-        <h1 className="text-xl font-semibold text-stone-100 mb-2">Check your email</h1>
-        <p className="text-stone-400 text-sm mb-1">
+        <h1 className="text-xl font-semibold text-slate-100 mb-2">Check your email</h1>
+        <p className="text-slate-400 text-sm mb-1">
           We sent a verification link to:
         </p>
-        <p className="text-amber-400 text-sm font-medium mb-6 break-all">
+        <p className="text-violet-400 text-sm font-medium mb-6 break-all">
           {email ?? "your email address"}
         </p>
 
-        <p className="text-stone-500 text-xs mb-8">
+        <p className="text-slate-500 text-xs mb-8">
           Click the link in the email to verify your account, then come back here.
         </p>
 
@@ -99,7 +99,7 @@ export default function VerifyPage() {
         <button
           onClick={handleCheck}
           disabled={checking}
-          className="w-full bg-gradient-to-r from-amber-400 to-orange-400 text-white py-3 rounded-xl font-medium text-sm mb-3 disabled:opacity-50 disabled:cursor-not-allowed transition"
+          className="w-full bg-gradient-to-r from-violet-400 to-orange-400 text-white py-3 rounded-xl font-medium text-sm mb-3 disabled:opacity-50 disabled:cursor-not-allowed transition"
         >
           {checking ? "Checking…" : "I've verified — continue"}
         </button>
@@ -108,7 +108,7 @@ export default function VerifyPage() {
         <button
           onClick={handleResend}
           disabled={cooldown > 0}
-          className="w-full bg-stone-800 border border-stone-600 text-stone-300 py-3 rounded-xl text-sm font-medium hover:border-stone-400 transition-colors mb-3 disabled:opacity-40 disabled:cursor-not-allowed"
+          className="w-full bg-slate-800 border border-slate-600 text-slate-300 py-3 rounded-xl text-sm font-medium hover:border-stone-400 transition-colors mb-3 disabled:opacity-40 disabled:cursor-not-allowed"
         >
           {cooldown > 0 ? `Resend email (${cooldown}s)` : resent ? "Resend email" : "Resend email"}
         </button>
@@ -124,7 +124,7 @@ export default function VerifyPage() {
         {/* Sign out */}
         <button
           onClick={handleSignOut}
-          className="text-xs text-stone-600 hover:text-stone-400 transition-colors mt-2"
+          className="text-xs text-slate-600 hover:text-slate-400 transition-colors mt-2"
         >
           Use a different email → sign out
         </button>
