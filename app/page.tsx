@@ -911,32 +911,32 @@ export default function Home() {
   // ── Render ──────────────────────────────────────────────────────────────────
 
   return (
-    <div className="bg-stone-950 px-3 py-4 flex flex-col overflow-y-auto" style={{ position: "fixed", inset: 0 }}>
-      <div className="flex-1 max-w-xl mx-auto w-full bg-stone-900 p-4 rounded-2xl shadow-xl border border-stone-700">
+    <div className="bg-slate-950 px-3 py-4 flex flex-col overflow-y-auto" style={{ position: "fixed", inset: 0 }}>
+      <div className="flex-1 max-w-xl mx-auto w-full bg-slate-900 p-4 rounded-2xl shadow-xl border border-slate-700">
 
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
             <span className="text-2xl">🎞️</span>
-            <h1 className="text-2xl font-semibold tracking-wide text-stone-100">Stash</h1>
+            <h1 className="text-2xl font-semibold tracking-wide text-slate-100">Stash</h1>
           </div>
           <div className="flex items-center gap-1.5">
             <button
               onClick={() => setShowOnboarding(true)}
-              className="text-stone-500 border border-stone-700 rounded-lg p-1.5 hover:border-stone-500 hover:text-stone-300 active:bg-stone-700 active:text-stone-200 active:border-stone-500 active:scale-90 transition-all"
+              className="text-slate-500 border border-slate-700 rounded-lg p-1.5 hover:border-slate-500 hover:text-slate-300 active:bg-slate-700 active:text-slate-200 active:border-slate-500 active:scale-90 transition-all"
               title="How to use Stash"
             >
               ?
             </button>
             <button
               onClick={() => { setFeedbackSent(false); setFeedbackText(""); setShowFeedbackModal(true); }}
-              className="text-stone-500 border border-stone-700 rounded-lg p-1.5 hover:border-stone-500 hover:text-stone-300 active:bg-stone-700 active:text-stone-200 active:border-stone-500 active:scale-90 transition-all"
+              className="text-slate-500 border border-slate-700 rounded-lg p-1.5 hover:border-slate-500 hover:text-slate-300 active:bg-slate-700 active:text-slate-200 active:border-slate-500 active:scale-90 transition-all"
               title="Send feedback"
             >
               💬
             </button>
             <button
               onClick={handleSignOut}
-              className="text-xs text-stone-500 border border-stone-700 rounded-lg px-2.5 py-1.5 hover:border-stone-500 hover:text-stone-300 active:bg-stone-700 active:text-stone-200 active:scale-90 transition-all"
+              className="text-xs text-slate-500 border border-slate-700 rounded-lg px-2.5 py-1.5 hover:border-slate-500 hover:text-slate-300 active:bg-slate-700 active:text-slate-200 active:scale-90 transition-all"
             >
               Sign Out
             </button>
@@ -976,7 +976,7 @@ export default function Home() {
               }
             }}
             placeholder="Type or speak what you're looking for…"
-            className="w-full bg-stone-800 border border-stone-600 p-3 rounded-xl text-base text-stone-100 placeholder-stone-500 focus:outline-none focus:border-amber-500/50"
+            className="w-full bg-slate-800 border border-slate-600 p-3 rounded-xl text-base text-slate-100 placeholder-stone-500 focus:outline-none focus:border-violet-500/50"
           />
 
           {/* Action buttons row */}
@@ -991,13 +991,13 @@ export default function Home() {
                   startRecording();
                 }
               }}
-              className={`flex flex-col items-center gap-1 px-4 py-1 rounded-xl transition-all active:scale-90 active:bg-stone-700 ${
+              className={`flex flex-col items-center gap-1 px-4 py-1 rounded-xl transition-all active:scale-90 active:bg-slate-700 ${
                 isListening ? "opacity-100" : "opacity-100"
               }`}
               title={isListening ? "Stop recording" : "Speak a memory"}
             >
               <span className="text-2xl">{isListening ? "⏹️" : "🎤"}</span>
-              <span className={`text-[10px] ${isListening ? "text-red-400" : "text-stone-500"}`}>
+              <span className={`text-[10px] ${isListening ? "text-red-400" : "text-slate-500"}`}>
                 {isListening ? "Stop" : "Speak"}
               </span>
             </button>
@@ -1005,38 +1005,38 @@ export default function Home() {
             <button
               type="button"
               onClick={() => router.push("/camera")}
-              className="flex flex-col items-center gap-1 px-4 py-1 rounded-xl transition-all active:scale-90 active:bg-stone-700"
+              className="flex flex-col items-center gap-1 px-4 py-1 rounded-xl transition-all active:scale-90 active:bg-slate-700"
               title="Add a photo memory"
             >
               <span className="text-2xl">📷</span>
-              <span className="text-[10px] text-stone-500">Photo</span>
+              <span className="text-[10px] text-slate-500">Photo</span>
             </button>
 
             <button
               type="button"
               onClick={() => setShowListModal(true)}
-              className="flex flex-col items-center gap-1 px-4 py-1 rounded-xl transition-all active:scale-90 active:bg-stone-700"
+              className="flex flex-col items-center gap-1 px-4 py-1 rounded-xl transition-all active:scale-90 active:bg-slate-700"
               title="Create a new list"
             >
               <span className="text-2xl">📝</span>
-              <span className="text-[10px] text-stone-500">List</span>
+              <span className="text-[10px] text-slate-500">List</span>
             </button>
 
             <button
               type="button"
               onClick={() => router.push("/guide")}
-              className="flex flex-col items-center gap-1 px-4 py-1 rounded-xl transition-all active:scale-90 active:bg-stone-700"
+              className="flex flex-col items-center gap-1 px-4 py-1 rounded-xl transition-all active:scale-90 active:bg-slate-700"
               title="User Guide"
             >
               <span className="text-2xl">❓</span>
-              <span className="text-[10px] text-stone-500">Help</span>
+              <span className="text-[10px] text-slate-500">Help</span>
             </button>
           </div>
 
         </div>
 
           {isDetecting && (
-            <p className="text-xs text-amber-400 animate-pulse px-1 mb-2">
+            <p className="text-xs text-violet-400 animate-pulse px-1 mb-2">
               ✨ Identifying what you&apos;re looking for…
             </p>
           )}
@@ -1071,21 +1071,21 @@ export default function Home() {
         <div className="flex justify-around mt-1 mb-4">
           <button
             onClick={() => searchSpotify()}
-            className="flex flex-col items-center gap-1 px-3 py-1 rounded-xl transition-all active:scale-90 active:bg-stone-700"
+            className="flex flex-col items-center gap-1 px-3 py-1 rounded-xl transition-all active:scale-90 active:bg-slate-700"
           >
             <span className="text-2xl">🎵</span>
-            <span className="text-[10px] text-amber-400">Find Music</span>
+            <span className="text-[10px] text-violet-400">Find Music</span>
           </button>
           <button
             onClick={() => searchVideos()}
-            className="flex flex-col items-center gap-1 px-3 py-1 rounded-xl transition-all active:scale-90 active:bg-stone-700"
+            className="flex flex-col items-center gap-1 px-3 py-1 rounded-xl transition-all active:scale-90 active:bg-slate-700"
           >
             <span className="text-2xl">🎥</span>
             <span className="text-[10px] text-blue-400">Find Video</span>
           </button>
           <button
             onClick={() => searchMovies()}
-            className="flex flex-col items-center gap-1 px-3 py-1 rounded-xl transition-all active:scale-90 active:bg-stone-700"
+            className="flex flex-col items-center gap-1 px-3 py-1 rounded-xl transition-all active:scale-90 active:bg-slate-700"
           >
             <span className="text-2xl">🎬</span>
             <span className="text-[10px] text-red-400">Find Movie</span>
@@ -1093,12 +1093,12 @@ export default function Home() {
           <button
             onClick={() => saveMemory()}
             disabled={!memory.trim() || isSaving}
-            className={`flex flex-col items-center gap-1 px-3 py-1 rounded-xl transition-all active:scale-90 active:bg-stone-700 ${
+            className={`flex flex-col items-center gap-1 px-3 py-1 rounded-xl transition-all active:scale-90 active:bg-slate-700 ${
               !memory.trim() || isSaving ? "opacity-30" : "opacity-100"
             }`}
           >
             <span className="text-2xl">💾</span>
-            <span className="text-[10px] text-amber-400">{isSaving ? "Saving…" : "Save note"}</span>
+            <span className="text-[10px] text-violet-400">{isSaving ? "Saving…" : "Save note"}</span>
           </button>
         </div>
 
@@ -1118,12 +1118,12 @@ export default function Home() {
                         Promise.all([searchSpotify(voiceQuery), searchMovies(voiceQuery), searchVideos(voiceQuery)]);
                       }
                     }}
-                    className="text-xs bg-stone-800 border border-amber-400 rounded px-2 py-1 text-stone-100 flex-1 focus:outline-none"
+                    className="text-xs bg-slate-800 border border-violet-400 rounded px-2 py-1 text-slate-100 flex-1 focus:outline-none"
                   />
                 ) : (
                   <button
                     onClick={() => setEditingVoiceQuery(true)}
-                    className="text-xs text-stone-400 italic flex items-center gap-1 hover:text-amber-400 transition-colors"
+                    className="text-xs text-slate-400 italic flex items-center gap-1 hover:text-violet-400 transition-colors"
                     title="Tap to correct"
                   >
                     🎤 &ldquo;{voiceQuery}&rdquo; ✏️
@@ -1132,7 +1132,7 @@ export default function Home() {
               ) : <span />}
               <button
                 onClick={clearSearchState}
-                className="text-xs text-stone-500 hover:text-stone-300 active:scale-95 shrink-0"
+                className="text-xs text-slate-500 hover:text-slate-300 active:scale-95 shrink-0"
               >
                 Clear ✕
               </button>
@@ -1140,7 +1140,7 @@ export default function Home() {
             {voiceQuery && memories.some((m) => m.type === "list") && (
               <button
                 onClick={() => setShowAddToListSheet(true)}
-                className="self-start text-xs text-stone-400 border border-stone-700 rounded-full px-3 py-1 hover:border-amber-500/50 hover:text-amber-400 active:scale-95 active:bg-stone-800 transition-all"
+                className="self-start text-xs text-slate-400 border border-slate-700 rounded-full px-3 py-1 hover:border-violet-500/50 hover:text-violet-400 active:scale-95 active:bg-slate-800 transition-all"
               >
                 📋 Add &ldquo;{voiceQuery}&rdquo; to a list
               </button>
@@ -1150,10 +1150,10 @@ export default function Home() {
 
         {/* ── Music results — one section per search ── */}
         {musicBatches.map((batch, batchIdx) => (
-          <div key={batch.query + batch.time} className={`mt-3 space-y-2 rounded-xl p-2 ${batchIdx > 0 ? "bg-amber-950/40 border border-amber-700/40" : ""}`}>
+          <div key={batch.query + batch.time} className={`mt-3 space-y-2 rounded-xl p-2 ${batchIdx > 0 ? "bg-violet-950/40 border border-violet-700/40" : ""}`}>
             <div className="flex items-center gap-2 px-1">
-              <p className={`text-xs font-semibold uppercase tracking-wider ${batchIdx > 0 ? "text-amber-500" : "text-stone-400"}`}>🎵 Music</p>
-              {batchIdx > 0 && <span className="text-[10px] text-amber-600/80 italic">&ldquo;{batch.query}&rdquo;</span>}
+              <p className={`text-xs font-semibold uppercase tracking-wider ${batchIdx > 0 ? "text-violet-400" : "text-slate-400"}`}>🎵 Music</p>
+              {batchIdx > 0 && <span className="text-[10px] text-violet-500/80 italic">&ldquo;{batch.query}&rdquo;</span>}
             </div>
             {batch.items.map((track, i) => {
               const isSelected = selectedItems.some(s => s.title === track.title && s.kind === "music" && s.artist === track.artist);
@@ -1163,14 +1163,14 @@ export default function Home() {
                   if (idx >= 0) removeFromSelection(idx);
                   else addToSelection({ kind: "music", title: track.title || "", image: track.image, artist: track.artist, url: track.url });
                 }}
-                  className={`p-4 rounded-xl border flex items-center gap-4 cursor-pointer transition-colors ${isSelected ? "border-amber-400 bg-amber-50" : "bg-white hover:bg-gray-50"}`}
+                  className={`p-4 rounded-xl border flex items-center gap-4 cursor-pointer transition-colors ${isSelected ? "border-violet-400 bg-violet-50" : "bg-white hover:bg-gray-50"}`}
                 >
                   {track.image && <img src={track.image} className="w-12 h-12 rounded" alt={track.title} />}
                   <div className="flex-1">
                     <p className="text-sm font-medium">{track.title}</p>
                     <p className="text-xs text-gray-500">{track.artist}</p>
                   </div>
-                  {isSelected && <div className="w-6 h-6 rounded-full bg-amber-400 flex items-center justify-center flex-shrink-0"><span className="text-white text-xs font-bold">✓</span></div>}
+                  {isSelected && <div className="w-6 h-6 rounded-full bg-violet-500 flex items-center justify-center flex-shrink-0"><span className="text-white text-xs font-bold">✓</span></div>}
                 </div>
               );
             })}
@@ -1179,10 +1179,10 @@ export default function Home() {
 
         {/* ── Video results — one section per search ── */}
         {videoBatches.map((batch, batchIdx) => (
-          <div key={batch.query + batch.time} className={`mt-3 space-y-2 rounded-xl p-2 ${batchIdx > 0 ? "bg-amber-950/40 border border-amber-700/40" : ""}`}>
+          <div key={batch.query + batch.time} className={`mt-3 space-y-2 rounded-xl p-2 ${batchIdx > 0 ? "bg-violet-950/40 border border-violet-700/40" : ""}`}>
             <div className="flex items-center gap-2 px-1">
-              <p className={`text-xs font-semibold uppercase tracking-wider ${batchIdx > 0 ? "text-amber-500" : "text-stone-400"}`}>🎥 Videos</p>
-              {batchIdx > 0 && <span className="text-[10px] text-amber-600/80 italic">&ldquo;{batch.query}&rdquo;</span>}
+              <p className={`text-xs font-semibold uppercase tracking-wider ${batchIdx > 0 ? "text-violet-400" : "text-slate-400"}`}>🎥 Videos</p>
+              {batchIdx > 0 && <span className="text-[10px] text-violet-500/80 italic">&ldquo;{batch.query}&rdquo;</span>}
             </div>
             {batch.items.map((video, i) => {
               const isSelected = selectedItems.some(s => s.videoId === video.videoId && s.kind === "video");
@@ -1192,11 +1192,11 @@ export default function Home() {
                   if (idx >= 0) removeFromSelection(idx);
                   else addToSelection({ kind: "video", title: video.title ?? "", image: video.thumbnail, videoId: video.videoId });
                 }}
-                  className={`p-3 rounded-lg border flex items-center gap-3 cursor-pointer transition-colors ${isSelected ? "border-amber-400 bg-amber-50" : "bg-white hover:bg-gray-50"}`}
+                  className={`p-3 rounded-lg border flex items-center gap-3 cursor-pointer transition-colors ${isSelected ? "border-violet-400 bg-violet-50" : "bg-white hover:bg-gray-50"}`}
                 >
                   <img src={video.thumbnail} className="w-12 h-12 rounded" alt={video.title} />
                   <p className="text-sm flex-1">{video.title}</p>
-                  {isSelected && <div className="w-6 h-6 rounded-full bg-amber-400 flex items-center justify-center flex-shrink-0"><span className="text-white text-xs font-bold">✓</span></div>}
+                  {isSelected && <div className="w-6 h-6 rounded-full bg-violet-500 flex items-center justify-center flex-shrink-0"><span className="text-white text-xs font-bold">✓</span></div>}
                 </div>
               );
             })}
@@ -1205,10 +1205,10 @@ export default function Home() {
 
         {/* ── Movie results — one section per search ── */}
         {movieBatches.map((batch, batchIdx) => (
-          <div key={batch.query + batch.time} className={`mt-3 space-y-2 rounded-xl p-2 ${batchIdx > 0 ? "bg-amber-950/40 border border-amber-700/40" : ""}`}>
+          <div key={batch.query + batch.time} className={`mt-3 space-y-2 rounded-xl p-2 ${batchIdx > 0 ? "bg-violet-950/40 border border-violet-700/40" : ""}`}>
             <div className="flex items-center gap-2 px-1">
-              <p className={`text-xs font-semibold uppercase tracking-wider ${batchIdx > 0 ? "text-amber-500" : "text-stone-400"}`}>🎬 Movies &amp; Series</p>
-              {batchIdx > 0 && <span className="text-[10px] text-amber-600/80 italic">&ldquo;{batch.query}&rdquo;</span>}
+              <p className={`text-xs font-semibold uppercase tracking-wider ${batchIdx > 0 ? "text-violet-400" : "text-slate-400"}`}>🎬 Movies &amp; Series</p>
+              {batchIdx > 0 && <span className="text-[10px] text-violet-500/80 italic">&ldquo;{batch.query}&rdquo;</span>}
             </div>
             {batch.items.map((movie) => {
               const isSelected = selectedItems.some(s => s.title === movie.title && s.kind === "movie" && s.year === movie.year);
@@ -1218,7 +1218,7 @@ export default function Home() {
                   if (idx >= 0) removeFromSelection(idx);
                   else addToSelection({ kind: "movie", title: movie.title, image: movie.poster, year: movie.year, movieId: movie.id });
                 }}
-                  className={`p-3 rounded-xl border flex items-center gap-3 cursor-pointer transition-colors ${isSelected ? "border-amber-400 bg-amber-50" : "bg-white hover:bg-gray-50"}`}
+                  className={`p-3 rounded-xl border flex items-center gap-3 cursor-pointer transition-colors ${isSelected ? "border-violet-400 bg-violet-50" : "bg-white hover:bg-gray-50"}`}
                 >
                   {movie.poster
                     ? <img src={movie.poster} className="w-10 h-14 rounded object-cover" alt={movie.title} />
@@ -1231,7 +1231,7 @@ export default function Home() {
                       {movie.mediaType === "tv" && <span className="ml-1.5 text-[10px] bg-blue-100 text-blue-600 rounded px-1 py-0.5 font-medium">Series</span>}
                     </p>
                   </div>
-                  {isSelected && <div className="w-6 h-6 rounded-full bg-amber-400 flex items-center justify-center flex-shrink-0"><span className="text-white text-xs font-bold">✓</span></div>}
+                  {isSelected && <div className="w-6 h-6 rounded-full bg-violet-500 flex items-center justify-center flex-shrink-0"><span className="text-white text-xs font-bold">✓</span></div>}
                 </div>
               );
             })}
@@ -1241,7 +1241,7 @@ export default function Home() {
         {/* ── Floating bag button ── */}
         {selectedItems.length > 0 && (
           <div className="fixed bottom-6 right-4 z-40 flex flex-col items-end gap-1">
-            <span className="text-[10px] text-amber-300 bg-stone-900/80 backdrop-blur-sm rounded-full px-2 py-0.5 whitespace-nowrap">
+            <span className="text-[10px] text-amber-300 bg-slate-900/80 backdrop-blur-sm rounded-full px-2 py-0.5 whitespace-nowrap">
               Search again to add more
             </span>
             <button
@@ -1258,26 +1258,26 @@ export default function Home() {
         {showBag && (
           <div className="fixed inset-0 z-50 flex flex-col justify-end" onClick={() => setShowBag(false)}>
             <div
-              className="bg-stone-900 border-t border-stone-700 rounded-t-2xl p-5 animate-slide-up"
+              className="bg-slate-900 border-t border-slate-700 rounded-t-2xl p-5 animate-slide-up"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="w-10 h-1 bg-stone-600 rounded-full mx-auto mb-4" />
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-stone-100 font-semibold text-lg">🎒 Your Stash</h3>
-                <span className="text-xs text-stone-500">{selectedItems.length}/10 items</span>
+                <h3 className="text-slate-100 font-semibold text-lg">🎒 Your Stash</h3>
+                <span className="text-xs text-slate-500">{selectedItems.length}/10 items</span>
               </div>
               <div className="space-y-2 mb-5 max-h-60 overflow-y-auto">
                 {selectedItems.map((item, i) => (
-                  <div key={i} className="flex items-center justify-between bg-stone-800 rounded-xl px-3 py-2">
+                  <div key={i} className="flex items-center justify-between bg-slate-800 rounded-xl px-3 py-2">
                     <div className="flex items-center gap-2">
                       <span className="text-base">{item.kind === "movie" ? "🎬" : item.kind === "video" ? "🎥" : "🎵"}</span>
                       <div>
-                        <p className="text-sm text-stone-100 font-medium leading-tight">{item.title}</p>
-                        {item.artist && <p className="text-xs text-stone-400">{item.artist}</p>}
-                        {item.year && <p className="text-xs text-stone-400">{item.year}</p>}
+                        <p className="text-sm text-slate-100 font-medium leading-tight">{item.title}</p>
+                        {item.artist && <p className="text-xs text-slate-400">{item.artist}</p>}
+                        {item.year && <p className="text-xs text-slate-400">{item.year}</p>}
                       </div>
                     </div>
-                    <button onClick={() => removeFromSelection(i)} className="text-stone-500 hover:text-red-400 active:text-red-500 active:scale-90 transition-all text-lg ml-2">✕</button>
+                    <button onClick={() => removeFromSelection(i)} className="text-slate-500 hover:text-red-400 active:text-red-500 active:scale-90 transition-all text-lg ml-2">✕</button>
                   </div>
                 ))}
               </div>
@@ -1287,7 +1287,7 @@ export default function Home() {
               >
                 Stash it! 🎉
               </button>
-              <button onClick={() => { setShowBag(false); clearSearchState(); }} className="w-full text-stone-500 text-sm py-2 mt-1 rounded-xl transition-all active:text-stone-300 active:bg-stone-800">
+              <button onClick={() => { setShowBag(false); clearSearchState(); }} className="w-full text-slate-500 text-sm py-2 mt-1 rounded-xl transition-all active:text-slate-300 active:bg-slate-800">
                 Clear all
               </button>
             </div>
@@ -1297,9 +1297,9 @@ export default function Home() {
         {/* ── New list modal ── */}
         {showListModal && (
           <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 px-4">
-            <div className="bg-stone-900 border border-stone-700 rounded-2xl p-6 w-full max-w-sm">
-              <h3 className="text-stone-100 font-semibold mb-1">📝 New List</h3>
-              <p className="text-stone-400 text-sm mb-4">Create a shopping list, task list, or anything you want to track and check off.</p>
+            <div className="bg-slate-900 border border-slate-700 rounded-2xl p-6 w-full max-w-sm">
+              <h3 className="text-slate-100 font-semibold mb-1">📝 New List</h3>
+              <p className="text-slate-400 text-sm mb-4">Create a shopping list, task list, or anything you want to track and check off.</p>
 
               <input
                 value={listTitle}
@@ -1307,7 +1307,7 @@ export default function Home() {
                 onTouchStart={(e) => e.stopPropagation()}
                 onTouchEnd={(e) => e.stopPropagation()}
                 placeholder="List name (e.g. Grocery List)"
-                className="w-full bg-stone-800 border border-stone-600 rounded-xl p-3 text-sm text-stone-100 placeholder-stone-500 focus:outline-none mb-3"
+                className="w-full bg-slate-800 border border-slate-600 rounded-xl p-3 text-sm text-slate-100 placeholder-stone-500 focus:outline-none mb-3"
                 autoFocus
               />
 
@@ -1318,20 +1318,20 @@ export default function Home() {
                 onTouchEnd={(e) => e.stopPropagation()}
                 placeholder={"Items (one per line):\nMilk\nEggs\nBread"}
                 rows={5}
-                className="w-full bg-stone-800 border border-stone-600 rounded-xl p-3 text-sm text-stone-100 placeholder-stone-500 focus:outline-none resize-none mb-3"
+                className="w-full bg-slate-800 border border-slate-600 rounded-xl p-3 text-sm text-slate-100 placeholder-stone-500 focus:outline-none resize-none mb-3"
               />
 
               <div className="flex gap-2">
                 <button
                   onClick={() => { setShowListModal(false); setListTitle(""); setNewListItemInput(""); }}
-                  className="flex-1 py-2 text-stone-500 text-sm"
+                  className="flex-1 py-2 text-slate-500 text-sm"
                 >
                   Cancel
                 </button>
                 <button
                   disabled={!listTitle.trim()}
                   onClick={createList}
-                  className="flex-1 bg-amber-400 text-stone-900 font-semibold py-2 rounded-xl text-sm disabled:opacity-40 disabled:cursor-not-allowed"
+                  className="flex-1 bg-violet-500 text-stone-900 font-semibold py-2 rounded-xl text-sm disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   Create List
                 </button>
@@ -1343,30 +1343,30 @@ export default function Home() {
         {/* ── Feedback modal ── */}
         {showFeedbackModal && (
           <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 px-4">
-            <div className="bg-stone-900 border border-stone-700 rounded-2xl p-6 w-full max-w-sm">
+            <div className="bg-slate-900 border border-slate-700 rounded-2xl p-6 w-full max-w-sm">
               {feedbackSent ? (
                 <div className="text-center py-4">
                   <div className="text-4xl mb-3">🙏</div>
-                  <h3 className="text-stone-100 font-semibold mb-1">Thanks for the feedback!</h3>
-                  <p className="text-stone-400 text-sm mb-4">It goes directly to the team and helps make Stash better.</p>
-                  <button onClick={() => setShowFeedbackModal(false)} className="text-amber-400 text-sm font-medium">Close</button>
+                  <h3 className="text-slate-100 font-semibold mb-1">Thanks for the feedback!</h3>
+                  <p className="text-slate-400 text-sm mb-4">It goes directly to the team and helps make Stash better.</p>
+                  <button onClick={() => setShowFeedbackModal(false)} className="text-violet-400 text-sm font-medium">Close</button>
                 </div>
               ) : (
                 <>
-                  <h3 className="text-stone-100 font-semibold mb-1">Share your thoughts</h3>
-                  <p className="text-stone-400 text-sm mb-4">What's working? What's missing? What's confusing?</p>
+                  <h3 className="text-slate-100 font-semibold mb-1">Share your thoughts</h3>
+                  <p className="text-slate-400 text-sm mb-4">What's working? What's missing? What's confusing?</p>
                   <textarea
                     value={feedbackText}
                     onChange={(e) => setFeedbackText(e.target.value)}
                     placeholder="Type your feedback here…"
                     rows={4}
-                    className="w-full bg-stone-800 border border-stone-600 rounded-xl p-3 text-sm text-stone-100 placeholder-stone-500 focus:outline-none resize-none mb-3"
+                    className="w-full bg-slate-800 border border-slate-600 rounded-xl p-3 text-sm text-slate-100 placeholder-stone-500 focus:outline-none resize-none mb-3"
                     autoFocus
                   />
                   <div className="flex gap-2">
                     <button
                       onClick={() => setShowFeedbackModal(false)}
-                      className="flex-1 py-2 text-stone-500 text-sm"
+                      className="flex-1 py-2 text-slate-500 text-sm"
                     >
                       Cancel
                     </button>
@@ -1388,7 +1388,7 @@ export default function Home() {
                           alert("Failed to send feedback: " + msg);
                         }
                       }}
-                      className="flex-1 bg-amber-400 text-stone-900 font-semibold py-2 rounded-xl text-sm disabled:opacity-40 disabled:cursor-not-allowed"
+                      className="flex-1 bg-violet-500 text-stone-900 font-semibold py-2 rounded-xl text-sm disabled:opacity-40 disabled:cursor-not-allowed"
                     >
                       Send
                     </button>
@@ -1408,23 +1408,23 @@ export default function Home() {
           );
           return (
             <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 px-4">
-              <div className="bg-stone-900 border border-stone-700 rounded-2xl p-6 w-full max-w-sm max-h-[80vh] flex flex-col">
-                <h3 className="text-stone-100 font-semibold mb-0.5">Save {selectedItems.length} {typeLabel} item{selectedItems.length > 1 ? "s" : ""}</h3>
-                <p className="text-stone-400 text-sm mb-4">How would you like to save these?</p>
+              <div className="bg-slate-900 border border-slate-700 rounded-2xl p-6 w-full max-w-sm max-h-[80vh] flex flex-col">
+                <h3 className="text-slate-100 font-semibold mb-0.5">Save {selectedItems.length} {typeLabel} item{selectedItems.length > 1 ? "s" : ""}</h3>
+                <p className="text-slate-400 text-sm mb-4">How would you like to save these?</p>
 
                 <div className="space-y-2 overflow-y-auto flex-1">
                   {/* Existing playlists */}
                   {existingPlaylists.length > 0 && (
                     <div className="mb-1">
-                      <p className="text-xs text-stone-500 uppercase tracking-wide mb-2">Add to existing playlist</p>
+                      <p className="text-xs text-slate-500 uppercase tracking-wide mb-2">Add to existing playlist</p>
                       {existingPlaylists.map((pl) => (
                         <button
                           key={pl.id}
                           onClick={() => { addToExistingPlaylist(pl.id); setShowPlaylistModal(false); }}
-                          className="w-full bg-stone-800 border border-stone-600 text-stone-200 py-2.5 rounded-xl text-sm font-medium text-left px-4 mb-2 hover:border-amber-500/50 transition-colors"
+                          className="w-full bg-slate-800 border border-slate-600 text-slate-200 py-2.5 rounded-xl text-sm font-medium text-left px-4 mb-2 hover:border-violet-500/50 transition-colors"
                         >
                           {pl.text}
-                          <p className="text-xs text-stone-500 mt-0.5 font-normal">{(pl.items || []).length} items</p>
+                          <p className="text-xs text-slate-500 mt-0.5 font-normal">{(pl.items || []).length} items</p>
                         </button>
                       ))}
                       <p className="text-xs text-stone-600 text-center my-3">— or —</p>
@@ -1434,22 +1434,22 @@ export default function Home() {
                   {/* Create new */}
                   <button
                     onClick={() => { saveAsPlaylist(); setShowPlaylistModal(false); }}
-                    className="w-full bg-amber-500/20 border border-amber-500/40 text-amber-400 py-3 rounded-xl text-sm font-medium text-left px-4"
+                    className="w-full bg-violet-500/20 border border-amber-500/40 text-violet-400 py-3 rounded-xl text-sm font-medium text-left px-4"
                   >
                     🎶 Create new playlist
-                    <p className="text-xs text-amber-500/60 mt-0.5 font-normal">All items in one card</p>
+                    <p className="text-xs text-violet-400/60 mt-0.5 font-normal">All items in one card</p>
                   </button>
 
                   {/* Save separately */}
                   <button
                     onClick={() => { saveSeparately(); setShowPlaylistModal(false); }}
-                    className="w-full bg-stone-800 border border-stone-600 text-stone-300 py-3 rounded-xl text-sm font-medium text-left px-4"
+                    className="w-full bg-slate-800 border border-slate-600 text-slate-300 py-3 rounded-xl text-sm font-medium text-left px-4"
                   >
                     📋 Save Separately
-                    <p className="text-xs text-stone-500 mt-0.5 font-normal">One card per item</p>
+                    <p className="text-xs text-slate-500 mt-0.5 font-normal">One card per item</p>
                   </button>
 
-                  <button onClick={() => setShowPlaylistModal(false)} className="w-full text-stone-500 py-2 text-sm">
+                  <button onClick={() => setShowPlaylistModal(false)} className="w-full text-slate-500 py-2 text-sm">
                     Cancel
                   </button>
                 </div>
@@ -1460,20 +1460,20 @@ export default function Home() {
 
         {/* ── Saved Memories divider ── */}
         <div className="flex items-center gap-3 mt-6 mb-4">
-          <div className="flex-1 h-px bg-stone-700" />
-          <span className="text-xs font-semibold text-amber-400 uppercase tracking-widest whitespace-nowrap">📦 Your Stash</span>
-          <div className="flex-1 h-px bg-stone-700" />
+          <div className="flex-1 h-px bg-slate-700" />
+          <span className="text-xs font-semibold text-violet-400 uppercase tracking-widest whitespace-nowrap">📦 Your Stash</span>
+          <div className="flex-1 h-px bg-slate-700" />
         </div>
 
         <input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search saved memories..."
-          className="bg-stone-800 border border-stone-600 p-3 w-full rounded-lg text-base text-stone-100 placeholder-stone-500 mb-2 focus:outline-none"
+          className="bg-slate-800 border border-slate-600 p-3 w-full rounded-lg text-base text-slate-100 placeholder-stone-500 mb-2 focus:outline-none"
         />
 
         {search && (
-          <p className="text-sm text-stone-500 mb-2">
+          <p className="text-sm text-slate-500 mb-2">
             {filteredMemories.length} result(s)
           </p>
         )}
@@ -1482,15 +1482,15 @@ export default function Home() {
         <div className="mb-4 space-y-2">
           {/* Sort row */}
           <div className="flex items-center gap-1.5 flex-wrap">
-            <span className="text-[10px] text-stone-500 uppercase tracking-widest mr-1">Sort</span>
+            <span className="text-[10px] text-slate-500 uppercase tracking-widest mr-1">Sort</span>
             {([["newest", "Newest"], ["oldest", "Oldest"], ["az", "A–Z"], ["type", "Type"], ["custom", "Custom ↕"]] as const).map(([val, label]) => (
               <button
                 key={val}
                 onClick={() => setSortBy(val)}
                 className={`text-xs px-2.5 py-1 rounded-full border transition-all active:scale-90 ${
                   sortBy === val
-                    ? "bg-amber-400 text-stone-900 border-amber-400 font-semibold"
-                    : "bg-stone-800 text-stone-400 border-stone-700 hover:border-stone-500"
+                    ? "bg-violet-500 text-stone-900 border-violet-400 font-semibold"
+                    : "bg-slate-800 text-slate-400 border-slate-700 hover:border-slate-500"
                 }`}
               >
                 {label}
@@ -1500,7 +1500,7 @@ export default function Home() {
 
           {/* Filter row */}
           <div className="flex items-center gap-1.5 flex-wrap">
-            <span className="text-[10px] text-stone-500 uppercase tracking-widest mr-1">Show</span>
+            <span className="text-[10px] text-slate-500 uppercase tracking-widest mr-1">Show</span>
             {([
               [null, "All"],
               ["playlist", "🎵 Playlists"],
@@ -1513,8 +1513,8 @@ export default function Home() {
                 onClick={() => setFilterType(val)}
                 className={`text-xs px-2.5 py-1 rounded-full border transition-all active:scale-90 ${
                   filterType === val
-                    ? "bg-amber-400 text-stone-900 border-amber-400 font-semibold"
-                    : "bg-stone-800 text-stone-400 border-stone-700 hover:border-stone-500"
+                    ? "bg-violet-500 text-stone-900 border-violet-400 font-semibold"
+                    : "bg-slate-800 text-slate-400 border-slate-700 hover:border-slate-500"
                 }`}
               >
                 {label}
@@ -1525,7 +1525,7 @@ export default function Home() {
           {/* Clear filters + collapse all row */}
           <div className="flex items-center gap-3 flex-wrap">
             {search && (
-              <button onClick={() => setSearch("")} className="text-sm text-stone-500 hover:text-stone-300 transition">
+              <button onClick={() => setSearch("")} className="text-sm text-slate-500 hover:text-slate-300 transition">
                 Clear search
               </button>
             )}
@@ -1545,7 +1545,7 @@ export default function Home() {
                   } catch { /* silent */ }
                   setTimeout(() => setCollapseAll(null), 100);
                 }}
-                className="text-xs px-2.5 py-1 rounded-full border border-stone-700 bg-stone-800 text-stone-400 hover:border-stone-500 hover:text-stone-200 transition-all active:scale-90"
+                className="text-xs px-2.5 py-1 rounded-full border border-slate-700 bg-slate-800 text-slate-400 hover:border-slate-500 hover:text-slate-200 transition-all active:scale-90"
                 title="Collapse all cards"
               >&#x229F; Min all</button>
               <button
@@ -1558,7 +1558,7 @@ export default function Home() {
                   } catch { /* silent */ }
                   setTimeout(() => setCollapseAll(null), 100);
                 }}
-                className="text-xs px-2.5 py-1 rounded-full border border-stone-700 bg-stone-800 text-stone-400 hover:border-stone-500 hover:text-stone-200 transition-all active:scale-90"
+                className="text-xs px-2.5 py-1 rounded-full border border-slate-700 bg-slate-800 text-slate-400 hover:border-slate-500 hover:text-slate-200 transition-all active:scale-90"
                 title="Expand all cards"
               >&#x229E; Max all</button>
             </div>
@@ -1622,12 +1622,12 @@ export default function Home() {
       {showAddToListSheet && (
         <div className="fixed inset-0 z-50 flex flex-col justify-end" onClick={() => setShowAddToListSheet(false)}>
           <div
-            className="bg-stone-900 border-t border-stone-700 rounded-t-2xl p-5 animate-slide-up"
+            className="bg-slate-900 border-t border-slate-700 rounded-t-2xl p-5 animate-slide-up"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="w-10 h-1 bg-stone-600 rounded-full mx-auto mb-4" />
-            <h3 className="text-stone-100 font-semibold text-base mb-1">📋 Add to a list</h3>
-            <p className="text-stone-400 text-xs mb-4">Pick a list to add &ldquo;{voiceQuery}&rdquo; to</p>
+            <h3 className="text-slate-100 font-semibold text-base mb-1">📋 Add to a list</h3>
+            <p className="text-slate-400 text-xs mb-4">Pick a list to add &ldquo;{voiceQuery}&rdquo; to</p>
             <div className="space-y-2 max-h-72 overflow-y-auto">
               {memories
                 .filter((m) => m.type === "list")
@@ -1638,10 +1638,10 @@ export default function Home() {
                       await addItemToList(list.id, voiceQuery);
                       setShowAddToListSheet(false);
                     }}
-                    className="w-full bg-stone-800 border border-stone-600 text-stone-200 py-3 px-4 rounded-xl text-sm font-medium text-left hover:border-amber-500/50 active:scale-95 active:bg-stone-700 transition-all"
+                    className="w-full bg-slate-800 border border-slate-600 text-slate-200 py-3 px-4 rounded-xl text-sm font-medium text-left hover:border-violet-500/50 active:scale-95 active:bg-slate-700 transition-all"
                   >
                     {list.text}
-                    <p className="text-xs text-stone-500 mt-0.5 font-normal">
+                    <p className="text-xs text-slate-500 mt-0.5 font-normal">
                       {(list.listItems || []).length} item{(list.listItems || []).length !== 1 ? "s" : ""}
                     </p>
                   </button>
@@ -1649,7 +1649,7 @@ export default function Home() {
             </div>
             <button
               onClick={() => setShowAddToListSheet(false)}
-              className="w-full text-stone-500 text-sm py-3 mt-2 rounded-xl transition-all active:text-stone-300 active:bg-stone-800"
+              className="w-full text-slate-500 text-sm py-3 mt-2 rounded-xl transition-all active:text-slate-300 active:bg-slate-800"
             >
               Cancel
             </button>
