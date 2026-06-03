@@ -55,7 +55,7 @@ export default function GuidePage() {
           Stash is a web app — no App Store download required. Open your browser and go to:
         </p>
         <div className="bg-stone-900 border border-amber-500/30 rounded-xl p-3 text-center mb-4">
-          <span className="text-amber-400 font-mono text-sm font-medium">memory-vault-qrbb.vercel.app</span>
+          <span className="text-amber-400 font-mono text-sm font-medium">usestash.vercel.app</span>
         </div>
         <p className="text-stone-300 text-sm leading-relaxed mb-3">
           Sign in using your Google account.
@@ -105,7 +105,7 @@ export default function GuidePage() {
           <div className="bg-stone-900 border border-stone-800 rounded-xl p-4">
             <p className="text-sm font-semibold text-stone-200 mb-2">📱 iPhone — Safari</p>
             <ol className="space-y-1 text-sm text-stone-400 list-decimal list-inside">
-              <li>Open Safari and go to <span className="text-amber-400 font-mono text-xs">memory-vault-qrbb.vercel.app</span></li>
+              <li>Open Safari and go to <span className="text-amber-400 font-mono text-xs">usestash.vercel.app</span></li>
               <li>Tap the Share button (box with arrow, bottom of screen)</li>
               <li>Scroll down and tap &ldquo;Add to Home Screen&rdquo;</li>
               <li>Tap <strong className="text-stone-300">Add</strong> in the top right corner</li>
@@ -114,7 +114,7 @@ export default function GuidePage() {
           <div className="bg-stone-900 border border-stone-800 rounded-xl p-4">
             <p className="text-sm font-semibold text-stone-200 mb-2">🤖 Android — Chrome</p>
             <ol className="space-y-1 text-sm text-stone-400 list-decimal list-inside">
-              <li>Open Chrome and go to <span className="text-amber-400 font-mono text-xs">memory-vault-qrbb.vercel.app</span></li>
+              <li>Open Chrome and go to <span className="text-amber-400 font-mono text-xs">usestash.vercel.app</span></li>
               <li>Tap the three-dot menu (top right)</li>
               <li>Tap &ldquo;Add to Home screen&rdquo; or &ldquo;Install app&rdquo;</li>
               <li>Tap <strong className="text-stone-300">Add</strong> to confirm</li>
@@ -216,7 +216,7 @@ export default function GuidePage() {
             <li>Open the Shortcuts app on your iPhone</li>
             <li>Tap <strong className="text-stone-300">+</strong> in the top right to create a new shortcut</li>
             <li>Tap Add Action, search for <strong className="text-stone-300">&ldquo;Open URL&rdquo;</strong> and select it</li>
-            <li>Enter <span className="text-amber-400 font-mono text-xs">memory-vault-qrbb.vercel.app</span> in the URL field</li>
+            <li>Enter <span className="text-amber-400 font-mono text-xs">usestash.vercel.app</span> in the URL field</li>
             <li>Rename it to something easy to say, like <strong className="text-stone-300">&ldquo;Open Stash&rdquo;</strong></li>
             <li>Tap Done — now say &ldquo;Hey Siri, Open Stash&rdquo;</li>
           </ol>
@@ -227,7 +227,7 @@ export default function GuidePage() {
       {/* Footer */}
       <div className="border-t border-stone-800 pt-6 text-center text-stone-500 text-xs space-y-1">
         <p>Questions or feedback? Use the 💬 Feedback button inside the app.</p>
-        <p className="text-stone-700">memory-vault-qrbb.vercel.app</p>
+        <p className="text-stone-700">usestash.vercel.app</p>
       </div>
 
     </div>
