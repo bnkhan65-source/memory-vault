@@ -77,7 +77,7 @@ export default function OnboardingModal({ onDone }: Props) {
 
   return (
     <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center px-4">
-      <div className="bg-stone-900 rounded-2xl p-8 w-full max-w-sm border border-stone-700 shadow-2xl">
+      <div className="bg-slate-900 rounded-2xl p-8 w-full max-w-sm border border-slate-700 shadow-2xl">
 
         {/* Progress dots */}
         <div className="flex justify-center gap-2 mb-6">
@@ -85,7 +85,7 @@ export default function OnboardingModal({ onDone }: Props) {
             <div
               key={i}
               className={`h-2 rounded-full transition-all duration-300 ${
-                i === slide ? "w-8 bg-amber-400" : i < slide ? "w-2 bg-amber-700" : "w-2 bg-stone-600"
+                i === slide ? "w-8 bg-violet-500" : i < slide ? "w-2 bg-violet-700" : "w-2 bg-slate-600"
               }`}
             />
           ))}
@@ -95,19 +95,19 @@ export default function OnboardingModal({ onDone }: Props) {
         <div className="text-6xl text-center mb-5">{current.emoji}</div>
 
         {/* Title */}
-        <h2 className="text-xl font-bold text-stone-100 text-center mb-4 leading-snug">
+        <h2 className="text-xl font-bold text-slate-100 text-center mb-4 leading-snug">
           {current.title}
         </h2>
 
         {/* Body */}
-        <p className="text-stone-300 text-base text-center leading-relaxed mb-4 whitespace-pre-line">
+        <p className="text-slate-300 text-base text-center leading-relaxed mb-4 whitespace-pre-line">
           {current.body}
         </p>
 
         {/* Tip */}
         {current.tip && (
-          <div className="bg-amber-950/50 border border-amber-800/40 rounded-xl px-4 py-3 mb-5">
-            <p className="text-amber-300 text-sm text-center leading-relaxed">
+          <div className="bg-violet-950/50 border border-violet-800/40 rounded-xl px-4 py-3 mb-5">
+            <p className="text-violet-300 text-sm text-center leading-relaxed">
               💡 {current.tip}
             </p>
           </div>
@@ -116,7 +116,7 @@ export default function OnboardingModal({ onDone }: Props) {
         {/* CTA */}
         <button
           onClick={advance}
-          className="w-full bg-gradient-to-r from-amber-400 to-orange-400 text-white py-4 rounded-xl font-semibold text-base mb-3"
+          className="w-full bg-gradient-to-r from-violet-500 to-orange-400 text-white py-4 rounded-xl font-semibold text-base mb-3"
         >
           {current.cta}
         </button>
@@ -126,7 +126,7 @@ export default function OnboardingModal({ onDone }: Props) {
           {slide > 0 ? (
             <button
               onClick={goBack}
-              className="text-stone-500 text-sm py-1 hover:text-stone-300 transition-colors"
+              className="text-slate-500 text-sm py-1 hover:text-slate-300 transition-colors"
             >
               ← Back
             </button>
@@ -135,7 +135,7 @@ export default function OnboardingModal({ onDone }: Props) {
           {!isLast && (
             <button
               onClick={onDone}
-              className="text-stone-600 text-sm py-1 hover:text-stone-400 transition-colors"
+              className="text-stone-600 text-sm py-1 hover:text-slate-400 transition-colors"
             >
               Skip for now
             </button>
