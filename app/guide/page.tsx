@@ -173,7 +173,7 @@ export default function GuidePage() {
         <div className="space-y-3">
           {[
             ['🎤 Voice search', 'Tap the mic, speak, select a result, and tap Save Memory.'],
-            ['⌨️ Manual text', 'Type anything in the Add memory box and tap Save Memory — great for quick notes, vibes, or things you don\'t need to search for.'],
+            ['⌨️ Manual text', 'Type anything in the Add memory box and tap Save Memory — great for quick notes, music, or things you don\'t need to search for.'],
             ['🎶 Playlists', 'Select multiple results (up to 10) before saving to group them into one playlist card.'],
             ['✅ Checklists', 'Tap the 📝 button next to the mic to create a checklist (shopping lists, to-do lists, packing lists). Add items later by tapping + on any list card. Tap 📷 Photo to photograph an item — Stash will identify what\'s in the photo and save both the image and label together.'],
           ].map(([title, desc], i) => (

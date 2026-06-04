@@ -14,7 +14,7 @@ export const MEMORY_TYPE_META = {
     color: "bg-green-100 text-green-700",
   },
   vibe: {
-    label: "Vibe",
+    label: "Music",
     icon: "🎵",
     color: "bg-purple-100 text-purple-700",
   },
