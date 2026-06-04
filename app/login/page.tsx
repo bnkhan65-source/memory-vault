@@ -3,6 +3,8 @@
 import { useState, useEffect } from "react";
 import {
   signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
   GoogleAuthProvider,
   onAuthStateChanged,
   signInWithEmailAndPassword,
@@ -73,11 +75,20 @@ export default function LoginPage() {
     }
   };
 
+  const isChromeIOS = () => {
+    if (typeof navigator === "undefined") return false;
+    return /CriOS/.test(navigator.userAgent);
+  };
+
   const handleGoogle = async () => {
     setError(null);
     try {
-      await signInWithPopup(auth, new GoogleAuthProvider());
-      router.push("/");
+      if (isChromeIOS()) {
+        await signInWithRedirect(auth, new GoogleAuthProvider());
+      } else {
+        await signInWithPopup(auth, new GoogleAuthProvider());
+        router.push("/");
+      }
     } catch (e: unknown) {
       const code = (e as { code?: string }).code || "";
       setError(friendlyError(code));
