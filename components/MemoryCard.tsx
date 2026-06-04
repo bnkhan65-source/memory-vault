@@ -621,7 +621,12 @@ export default function MemoryCard({
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  onRemoveListItems(memory.id, checkedItems);
+                  // Map visual indices (from resolvedListItems) back to actual memory.listItems indices
+                  const actualIndices = checkedItems.map((visualIdx) => {
+                    const item = resolvedListItems[visualIdx];
+                    return (memory.listItems || []).indexOf(item);
+                  }).filter((i) => i !== -1);
+                  onRemoveListItems(memory.id, actualIndices);
                   setCheckedItems([]);
                 }}
                 className="text-xs text-slate-500 hover:text-red-400 active:text-red-500 transition-all mt-2"
