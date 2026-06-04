@@ -3,6 +3,8 @@
 import { useState, useEffect } from "react";
 import {
   signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
   GoogleAuthProvider,
   onAuthStateChanged,
   signInWithEmailAndPassword,
@@ -23,7 +25,17 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [resetSent, setResetSent] = useState(false);
 
+  const isChromeIOS = typeof navigator !== "undefined" &&
+    /CriOS/i.test(navigator.userAgent);
+
   useEffect(() => {
+    getRedirectResult(auth).then((result) => {
+      if (result?.user) router.push("/");
+    }).catch((e: unknown) => {
+      const code = (e as { code?: string }).code || "";
+      setError(friendlyError(code));
+    });
+
     const unsub = onAuthStateChanged(auth, (user) => {
       if (!user) return;
       if (!user.emailVerified && user.providerData[0]?.providerId === "password") {
@@ -75,12 +87,17 @@ export default function LoginPage() {
 
   const handleGoogle = async () => {
     setError(null);
+    const provider = new GoogleAuthProvider();
     try {
-      await signInWithPopup(auth, new GoogleAuthProvider());
+      await signInWithPopup(auth, provider);
       router.push("/");
     } catch (e: unknown) {
       const code = (e as { code?: string }).code || "";
-      setError(friendlyError(code));
+      if (code === "auth/popup-blocked" || code === "auth/popup-closed-by-user") {
+        await signInWithRedirect(auth, provider);
+      } else {
+        setError(friendlyError(code));
+      }
     }
   };
 
@@ -194,12 +211,19 @@ export default function LoginPage() {
         </div>
 
         {/* Google */}
-        <button
-          onClick={handleGoogle}
-          className="w-full bg-slate-800 border border-slate-600 text-slate-300 py-3 rounded-xl text-sm font-medium hover:border-stone-400 transition-colors"
-        >
-          Continue with Google
-        </button>
+        {isChromeIOS ? (
+          <div className="w-full bg-slate-800 border border-amber-700 text-amber-400 py-3 px-4 rounded-xl text-xs text-center leading-relaxed">
+            Google sign-in requires Safari on iPhone.<br />
+            <span className="text-slate-400">Open this page in Safari to sign in with Google, or use email/password above.</span>
+          </div>
+        ) : (
+          <button
+            onClick={handleGoogle}
+            className="w-full bg-slate-800 border border-slate-600 text-slate-300 py-3 rounded-xl text-sm font-medium hover:border-stone-400 transition-colors"
+          >
+            Continue with Google
+          </button>
+        )}
 
         <p className="text-center text-xs text-slate-600 mt-5">
           By signing in you agree to our{" "}

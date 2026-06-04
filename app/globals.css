@@ -1,11 +1,13 @@
 @import "tailwindcss";
 
 html {
-  height: 100%;
+  height: -webkit-fill-available;
+  height: 100svh;
 }
 
 body {
-  min-height: 100dvh;
+  min-height: 100vh;
+  min-height: -webkit-fill-available;
   overscroll-behavior: none;
 }
 
