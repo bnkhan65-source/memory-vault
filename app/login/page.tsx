@@ -25,8 +25,6 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [resetSent, setResetSent] = useState(false);
 
-  const isChromeIOS = typeof navigator !== "undefined" &&
-    /CriOS/i.test(navigator.userAgent);
 
   useEffect(() => {
     getRedirectResult(auth).then((result) => {
@@ -211,19 +209,12 @@ export default function LoginPage() {
         </div>
 
         {/* Google */}
-        {isChromeIOS ? (
-          <div className="w-full bg-slate-800 border border-amber-700 text-amber-400 py-3 px-4 rounded-xl text-xs text-center leading-relaxed">
-            Google sign-in requires Safari on iPhone.<br />
-            <span className="text-slate-400">Open this page in Safari to sign in with Google, or use email/password above.</span>
-          </div>
-        ) : (
-          <button
-            onClick={handleGoogle}
-            className="w-full bg-slate-800 border border-slate-600 text-slate-300 py-3 rounded-xl text-sm font-medium hover:border-stone-400 transition-colors"
-          >
-            Continue with Google
-          </button>
-        )}
+        <button
+          onClick={handleGoogle}
+          className="w-full bg-slate-800 border border-slate-600 text-slate-300 py-3 rounded-xl text-sm font-medium hover:border-stone-400 transition-colors"
+        >
+          Continue with Google
+        </button>
 
         <p className="text-center text-xs text-slate-600 mt-5">
           By signing in you agree to our{" "}
