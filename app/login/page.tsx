@@ -3,8 +3,6 @@
 import { useState, useEffect } from "react";
 import {
   signInWithPopup,
-  signInWithRedirect,
-  getRedirectResult,
   GoogleAuthProvider,
   onAuthStateChanged,
   signInWithEmailAndPassword,
@@ -82,13 +80,13 @@ export default function LoginPage() {
 
   const handleGoogle = async () => {
     setError(null);
+    if (isChromeIOS()) {
+      setError("Google sign-in doesn't work in Chrome on iPhone. Please use Safari, or sign in with email and password below.");
+      return;
+    }
     try {
-      if (isChromeIOS()) {
-        await signInWithRedirect(auth, new GoogleAuthProvider());
-      } else {
-        await signInWithPopup(auth, new GoogleAuthProvider());
-        router.push("/");
-      }
+      await signInWithPopup(auth, new GoogleAuthProvider());
+      router.push("/");
     } catch (e: unknown) {
       const code = (e as { code?: string }).code || "";
       setError(friendlyError(code));
