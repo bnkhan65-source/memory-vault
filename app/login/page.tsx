@@ -73,17 +73,8 @@ export default function LoginPage() {
     }
   };
 
-  const isChromeIOS = () => {
-    if (typeof navigator === "undefined") return false;
-    return /CriOS/.test(navigator.userAgent);
-  };
-
   const handleGoogle = async () => {
     setError(null);
-    if (isChromeIOS()) {
-      setError("Google sign-in doesn't work in Chrome on iPhone. Please use Safari, or sign in with email and password below.");
-      return;
-    }
     try {
       await signInWithPopup(auth, new GoogleAuthProvider());
       router.push("/");
