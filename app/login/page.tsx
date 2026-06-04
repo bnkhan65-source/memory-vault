@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import {
-  signInWithPopup,
   signInWithRedirect,
   getRedirectResult,
   GoogleAuthProvider,
@@ -85,17 +84,11 @@ export default function LoginPage() {
 
   const handleGoogle = async () => {
     setError(null);
-    const provider = new GoogleAuthProvider();
     try {
-      await signInWithPopup(auth, provider);
-      router.push("/");
+      await signInWithRedirect(auth, new GoogleAuthProvider());
     } catch (e: unknown) {
       const code = (e as { code?: string }).code || "";
-      if (code === "auth/popup-blocked" || code === "auth/popup-closed-by-user") {
-        await signInWithRedirect(auth, provider);
-      } else {
-        setError(friendlyError(code));
-      }
+      setError(friendlyError(code));
     }
   };
 

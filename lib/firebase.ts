@@ -6,7 +6,7 @@ import { getStorage } from "firebase/storage";
 //  Your config (this is fine)
 const firebaseConfig = {
   apiKey: "AIzaSyC7nAb5tpL8UrbVvmXY2Ih2V5tTSB3PJ40",
-  authDomain: "memory-vault-954c2.firebaseapp.com",
+  authDomain: "usestash.vercel.app",
   projectId: "memory-vault-954c2",
   storageBucket: "memory-vault-954c2.firebasestorage.app",
   messagingSenderId: "689215782329",
