@@ -99,6 +99,13 @@ export default function Home() {
   const [movieBatches, setMovieBatches] = useState<ResultBatch<Movie>[]>([]);
   const [selectedTrack, setSelectedTrack] = useState<Track | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [toast, setToast] = useState<string | null>(null);
+  const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const showToast = (msg: string) => {
+    if (toastTimer.current) clearTimeout(toastTimer.current);
+    setToast(msg);
+    toastTimer.current = setTimeout(() => setToast(null), 2500);
+  };
   const [selectedItems, setSelectedItems] = useState<SelectedItem[]>([]);
   const [showPlaylistModal, setShowPlaylistModal] = useState(false);
   const [isListening, setIsListening] = useState(false);
@@ -302,6 +309,7 @@ export default function Home() {
 
       setMemories((prev) => [newMemory, ...prev]);
       setSelectedTrack(null);
+      showToast("✓ Saved to Stash");
     } catch (err) {
       console.error("SAVE ERROR:", err);
       setError("Failed to save memory. Please try again.");
@@ -342,6 +350,7 @@ export default function Home() {
       });
       setMemories((prev) => [{ id: newDoc.id, text, videoUrl: url, type: "link", checked: [] }, ...prev]);
       setMemory("");
+      showToast("✓ Link saved");
     } catch (err) {
       console.error("SAVE LINK ERROR:", err);
       setError("Failed to save link. Please try again.");
@@ -469,6 +478,7 @@ export default function Home() {
         ...prev,
       ]);
       clearSearchState();
+      showToast("✓ Playlist saved");
     } catch (err) {
       console.error("SAVE PLAYLIST ERROR:", err);
       setError("Failed to save playlist.");
@@ -531,6 +541,7 @@ export default function Home() {
     }
     setMemories((prev) => [...newMemories, ...prev]);
     clearSearchState();
+    showToast(`✓ ${newMemories.length} item${newMemories.length > 1 ? "s" : ""} saved`);
   };
 
   // ── Create list ─────────────────────────────────────────────────────────────
@@ -553,6 +564,7 @@ export default function Home() {
         { id: newDoc.id, text: listTitle.trim(), type: "list", listItems: parsedItems, checked: [] },
         ...prev,
       ]);
+      showToast("✓ List saved");
       setShowListModal(false);
       setListTitle("");
       setNewListItemInput("");
@@ -1661,6 +1673,17 @@ export default function Home() {
       <p className="text-center text-[10px] text-stone-600 py-2">
         This product uses the TMDB API but is not endorsed or certified by TMDB.
       </p>
+
+      {/* ── Toast notification ── */}
+      <div
+        className={`fixed bottom-24 left-1/2 -translate-x-1/2 z-[999] transition-all duration-300 ${
+          toast ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2 pointer-events-none"
+        }`}
+      >
+        <div className="bg-violet-600 text-white text-sm font-medium px-5 py-2.5 rounded-full shadow-lg">
+          {toast}
+        </div>
+      </div>
     </div>
   );
 }
