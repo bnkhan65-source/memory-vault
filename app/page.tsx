@@ -99,6 +99,10 @@ export default function Home() {
   const [movieBatches, setMovieBatches] = useState<ResultBatch<Movie>[]>([]);
   const [selectedTrack, setSelectedTrack] = useState<Track | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [pendingLinkUrl, setPendingLinkUrl] = useState<string | null>(null);
+  const [linkTags, setLinkTags] = useState<string[]>([]);
+  const [linkCustomTag, setLinkCustomTag] = useState("");
+  const QUICK_TAGS = ["read later", "watch", "buy", "reference", "follow up", "share"];
   const [toast, setToast] = useState<string | null>(null);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const showToast = (msg: string) => {
@@ -319,7 +323,7 @@ export default function Home() {
   };
 
   // ── Save a pasted URL as a link memory ────────────────────────────────────
-  const saveLinkMemory = async (url: string) => {
+  const saveLinkMemory = async (url: string, tags: string[] = []) => {
     if (!user) return;
     if (memories.length >= MAX_MEMORIES) {
       setError(`You've reached the maximum of ${MAX_MEMORIES} saved memories.`);
@@ -344,11 +348,11 @@ export default function Home() {
         text,
         videoUrl: url,
         type: "link",
-        tags: [],
+        tags,
         checked: [],
         createdAt: serverTimestamp(),
       });
-      setMemories((prev) => [{ id: newDoc.id, text, videoUrl: url, type: "link", checked: [] }, ...prev]);
+      setMemories((prev) => [{ id: newDoc.id, text, videoUrl: url, type: "link", tags, checked: [] }, ...prev]);
       setMemory("");
       showToast("✓ Link saved");
     } catch (err) {
@@ -984,7 +988,9 @@ export default function Home() {
               const pasted = e.clipboardData.getData("text").trim();
               if (/^https?:\/\//i.test(pasted)) {
                 e.preventDefault();
-                saveLinkMemory(pasted);
+                setPendingLinkUrl(pasted);
+                setLinkTags([]);
+                setLinkCustomTag("");
               }
             }}
             placeholder="Type or speak what you're looking for…"
@@ -1673,6 +1679,89 @@ export default function Home() {
       <p className="text-center text-[10px] text-stone-600 py-2">
         This product uses the TMDB API but is not endorsed or certified by TMDB.
       </p>
+
+      {/* ── Link tag picker ── */}
+      {pendingLinkUrl && (
+        <div className="fixed inset-0 z-50 flex flex-col justify-end" onClick={() => {
+          saveLinkMemory(pendingLinkUrl, linkTags);
+          setPendingLinkUrl(null);
+        }}>
+          <div
+            className="bg-slate-900 border-t border-slate-700 rounded-t-2xl p-5 animate-slide-up"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="w-10 h-1 bg-stone-600 rounded-full mx-auto mb-4" />
+            <p className="text-slate-100 font-semibold text-sm mb-1">Add tags to this link</p>
+            <p className="text-slate-500 text-xs mb-4 truncate">{pendingLinkUrl}</p>
+
+            {/* Quick tag chips */}
+            <div className="flex flex-wrap gap-2 mb-4">
+              {QUICK_TAGS.map((tag) => (
+                <button
+                  key={tag}
+                  onClick={() => setLinkTags((prev) =>
+                    prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]
+                  )}
+                  className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${
+                    linkTags.includes(tag)
+                      ? "bg-violet-600 border-violet-500 text-white"
+                      : "bg-slate-800 border-slate-600 text-slate-400"
+                  }`}
+                >
+                  {tag}
+                </button>
+              ))}
+            </div>
+
+            {/* Custom tag input */}
+            <div className="flex gap-2 mb-4">
+              <input
+                value={linkCustomTag}
+                onChange={(e) => setLinkCustomTag(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && linkCustomTag.trim()) {
+                    setLinkTags((prev) => [...new Set([...prev, linkCustomTag.trim().toLowerCase()])]);
+                    setLinkCustomTag("");
+                  }
+                }}
+                placeholder="Custom tag…"
+                className="flex-1 bg-slate-800 border border-slate-600 text-slate-100 placeholder-stone-500 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-violet-500/50"
+              />
+              <button
+                onClick={() => {
+                  if (linkCustomTag.trim()) {
+                    setLinkTags((prev) => [...new Set([...prev, linkCustomTag.trim().toLowerCase()])]);
+                    setLinkCustomTag("");
+                  }
+                }}
+                className="px-3 py-2 bg-slate-700 text-slate-300 rounded-xl text-sm"
+              >Add</button>
+            </div>
+
+            {/* Save / Skip */}
+            <div className="flex gap-2">
+              <button
+                onClick={() => {
+                  saveLinkMemory(pendingLinkUrl, linkTags);
+                  setPendingLinkUrl(null);
+                }}
+                className="flex-1 bg-violet-600 text-white py-3 rounded-xl text-sm font-medium active:bg-violet-700 transition-all"
+              >
+                Save{linkTags.length > 0 ? ` with ${linkTags.length} tag${linkTags.length > 1 ? "s" : ""}` : ""}
+              </button>
+              <button
+                onClick={() => {
+                  saveLinkMemory(pendingLinkUrl, []);
+                  setPendingLinkUrl(null);
+                }}
+                className="px-4 py-3 text-slate-500 text-sm rounded-xl active:bg-slate-800 transition-all"
+              >
+                Skip
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── Toast notification ── */}
       <div
