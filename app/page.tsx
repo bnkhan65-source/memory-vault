@@ -1540,8 +1540,8 @@ export default function Home() {
                   setCollapseAll(true);
                   try {
                     const allIds = memories.map((m) => m.id);
-                    const stored: string[] = JSON.parse(localStorage.getItem("stash_collapsed") || "[]");
-                    localStorage.setItem("stash_collapsed", JSON.stringify([...new Set([...stored, ...allIds])]));
+                    const expanded: string[] = JSON.parse(localStorage.getItem("stash_expanded") || "[]");
+                    localStorage.setItem("stash_expanded", JSON.stringify(expanded.filter((id) => !allIds.includes(id))));
                   } catch { /* silent */ }
                   setTimeout(() => setCollapseAll(null), 100);
                 }}
@@ -1553,8 +1553,8 @@ export default function Home() {
                   setCollapseAll(false);
                   try {
                     const allIds = memories.map((m) => m.id);
-                    const stored: string[] = JSON.parse(localStorage.getItem("stash_collapsed") || "[]");
-                    localStorage.setItem("stash_collapsed", JSON.stringify(stored.filter((id) => !allIds.includes(id))));
+                    const expanded: string[] = JSON.parse(localStorage.getItem("stash_expanded") || "[]");
+                    localStorage.setItem("stash_expanded", JSON.stringify([...new Set([...expanded, ...allIds])]));
                   } catch { /* silent */ }
                   setTimeout(() => setCollapseAll(null), 100);
                 }}

@@ -58,11 +58,12 @@ export default function MemoryCard({
   const cardRef = useRef<HTMLDivElement>(null);
 
   const [isCollapsed, setIsCollapsed] = useState(() => {
-    if (typeof window === "undefined") return false;
+    if (typeof window === "undefined") return true;
     try {
-      const stored: string[] = JSON.parse(localStorage.getItem("stash_collapsed") || "[]");
-      return stored.includes(memory.id);
-    } catch { return false; }
+      // Default collapsed — only expanded if user explicitly opened it
+      const expanded: string[] = JSON.parse(localStorage.getItem("stash_expanded") || "[]");
+      return !expanded.includes(memory.id);
+    } catch { return true; }
   });
 
   // Sync when a "collapse all / expand all" override is fired from the parent
@@ -70,11 +71,11 @@ export default function MemoryCard({
     if (collapsedOverride == null) return;
     setIsCollapsed(collapsedOverride);
     try {
-      const stored: string[] = JSON.parse(localStorage.getItem("stash_collapsed") || "[]");
+      const expanded: string[] = JSON.parse(localStorage.getItem("stash_expanded") || "[]");
       const updated = collapsedOverride
-        ? [...new Set([...stored, memory.id])]
-        : stored.filter((id) => id !== memory.id);
-      localStorage.setItem("stash_collapsed", JSON.stringify(updated));
+        ? expanded.filter((id) => id !== memory.id)   // collapsing → remove from expanded
+        : [...new Set([...expanded, memory.id])];      // expanding → add to expanded
+      localStorage.setItem("stash_expanded", JSON.stringify(updated));
     } catch { /* silent */ }
   }, [collapsedOverride, memory.id]);
   const [isEditing, setIsEditing] = useState(false);
@@ -414,11 +415,11 @@ export default function MemoryCard({
                 const next = !isCollapsed;
                 setIsCollapsed(next);
                 try {
-                  const stored: string[] = JSON.parse(localStorage.getItem("stash_collapsed") || "[]");
+                  const expanded: string[] = JSON.parse(localStorage.getItem("stash_expanded") || "[]");
                   const updated = next
-                    ? [...new Set([...stored, memory.id])]
-                    : stored.filter((id) => id !== memory.id);
-                  localStorage.setItem("stash_collapsed", JSON.stringify(updated));
+                    ? expanded.filter((id) => id !== memory.id)   // collapsing → remove from expanded
+                    : [...new Set([...expanded, memory.id])];      // expanding → add to expanded
+                  localStorage.setItem("stash_expanded", JSON.stringify(updated));
                 } catch { /* silent */ }
               }}
               className="text-slate-500 hover:text-slate-300 active:text-violet-400 transition-all px-1 py-0.5 rounded text-xs"
