@@ -129,6 +129,7 @@ export default function Home() {
   const [sortBy, setSortBy] = useState<"newest" | "oldest" | "az" | "type" | "custom">("newest");
   const [cardOrder, setCardOrder] = useState<string[]>([]);
   const [collapseAll, setCollapseAll] = useState<boolean | null>(null);
+  const [showSettings, setShowSettings] = useState(false);
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -1483,105 +1484,95 @@ export default function Home() {
           <div className="flex-1 h-px bg-slate-700" />
         </div>
 
-        <input
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search saved memories..."
-          className="bg-slate-800 border border-slate-600 p-3 w-full rounded-lg text-base text-slate-100 placeholder-stone-500 mb-2 focus:outline-none"
-        />
+        {/* Search + settings icon */}
+        <div className="flex gap-2 mb-2">
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search saved memories..."
+            className="bg-slate-800 border border-slate-600 p-3 flex-1 rounded-lg text-base text-slate-100 placeholder-stone-500 focus:outline-none"
+          />
+          <button
+            onClick={() => setShowSettings((v) => !v)}
+            className={`px-3 rounded-lg border transition-all ${
+              showSettings
+                ? "bg-violet-600 border-violet-500 text-white"
+                : "bg-slate-800 border-slate-600 text-slate-400 hover:border-slate-500"
+            }`}
+            title="Settings"
+          >
+            ⚙️
+          </button>
+        </div>
 
-        {search && (
-          <p className="text-sm text-slate-500 mb-2">
-            {filteredMemories.length} result(s)
-          </p>
-        )}
-
-        {/* Sort & Filter bar */}
-        <div className="mb-4 space-y-2">
-          {/* Sort row */}
-          <div className="flex items-center gap-1.5 flex-wrap">
-            <span className="text-[10px] text-slate-500 uppercase tracking-widest mr-1">Sort</span>
-            {([["newest", "Newest"], ["oldest", "Oldest"], ["az", "A–Z"], ["type", "Type"], ["custom", "Custom ↕"]] as const).map(([val, label]) => (
-              <button
-                key={val}
-                onClick={() => setSortBy(val)}
-                className={`text-xs px-2.5 py-1 rounded-full border transition-all active:scale-90 ${
-                  sortBy === val
-                    ? "bg-violet-500 text-stone-900 border-violet-400 font-semibold"
-                    : "bg-slate-800 text-slate-400 border-slate-700 hover:border-slate-500"
-                }`}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-
-          {/* Filter row */}
-          <div className="flex items-center gap-1.5 flex-wrap">
-            <span className="text-[10px] text-slate-500 uppercase tracking-widest mr-1">Show</span>
-            {([
-              [null, "All"],
-              ["playlist", "🎵 Playlists"],
-              ["list", "📋 Lists"],
-              ["pic", "📸 Pics"],
-              ["note", "📝 Notes"],
-            ] as const).map(([val, label]) => (
-              <button
-                key={String(val)}
-                onClick={() => setFilterType(val)}
-                className={`text-xs px-2.5 py-1 rounded-full border transition-all active:scale-90 ${
-                  filterType === val
-                    ? "bg-violet-500 text-stone-900 border-violet-400 font-semibold"
-                    : "bg-slate-800 text-slate-400 border-slate-700 hover:border-slate-500"
-                }`}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-
-          {/* Clear filters + collapse all row */}
-          <div className="flex items-center gap-3 flex-wrap">
+        {/* Contextual chips */}
+        {(search || activeTag) && (
+          <div className="flex items-center gap-3 mb-2 flex-wrap">
             {search && (
-              <button onClick={() => setSearch("")} className="text-sm text-slate-500 hover:text-slate-300 transition">
-                Clear search
-              </button>
+              <p className="text-sm text-slate-500">{filteredMemories.length} result(s)</p>
+            )}
+            {search && (
+              <button onClick={() => setSearch("")} className="text-sm text-slate-500 hover:text-slate-300 transition">Clear search</button>
             )}
             {activeTag && (
-              <button onClick={() => setActiveTag(null)} className="text-sm text-purple-500">
-                Clear tag: #{activeTag}
-              </button>
+              <button onClick={() => setActiveTag(null)} className="text-sm text-purple-500">Clear tag: #{activeTag}</button>
             )}
-            <div className="ml-auto flex gap-1.5">
-              <button
-                onClick={() => {
-                  setCollapseAll(true);
-                  try {
-                    const allIds = memories.map((m) => m.id);
-                    const expanded: string[] = JSON.parse(localStorage.getItem("stash_expanded") || "[]");
-                    localStorage.setItem("stash_expanded", JSON.stringify(expanded.filter((id) => !allIds.includes(id))));
-                  } catch { /* silent */ }
-                  setTimeout(() => setCollapseAll(null), 100);
-                }}
-                className="text-xs px-2.5 py-1 rounded-full border border-slate-700 bg-slate-800 text-slate-400 hover:border-slate-500 hover:text-slate-200 transition-all active:scale-90"
-                title="Collapse all cards"
-              >&#x229F; Min all</button>
-              <button
-                onClick={() => {
-                  setCollapseAll(false);
-                  try {
-                    const allIds = memories.map((m) => m.id);
-                    const expanded: string[] = JSON.parse(localStorage.getItem("stash_expanded") || "[]");
-                    localStorage.setItem("stash_expanded", JSON.stringify([...new Set([...expanded, ...allIds])]));
-                  } catch { /* silent */ }
-                  setTimeout(() => setCollapseAll(null), 100);
-                }}
-                className="text-xs px-2.5 py-1 rounded-full border border-slate-700 bg-slate-800 text-slate-400 hover:border-slate-500 hover:text-slate-200 transition-all active:scale-90"
-                title="Expand all cards"
-              >&#x229E; Max all</button>
+          </div>
+        )}
+
+        {/* Settings panel */}
+        {showSettings && (
+          <div className="mb-4 bg-slate-800 border border-slate-700 rounded-xl p-4 space-y-4">
+            {/* Sort */}
+            <div>
+              <p className="text-[10px] text-slate-500 uppercase tracking-widest mb-2">Sort</p>
+              <div className="flex flex-wrap gap-1.5">
+                {([["newest", "Newest"], ["oldest", "Oldest"], ["az", "A–Z"], ["type", "Type"], ["custom", "Custom ↕"]] as const).map(([val, label]) => (
+                  <button key={val} onClick={() => setSortBy(val)}
+                    className={`text-xs px-2.5 py-1 rounded-full border transition-all active:scale-90 ${sortBy === val ? "bg-violet-500 text-stone-900 border-violet-400 font-semibold" : "bg-slate-700 text-slate-400 border-slate-600"}`}>
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Show */}
+            <div>
+              <p className="text-[10px] text-slate-500 uppercase tracking-widest mb-2">Show</p>
+              <div className="flex flex-wrap gap-1.5">
+                {([
+                  [null, "All"],
+                  ["playlist", "Playlists"],
+                  ["vibe", "Music"],
+                  ["list", "Lists"],
+                  ["pic", "Pics"],
+                  ["note", "Notes"],
+                  ["link", "Links"],
+                ] as const).map(([val, label]) => (
+                  <button key={String(val)} onClick={() => setFilterType(val)}
+                    className={`text-xs px-2.5 py-1 rounded-full border transition-all active:scale-90 ${filterType === val ? "bg-violet-500 text-stone-900 border-violet-400 font-semibold" : "bg-slate-700 text-slate-400 border-slate-600"}`}>
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Cards */}
+            <div>
+              <p className="text-[10px] text-slate-500 uppercase tracking-widest mb-2">Cards</p>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => { setCollapseAll(true); try { const allIds = memories.map((m) => m.id); const expanded: string[] = JSON.parse(localStorage.getItem("stash_expanded") || "[]"); localStorage.setItem("stash_expanded", JSON.stringify(expanded.filter((id) => !allIds.includes(id)))); } catch { /* silent */ } setTimeout(() => setCollapseAll(null), 100); }}
+                  className="text-xs px-3 py-1.5 rounded-full border border-slate-600 bg-slate-700 text-slate-400 active:scale-90 transition-all"
+                >⊟ Collapse all</button>
+                <button
+                  onClick={() => { setCollapseAll(false); try { const allIds = memories.map((m) => m.id); const expanded: string[] = JSON.parse(localStorage.getItem("stash_expanded") || "[]"); localStorage.setItem("stash_expanded", JSON.stringify([...new Set([...expanded, ...allIds])])); } catch { /* silent */ } setTimeout(() => setCollapseAll(null), 100); }}
+                  className="text-xs px-3 py-1.5 rounded-full border border-slate-600 bg-slate-700 text-slate-400 active:scale-90 transition-all"
+                >⊞ Expand all</button>
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
         {filteredMemories.length === 0 ? (
           <p className="text-center text-stone-600 mt-6">
